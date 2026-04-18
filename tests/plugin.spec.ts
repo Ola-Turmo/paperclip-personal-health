@@ -1,8 +1,8 @@
-import { describe, it } from "vitest";
-import { equal } from "node:assert";
+import { describe, expect, it } from "vitest";
+import manifest from "../src/manifest.js";
 
-describe("Personal Health Plugin", () => {
-  it("should have correct plugin id", () => {
-    equal("personal-health", "personal-health");
+describe("manifest", () => {
+  it("uses the personal-health plugin id", () => {
+    expect(manifest.id).toBe("personal-health");
   });
 });

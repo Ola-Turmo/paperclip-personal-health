@@ -507,3 +507,16 @@ Personal Health Plugin
 - Each action reads/writes the correct state namespace
 - Types fully specify all fields (no `unknown` in stored data)
 - PRD is current and reflects what was built
+
+## 11. Implementation Uplift (2026-04)
+
+To align the plugin with the richer `genetic.health` product direction, the implementation now also supports:
+
+- raw 23andMe / AncestryDNA import parsing inside the plugin worker,
+- evidence-labeled DNA insight summaries,
+- markdown exports that include an actionable health protocol,
+- living-mode vs privacy-mode DNA settings,
+- ambient nudges triggered after `agent.run.finished`,
+- documentation and packaging oriented around a unified “health operating layer” value proposition.
+
+These changes stay inside the plugin’s educational / non-diagnostic boundary and are intentionally framed as decision support rather than clinical advice.

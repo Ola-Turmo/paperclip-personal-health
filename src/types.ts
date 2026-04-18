@@ -21,7 +21,7 @@ export interface WorkoutPlan {
 export interface ExerciseLog {
   name: string;
   sets: number;
-  reps?: number;          // null for timed exercises
+  reps?: number;
   weightKg?: number;
   rpe?: number;
   notes?: string;
@@ -33,36 +33,24 @@ export interface WorkoutLog {
   id: string;
   type: WorkoutType;
   name: string;
-  performedAt: string;       // ISO 8601
-
-  // Core
+  performedAt: string;
   durationMinutes: number;
-  rpe?: number;              // 1–10
+  rpe?: number;
   caloriesBurned?: number;
-
-  // Cardio
   distanceKm?: number;
   avgPaceMinPerKm?: number;
   avgHeartRate?: number;
   maxHeartRate?: number;
   elevationGainM?: number;
   stravaActivityId?: string;
-
-  // Strength
   exercises?: ExerciseLog[];
-
-  // Swimming
   laps?: number;
   strokeTypes?: string[];
-
-  // Source
   source: WorkoutSource;
   wearableLogId?: string;
   rawData?: Record<string, unknown>;
   notes?: string;
 }
-
-// ── Nutrition ─────────────────────────────────────────────────────────────────
 
 export interface MacroTargets {
   proteinGrams: number;
@@ -97,14 +85,14 @@ export interface FoodItem {
   fiberGrams?: number;
   sugarGrams?: number;
   sodiumMg?: number;
-  source?: string;       // "Nutritionix", "USDA", "manual"
-  sourceId?: string;     // Nutritionix food item ID for fast re-log
+  source?: string;
+  sourceId?: string;
 }
 
 export interface MealLog {
   id: string;
-  date: string;           // YYYY-MM-DD
-  mealName: string;       // breakfast | lunch | dinner | snack | pre-workout | post-workout
+  date: string;
+  mealName: string;
   foods: FoodItem[];
   totalCalories: number;
   totalMacros?: MacroTargets;
@@ -115,23 +103,23 @@ export interface MealLog {
 export interface HydrationEntry {
   id: string;
   amountMl: number;
-  loggedAt: string;       // ISO timestamp
+  loggedAt: string;
   source: "manual" | "apple-health";
 }
 
 export interface HydrationLog {
   id: string;
-  date: string;           // YYYY-MM-DD
+  date: string;
   entries: HydrationEntry[];
-  totalMl: number;       // computed sum
-  goalMl: number;         // daily goal
+  totalMl: number;
+  goalMl: number;
+  source: "manual" | "apple-health";
 }
-
-// ── DNA ───────────────────────────────────────────────────────────────────────
 
 export type DnaSource = "23andme" | "ancestrydna" | "livedna" | "other";
 export type DnaInsightCategory = "nutrition" | "fitness" | "cardiovascular" | "metabolic" | "pharmacogenomics" | "sleep" | "risk";
 export type DnaDiploidType = "heterozygous" | "homozygousdominant" | "homozygousrecessive";
+export type DnaEvidenceTier = 1 | 2 | 3 | 4;
 
 export interface AlleleEffect {
   allele: string;
@@ -170,6 +158,8 @@ export interface DnaHealthInsight {
   relevantVariants: string[];
   actionableRecommendation?: string;
   source?: string;
+  evidenceTier?: DnaEvidenceTier;
+  evidenceLabel?: string;
 }
 
 export interface AncestryComposition {
@@ -189,9 +179,15 @@ export interface DnaReport {
   rawSnpsImported: number;
   snpsMatchedToKnowledgeBase: number;
   notes?: string;
+  privacyMode?: "living" | "privacy";
 }
 
-// ── Other existing types (kept) ─────────────────────────────────────────────
+export interface DnaSettings {
+  preferredReportSource: "23andme" | "promethease" | "genetichealth";
+  lastImport?: string;
+  privacyMode: "living" | "privacy";
+  researchOptIn: boolean;
+}
 
 export interface Medication {
   id: string;
@@ -244,6 +240,7 @@ export interface Appointment {
   durationMinutes?: number;
   notes?: string;
   prepNotes?: string;
+  cancelledAt?: string;
 }
 
 export interface LabResult {
@@ -273,7 +270,7 @@ export interface Habit {
   name: string;
   description?: string;
   frequency: string;
-  targetDays?: number[];   // 0=Sun, 1=Mon, ...
+  targetDays?: number[];
   targetCount: number;
   currentStreak: number;
 }
@@ -287,7 +284,7 @@ export interface HabitCompletion {
 
 export interface RecoveryStatus {
   date: string;
-  score: number;           // 0–100
+  score: number;
   overall: "red" | "yellow" | "green";
   recommendation?: string;
   source?: "manual" | "garmin" | "oura" | "whoop";
@@ -315,7 +312,7 @@ export interface WearableSyncStatus {
   device: string;
   lastSyncAt: string;
   connected: boolean;
-  deviceId?: string;        // from the wearable's API
+  deviceId?: string;
   error?: string;
 }
 
@@ -335,4 +332,11 @@ export interface DailyHealthSummary {
     totalMl: number;
     goalMl: number;
   };
+}
+
+export interface HealthNudge {
+  key: string;
+  message: string;
+  severity: "info" | "warning" | "success";
+  category: "workout" | "nutrition" | "hydration" | "medication" | "appointment" | "dna";
 }

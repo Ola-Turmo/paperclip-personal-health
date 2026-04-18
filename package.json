@@ -1,7 +1,7 @@
 {
   "name": "@ola-turmo/paperclip-personal-health",
-  "version": "0.1.0",
-  "description": "Personal health management plugin — medication, symptoms, workouts, sleep, nutrition, labs, wearables, and more",
+  "version": "0.2.0",
+  "description": "Living personal health plugin for Paperclip with workouts, nutrition, medications, labs, wearables, and genetic-health insights",
   "author": "turmo.dev",
   "private": true,
   "type": "module",
@@ -11,7 +11,7 @@
     "plugin:build": "node esbuild.config.mjs",
     "plugin:dev": "node ./esbuild.config.mjs --watch",
     "plugin:test": "vitest run",
-    "test": "node tests/smoke.test.mjs"
+    "test": "node tests/smoke.mjs"
   },
   "devDependencies": {
     "@paperclipai/plugin-sdk": "^2026.416.0",

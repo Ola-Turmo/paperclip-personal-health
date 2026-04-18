@@ -170,7 +170,7 @@
       ]
     },
     {
-      "rs1042713",
+      "rsId": "rs1042713",
       "gene": "ADRB2",
       "title": "ADRB2 Arg16Gly",
       "description": "Beta-2 adrenergic receptor variant affecting how cells respond to adrenaline and to bronchodilators (like albuterol/salbutamol). Gly/Gly individuals have enhanced bronchodilator response.",
@@ -183,7 +183,7 @@
       ]
     },
     {
-      "rsrs1042714",
+      "rsId": "rs1042714",
       "gene": "ADRB2",
       "title": "ADRB2 Gln27Glu",
       "description": "Beta-2 adrenergic receptor variant. The Glu allele is associated with reduced risk of obesity and enhanced fat loss during exercise.",
