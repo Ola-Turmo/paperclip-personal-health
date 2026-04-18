@@ -2,15 +2,15 @@
 
 ## 1. Product Intent
 
-Personal health management plugin for Paperclip — a life operating system layer for physical and mental wellbeing. Replaces scattered apps (medication reminders, symptom trackers, fitness logs, nutrition planners, DNA reports) with one unified plugin that can be queried and automated by your personal AI.
+Personal health management plugin for Paperclip — a privacy-aware life operating system layer for physical and mental wellbeing. Replaces scattered apps (medication reminders, symptom trackers, fitness logs, nutrition planners, bloodwork readers, DNA reports) with one unified plugin that can be queried and automated by your personal AI. The product favors conservative medical framing, explicit privacy controls, and auditable summaries over overconfident advice.
 
 ## 2. Problem
 
-Health data is fragmented across pharmacy portals, wearable apps, clinic portals, lab reports, DNA services, and paper notes. People miss medication doses, forget appointment prep, lose track of symptoms, have no unified nutrition view, and their DNA data sits in a zip file nobody reads. This plugin is the single pane of glass.
+Health data is fragmented across pharmacy portals, wearable apps, clinic portals, lab reports, DNA services, and paper notes. People miss medication doses, forget appointment prep, lose track of symptoms, have no unified nutrition view, and their DNA data sits in a zip file nobody reads. Safer health software also needs to show where a summary came from, what was redacted, and when a sensitive action was taken. This plugin is the single pane of glass and the audit layer.
 
 ## 3. Target Users
 
-Single user (Ola) managing personal health across: medications, symptoms, **workouts**, **nutrition**, **DNA**, sleep, lab results, habits, recovery, supplements, and wearables.
+Single user (Ola) managing personal health across: medications, symptoms, **workouts**, **nutrition**, **DNA**, sleep, lab results, bloodwork trends, habits, recovery, supplements, wearables, and privacy settings.
 
 ---
 
@@ -269,10 +269,10 @@ interface HydrationEntry {
 ### 4.3 DNA
 
 #### What
-Import raw genetic data from 23andMe or AncestryDNA, parse health-relevant variants, and track health insights over time. Surface variants that are relevant to nutrition (e.g., MTHFR, COMT), fitness (e.g., ACTN3), and health risks.
+Import raw genetic data from 23andMe or AncestryDNA, parse health-relevant variants, and track health insights over time. DNA here is a decision-support input, not a diagnosis. Surface variants that are relevant to nutrition (e.g., MTHFR, COMT), fitness (e.g., ACTN3), pharmacogenomics, and health risks when there is enough context to make them useful.
 
 #### Why
-23andMe gives you a zip file of 600,000+ SNPs. You open it once, see some scary headlines, and never look again. The data is actually useful: knowing your MTHFR variant explains why folic acid doesn't work for you, your APOE status informs diet, your ACTN3 status explains sprint vs endurance athlete predisposition. This plugin makes that actionable.
+23andMe gives you a zip file of 600,000+ SNPs. You open it once, see some scary headlines, and never look again. The data is useful when it is tied back to labs, symptoms, training load, and medication context: MTHFR may matter if homocysteine is elevated, ACTN3 may matter when training goals are specific, and pharmacogenomic markers may matter when medication metabolism is in play. This plugin makes those relationships actionable without overstating certainty.
 
 #### Data Model
 
@@ -353,7 +353,7 @@ interface AlleleEffect {
 #### State Namespaces
 - `health.dnaReports` → `DnaReport[]`
 - `health.dnaVariantAnnotations` → `DnaVariantAnnotation[]` (local knowledge base)
-- `health.dnaSettings` → `{ preferredReportSource: "23andme" | "promethease", lastImport?: string }`
+- `health.dnaSettings` → `{ preferredReportSource: "23andme" | "promethease", lastImport?: string, privacyMode: "living" | "privacy" }`
 
 #### Actions
 
@@ -369,6 +369,9 @@ interface AlleleEffect {
 | `health.annotate-variant` | Add a personal annotation/note to a variant |
 | `health.compare-dna-reports` | Compare two reports (detect changes, updated data) |
 | `health.export-dna-insights` | Export insights as markdown (for sharing with doctor) |
+| `health.get-dna-bloodwork-correlations` | Cross-analyze DNA signals with bloodwork context |
+| `health.get-dna-monitoring-plan` | Generate a conservative follow-up monitoring plan |
+| `health.get-dna-supplement-recommendations` | Suggest supplements only when the evidence and context justify it |
 | `health.delete-dna-report` | Remove a report and its variants |
 
 #### Import Pipeline
@@ -423,10 +426,84 @@ Initial knowledge base: top 200 clinically relevant SNPs (MTHFR, COMT, VDR, ACTN
 - If nutrition insight present (e.g., MTHFR variant): "Your MTHFR variant suggests methylfolate may work better than folic acid for you — worth noting for your next doctor visit."
 - Never surface disease risk variants unprompted — user must explicitly ask
 
+#### Cross-analysis rules
+- DNA and bloodwork correlations are hypothesis-generating, not diagnostic.
+- Use medication lists, symptoms, diet, and training load before suggesting any supplement or protocol change.
+- Prefer conservative language: "worth discussing with a clinician" over "you should do this."
+
 #### Non-Goals
 - No medical diagnosis — always "consult a healthcare provider"
 - No sharing of raw genetic data with third parties
-- No ancestry matching (keep it health-only)
+- No treatment decisions based on genetics or a single bloodwork result
+
+### 4.4 Labs & Bloodwork
+
+#### What
+Import lab panels, analyze biomarker trends against clinical and optimal ranges, compute category scores and biological age estimates, and generate conservative action plans. Interpret each result with fasting status, acute illness, training load, hydration, medication context, and prior results in mind.
+
+#### Why
+A single lab value is easy to misread. This plugin should prefer trends, context, and repeat testing over one-off alarms. Bloodwork can inform conversations about nutrition, recovery, medications, and follow-up timing, but only when the summary is transparent about what it used.
+
+#### State Namespaces
+- `health.labResults` → `LabResult[]`
+
+#### Actions
+
+| Action | Description |
+|---|---|
+| `health.add-lab-result` | Store a lab panel or biomarker result |
+| `health.get-lab-results` | List stored lab results |
+| `health.review-lab-trends` | Review longitudinal changes across panels |
+| `health.get-bloodwork-trends` | Generate biomarker trend summaries |
+| `health.get-bloodwork-biomarkers` | List the biomarker catalog |
+| `health.get-bloodwork-biomarker` | Look up a specific biomarker definition |
+| `health.analyze-bloodwork` | Produce the latest bloodwork analysis |
+| `health.get-bloodwork-category-scores` | Summarize healthspan category scores |
+| `health.calculate-biological-age` | Estimate biological age from lab patterns |
+| `health.get-bloodwork-action-plan` | Generate a conservative follow-up plan |
+| `health.get-dna-bloodwork-correlations` | Cross-analyze genetics and bloodwork |
+
+#### Non-Goals
+- No diagnosis from a single panel or biomarker
+- No supplement escalation without context
+- No replacing clinician interpretation or repeat testing when uncertainty is high
+
+### 4.5 Privacy, Auditability, and Projections
+
+#### What
+Maintain a first-class privacy policy, an append-only audit trail, and derived read models that present safe summaries without exposing raw state unnecessarily. Derived views include the health overview, latest lab projection, latest DNA projection, pending reminder projection, and privacy projection.
+
+#### Why
+Safer health software should explain its outputs. The plugin needs to know whether it is in living or privacy mode, what was redacted, and which source records informed a summary. Read models keep the UI explainable while source records remain the source of truth.
+
+#### State Namespaces
+- `health.privacyPolicy` → `HealthPrivacyPolicy`
+- `health.auditLog` → `HealthAuditEntry[]`
+- `health.nudgeHistory` → `HealthNudge[]`
+
+#### Read Models / Projections
+- `health.overview` → daily cross-domain summary
+- `health.workouts.overview` → training overview
+- `health.nutrition.overview` → nutrition overview
+- `health.labs.latest` → latest lab projection and analysis
+- `health.dna.latest` → latest DNA projection and summary
+- `health.reminders.pending` → pending reminders and nudges
+- `health.privacy.status` → privacy summary and exposure posture
+
+#### Actions
+
+| Action | Description |
+|---|---|
+| `health.update-privacy-settings` | Update privacy mode and export policy |
+| `health.get-privacy-status` | Summarize the current privacy posture |
+| `health.get-health-audit-log` | Read the sensitive-action audit trail |
+| `health.purge-health-audit-log` | Remove old audit entries according to retention rules |
+
+#### Auditability rules
+- Sensitive actions should write an audit entry with category, detail, success state, and sensitivity level.
+- Sensitive DNA exports and audit-log reads/purges should require explicit confirmation.
+- Privacy settings updates, sensitive exports, and purge operations should be discoverable from the audit log.
+- Derived views should stay derived; source records remain the canonical storage.
 
 ---
 
@@ -436,6 +513,7 @@ Initial knowledge base: top 200 clinically relevant SNPs (MTHFR, COMT, VDR, ACTN
 Personal Health Plugin
 ├── State: instance-scoped (per-plugin persistent storage)
 ├── Actions: one per feature (add, get, log, review patterns)
+├── Projections: overview, latest-lab, latest-DNA, privacy, reminder views
 ├── Events: subscribes to agent.run.finished for ambient nudges
 └── Integrations (future): wearables API, pharmacy portals, lab APIs,
     nutritionix, strava, 23andMe
@@ -468,6 +546,9 @@ Personal Health Plugin
 | `health.dnaReports` | `DnaReport[]` | DNA imports |
 | `health.dnaVariantAnnotations` | `DnaVariantAnnotation[]` | Local variant knowledge base |
 | `health.dnaSettings` | `DnaSettings` | Import preferences |
+| `health.privacyPolicy` | `HealthPrivacyPolicy` | Privacy and export policy |
+| `health.auditLog` | `HealthAuditEntry[]` | Append-only sensitive-action log |
+| `health.nudgeHistory` | `HealthNudge[]` | Prior nudges and reminder history |
 | `health.wearableStatus` | `WearableSyncStatus[]` | Device connection state |
 
 ## 7. Wearable Integration Map (Future)
@@ -499,6 +580,8 @@ Personal Health Plugin
 - Prescription management or pharmacy ordering (read-only)
 - Sharing health data with third parties without explicit consent
 - Replacing wearable native apps (integrate, not replicate)
+- Making one-off lab results or SNPs into treatment decisions
+- Using ancestry inference as the primary product value proposition
 
 ## 10. Definition of Done
 
@@ -514,9 +597,13 @@ To align the plugin with the richer `genetic.health` product direction, the impl
 
 - raw 23andMe / AncestryDNA import parsing inside the plugin worker,
 - evidence-labeled DNA insight summaries,
+- bloodwork analysis with biomarker trends, category scores, biological age, and action plans,
+- DNA ↔ bloodwork correlation summaries,
 - markdown exports that include an actionable health protocol,
 - living-mode vs privacy-mode DNA settings,
+- append-only audit logging for sensitive actions,
+- derived projections/read models for overview, privacy, reminder, DNA, and lab views,
 - ambient nudges triggered after `agent.run.finished`,
 - documentation and packaging oriented around a unified “health operating layer” value proposition.
 
-These changes stay inside the plugin’s educational / non-diagnostic boundary and are intentionally framed as decision support rather than clinical advice.
+These changes stay inside the plugin’s educational / non-diagnostic boundary and are intentionally framed as decision support rather than clinical advice. No output should imply that a single lab result, SNP, or summary is sufficient to start or stop treatment without clinician review.

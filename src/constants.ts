@@ -46,6 +46,8 @@ export const DATA_KEYS = {
   DNA_REPORTS: "health.dnaReports",
   DNA_VARIANT_ANNOTATIONS: "health.dnaVariantAnnotations",
   DNA_SETTINGS: "health.dnaSettings",
+  HEALTH_POLICY: "health.privacyPolicy",
+  HEALTH_AUDIT_LOG: "health.auditLog",
   NUDGE_HISTORY: "health.nudgeHistory",
 
   // Wearables
@@ -114,6 +116,7 @@ export const ACTION_KEYS = {
   ADD_LAB_RESULT: "health.add-lab-result",
   GET_LAB_RESULTS: "health.get-lab-results",
   REVIEW_LAB_TRENDS: "health.review-lab-trends",
+  GET_BLOODWORK_TRENDS: "health.get-bloodwork-trends",
   GET_BLOODWORK_BIOMARKERS: "health.get-bloodwork-biomarkers",
   GET_BLOODWORK_BIOMARKER: "health.get-bloodwork-biomarker",
   ANALYZE_BLOODWORK: "health.analyze-bloodwork",
@@ -156,9 +159,16 @@ export const ACTION_KEYS = {
   GET_DNA_PROTECTIVE_VARIANTS: "health.get-dna-protective-variants",
   GET_DNA_MONITORING_PLAN: "health.get-dna-monitoring-plan",
   GET_DNA_SUPPLEMENT_RECOMMENDATIONS: "health.get-dna-supplement-recommendations",
+  GET_DNA_BLOODWORK_CORRELATIONS: "health.get-dna-bloodwork-correlations",
   EXPORT_DNA_COMPREHENSIVE_REPORT: "health.export-dna-comprehensive-report",
   EXPORT_DNA_INSIGHTS: "health.export-dna-insights",
   DELETE_DNA_REPORT: "health.delete-dna-report",
+
+  // Privacy / audit
+  UPDATE_PRIVACY_SETTINGS: "health.update-privacy-settings",
+  GET_PRIVACY_STATUS: "health.get-privacy-status",
+  GET_HEALTH_AUDIT_LOG: "health.get-health-audit-log",
+  PURGE_HEALTH_AUDIT_LOG: "health.purge-health-audit-log",
 
   // Wearables
   SYNC_WEARABLE: "health.sync-wearable",

@@ -216,6 +216,9 @@ export interface DnaReport {
   variants: DnaVariant[];
   rawSnpsImported: number;
   snpsMatchedToKnowledgeBase: number;
+  knowledgeBaseVersion?: string;
+  parseWarnings?: string[];
+  isPrivacyRestricted?: boolean;
   notes?: string;
   privacyMode?: "living" | "privacy";
 }
@@ -225,6 +228,10 @@ export interface DnaSettings {
   lastImport?: string;
   privacyMode: "living" | "privacy";
   researchOptIn: boolean;
+  allowAncestryInference?: boolean;
+  allowSensitiveExports?: boolean;
+  retainVariantLevelData?: boolean;
+  ambientDetailLevel?: "generic" | "detailed";
 }
 
 export type DnaConfidence = "low" | "medium" | "high";
@@ -304,6 +311,16 @@ export interface DnaSupplementRecommendation {
   rationale: string;
   evidenceLabel?: string;
   relevantVariants: string[];
+}
+
+export interface DnaBloodworkCorrelation {
+  id: string;
+  title: string;
+  priority: "high" | "medium" | "low";
+  genes: string[];
+  biomarkers: string[];
+  summary: string;
+  clinicianDiscussion: string[];
 }
 
 export interface Medication {
@@ -466,6 +483,10 @@ export interface EvaluatedLabBiomarker {
   optimalRange?: BiomarkerOptimalRange;
   clinicalRange?: ClinicalReferenceRange;
   deviation?: number;
+  physiologicalRole?: string;
+  evidenceSummary?: string;
+  source?: string;
+  interactionHighlights?: string[];
   supportingActions: string[];
 }
 
@@ -486,11 +507,14 @@ export interface BloodworkComboSignal {
 
 export interface BloodworkBiologicalAge {
   method: "kdm-style-clinical-clock";
-  biologicalAge: number;
+  status: "available" | "insufficient-data";
+  biologicalAge: number | null;
   chronologicalAge?: number;
-  ageDelta?: number;
+  ageDelta?: number | null;
   imputedBiomarkers: string[];
   coverage: number;
+  confidence: "low" | "medium" | "high";
+  minimumCoverage: number;
   comboSignals: BloodworkComboSignal[];
   notes: string[];
 }
@@ -505,6 +529,8 @@ export interface BloodworkActionPlanItem {
   supplements: string[];
   lifestyle: string[];
   rationale?: string;
+  evidenceLevel?: string;
+  clinicianDiscussion?: string[];
 }
 
 export interface BloodworkAnalysis {
@@ -513,7 +539,26 @@ export interface BloodworkAnalysis {
   categoryScores: BloodworkCategoryScore[];
   actionPlan: BloodworkActionPlanItem[];
   biologicalAge?: BloodworkBiologicalAge;
+  educationalUseOnly: boolean;
+  coverageSummary: string;
   overallSummary: string;
+}
+
+export interface BloodworkTrendPoint {
+  resultedAt: string;
+  value: number;
+  unit: string;
+}
+
+export interface BloodworkTrend {
+  biomarkerId: string;
+  biomarkerName: string;
+  latest: number;
+  previous?: number;
+  delta?: number;
+  direction: "improving" | "worsening" | "stable" | "insufficient-data";
+  unit: string;
+  points: BloodworkTrendPoint[];
 }
 
 export interface Habit {
@@ -590,4 +635,25 @@ export interface HealthNudge {
   message: string;
   severity: "info" | "warning" | "success";
   category: "workout" | "nutrition" | "hydration" | "medication" | "appointment" | "dna";
+}
+
+export interface HealthPrivacyPolicy {
+  privacyMode: "living" | "privacy";
+  allowSensitiveExports: boolean;
+  allowAncestryInference: boolean;
+  retainVariantLevelData: boolean;
+  requireSensitiveConfirmation: boolean;
+  geneticsEnabled: boolean;
+  ambientDetailLevel: "generic" | "detailed";
+  auditRetentionDays: number;
+}
+
+export interface HealthAuditEntry {
+  id: string;
+  createdAt: string;
+  action: string;
+  category: "dna" | "bloodwork" | "medication" | "appointment" | "privacy" | "export" | "system";
+  detail: string;
+  sensitivity: "high" | "moderate" | "low";
+  success: boolean;
 }

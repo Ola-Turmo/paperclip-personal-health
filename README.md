@@ -2,7 +2,7 @@
 
 > **Turn Paperclip into your personal health operating layer.**
 >
-> Track medication adherence, workouts, recovery, hydration, food, labs, appointments, supplements, and living genetic-health insights from one plugin instead of a dozen disconnected apps.
+> Track medication adherence, workouts, recovery, hydration, food, labs, appointments, supplements, and living genetic-health insights from one plugin instead of a dozen disconnected apps — with privacy modes, audit trails, and derived read models built in.
 
 ![Personal Health hero](./assets/readme/hero.png)
 
@@ -13,8 +13,10 @@ Most personal-health stacks break down because the data lives everywhere except 
 - Meds are in a pharmacy portal.
 - Workouts are in a wearable app.
 - Labs are buried in PDFs.
+- Bloodwork is hard to read without trend context.
 - Nutrition tracking is tedious.
 - Raw DNA exports are technically rich and practically useless.
+- Genetics is easy to overinterpret when it is not tied back to labs and symptoms.
 
 **Personal Health for Paperclip** brings those workflows into a single action surface so your AI can help you log, review, summarize, and follow through.
 
@@ -42,18 +44,43 @@ Most personal-health stacks break down because the data lives everywhere except 
 - Curated food search / lookup
 - Hydration goals, intake logging, and progress checks
 
-### 4. Genetic-health workflows inspired by `genetic.health`
-This plugin now carries over the most useful parts of the `genetic.health` product into a Paperclip-native command surface:
+### 4. Labs, bloodwork, and genetic-health workflows inspired by `genetic.health`
+This plugin carries over the most useful parts of the `genetic.health` product into a Paperclip-native command surface:
 
 - Parse **23andMe** and **AncestryDNA** raw text exports
+- Analyze bloodwork with biomarker trend review, category scores, biological age, and conservative action plans
+- Cross-analyze genetics and bloodwork so DNA points to hypotheses, not conclusions
 - Map curated variants into **evidence-graded health insights**
 - Surface **nutrition, fitness, metabolic, cardiovascular, sleep, and pharmacogenomics** signals
 - Compare reports over time
 - Lookup any tracked **rsID** across imported reports
-- Export an **Actionable Health Protocol** in markdown for clinician conversations
+- Export clinician-ready markdown summaries instead of raw dumps
 - Preserve **privacy mode vs living mode** DNA settings so data-control is treated as a product feature, not an afterthought
 
 ![Feature collage](./assets/readme/feature-collage.png)
+
+## Safety, privacy, and auditability
+
+- Privacy mode reduces sensitive detail, suppresses ancestry inference, and minimizes variant-level retention when the user wants a stricter posture.
+- Living mode keeps richer genetics analysis available, but sensitive exports still require explicit confirmation.
+- Sensitive DNA exports and audit-log actions stay gated behind confirmation.
+- Bloodwork and DNA outputs are decision-support summaries, not diagnoses or treatment instructions.
+- Derived read models and projections keep the UI explainable by separating source records from computed summaries.
+- Sensitive actions and policy changes are captured in the audit trail so users can review what happened and when.
+
+## Read models and projections
+
+The plugin exposes safe, derived views so the UI can stay explainable without reading raw state directly:
+
+- `health.overview`
+- `health.workouts.overview`
+- `health.nutrition.overview`
+- `health.labs.latest`
+- `health.dna.latest`
+- `health.reminders.pending`
+- `health.privacy.status`
+
+These views are backed by source records, then reduced into summary objects for fast review.
 
 ## Product positioning
 
@@ -64,6 +91,9 @@ Use it when you want Paperclip to answer questions like:
 - “What’s the most important health follow-up today?”
 - “How has my training and recovery looked this week?”
 - “Which meals are keeping me on target?”
+- “How should I read my latest labs next to my DNA and training load?”
+- “What does privacy mode hide?”
+- “What changed in my latest lab and DNA projections?”
 - “Do my latest DNA insights change how I think about nutrition, recovery, or pharmacogenomic watch-outs?”
 - “What should I prep before tomorrow’s appointment?”
 
@@ -82,6 +112,16 @@ Use it when you want Paperclip to answer questions like:
 - `health.log-hydration`
 - `health.get-hydration`
 
+### Bloodwork
+- `health.add-lab-result`
+- `health.get-lab-results`
+- `health.review-lab-trends`
+- `health.get-bloodwork-trends`
+- `health.analyze-bloodwork`
+- `health.get-bloodwork-category-scores`
+- `health.calculate-biological-age`
+- `health.get-bloodwork-action-plan`
+
 ### DNA
 - `health.add-dna-report`
 - `health.get-dna-insights`
@@ -89,6 +129,16 @@ Use it when you want Paperclip to answer questions like:
 - `health.lookup-rsid`
 - `health.compare-dna-reports`
 - `health.export-dna-insights`
+- `health.get-dna-bloodwork-correlations`
+- `health.get-dna-monitoring-plan`
+- `health.get-dna-supplement-recommendations`
+- `health.export-dna-comprehensive-report`
+
+### Privacy and audit
+- `health.update-privacy-settings`
+- `health.get-privacy-status`
+- `health.get-health-audit-log`
+- `health.purge-health-audit-log`
 
 ### Daily operating layer
 - `health.get-daily-summary`
@@ -101,10 +151,12 @@ Use it when you want Paperclip to answer questions like:
 ```json
 {
   "fileName": "ola-23andme.txt",
-  "privacyMode": "living",
+  "privacyMode": "privacy",
   "rawData": "# This data file generated by 23andMe..."
 }
 ```
+
+Use `privacy` when you want stricter retention and redaction. Use `living` when you want richer genetics analysis and are comfortable with a broader analysis posture.
 
 The plugin will:
 1. detect the source format,
@@ -135,7 +187,7 @@ It does **not**:
 - recommend starting/stopping medication,
 - make treatment decisions.
 
-Genetic insights are framed as prompts for better conversations with qualified professionals.
+Genetic and bloodwork insights are framed as prompts for better conversations with qualified professionals, not as stand-alone treatment advice.
 
 ## Development
 
@@ -152,7 +204,10 @@ npm run plugin:test
 - **Paperclip worker plugin** built with `@paperclipai/plugin-sdk`
 - **Instance-scoped state** for core health records
 - **Curated DNA knowledge base** in `src/dna/annotations.json`
-- **Action-driven interface** for logging, summaries, comparisons, exports, and reminders
+- **Action-driven interface** for logging, summaries, comparisons, exports, reminders, and privacy controls
+- **Derived read models and projections** for overview, latest-lab, latest-DNA, reminder, and privacy views
+- **DNA ↔ bloodwork correlation summaries** for conservative cross-analysis
+- **Append-only audit trail** for sensitive actions and policy changes
 - **Marketing assets** generated in-repo under `assets/readme/`
 
 ## Why teams and operators like it

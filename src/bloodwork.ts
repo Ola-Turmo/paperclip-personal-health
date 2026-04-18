@@ -37,6 +37,8 @@ interface KdmParams {
   w: number;
 }
 
+const MIN_BIOLOGICAL_AGE_COVERAGE = 0.45;
+
 const CATEGORY_LIFESTYLE_GUIDANCE: Record<HealthspanCategory, string[]> = {
   "Heart Health": ["Favor a Mediterranean-style eating pattern", "Build 150+ minutes/week of aerobic activity", "Review blood pressure, sleep, and stress with the full picture in mind"],
   "Hormone Balance": ["Protect sleep regularity", "Review energy availability and recovery load", "Retest abnormal hormone markers with appropriate timing/context"],
@@ -343,6 +345,11 @@ function buildActionPlan(evaluated: EvaluatedLabBiomarker[]): BloodworkActionPla
         supplements: definition.supplementConsiderations?.slice(0, 2).map((item) => item.dosage ? `${item.supplement} (${item.dosage})` : item.supplement) ?? [],
         lifestyle: CATEGORY_LIFESTYLE_GUIDANCE[biomarker.category].slice(0, 2),
         rationale: definition.associatedHealthOutcomes?.[0]?.outcome,
+        evidenceLevel: definition.associatedHealthOutcomes?.[0]?.evidence ?? definition.optimalRanges[0]?.source ?? "Curated evidence",
+        clinicianDiscussion: [
+          `Interpret ${biomarker.name} with symptoms, medications, and recent context.`,
+          `Avoid treating this ${biomarker.status} value as diagnostic in isolation.`,
+        ],
       };
     });
 }
@@ -463,19 +470,29 @@ function calculateBiologicalAgeFromEntries(entries: EvaluatedLabBiomarker[], inp
   const chronologicalAge = input.chronologicalAge ?? input.age;
   const baseAge = chronologicalAge ?? 40;
   const ageDelta = round((rawAge - KDM_BASELINE_RAW_AGE) * 0.45, 1);
-  const biologicalAge = round(Math.max(18, Math.min(95, baseAge + ageDelta)), 1);
+  const coverage = round(providedCount / Object.keys(KDM_COEFFICIENTS).length, 2);
+  const enoughCoverage = coverage >= MIN_BIOLOGICAL_AGE_COVERAGE && providedCount >= 6;
+  const biologicalAge = enoughCoverage ? round(Math.max(18, Math.min(95, baseAge + ageDelta)), 1) : null;
+  const confidence: BloodworkBiologicalAge["confidence"] = coverage >= 0.8 ? "high" : coverage >= 0.6 ? "medium" : "low";
 
   return {
     method: "kdm-style-clinical-clock",
+    status: enoughCoverage ? "available" : "insufficient-data",
     biologicalAge,
     chronologicalAge,
-    ageDelta: chronologicalAge !== undefined ? round(biologicalAge - chronologicalAge, 1) : ageDelta,
+    ageDelta: enoughCoverage
+      ? (chronologicalAge !== undefined ? round((biologicalAge ?? baseAge) - chronologicalAge, 1) : ageDelta)
+      : null,
     imputedBiomarkers,
-    coverage: round(providedCount / Object.keys(KDM_COEFFICIENTS).length, 2),
+    coverage,
+    confidence,
+    minimumCoverage: MIN_BIOLOGICAL_AGE_COVERAGE,
     comboSignals: computeComboSignals(normalizedValues),
     notes: [
       "Uses BloodWork-inspired NHANES-style coefficients with median imputation for missing biomarkers.",
-      "This is a transparent KDM-style clinical estimate for educational planning, not a medical diagnosis.",
+      enoughCoverage
+        ? "This is a transparent KDM-style clinical estimate for educational planning, not a medical diagnosis."
+        : `Biological age was withheld because only ${(coverage * 100).toFixed(0)}% of required biomarker inputs were available.`,
     ],
   };
 }
@@ -524,6 +541,10 @@ export function evaluateBloodworkBiomarkers(result: LabResult, input: AnalyzeBlo
         optimalRange,
         clinicalRange,
         deviation,
+        physiologicalRole: definition.physiologicalRole,
+        evidenceSummary: definition.associatedHealthOutcomes?.[0]?.evidence ?? definition.optimalRanges[0]?.source,
+        source: definition.optimalRanges[0]?.source ?? definition.nhanesVariableCode,
+        interactionHighlights: definition.biomarkerInteractions?.slice(0, 3).map((item) => `${item.interactsWith}${item.relationship ? ` — ${item.relationship}` : ""}`),
         supportingActions: [
           ...definition.keyActions.slice(0, 2),
           ...(definition.dietaryInterventions?.slice(0, 2).map((item) => item.intervention) ?? []),
@@ -550,6 +571,11 @@ export function analyzeBloodwork(result: LabResult, input: AnalyzeBloodworkInput
     categoryScores,
     actionPlan,
     biologicalAge,
+    educationalUseOnly: true,
+    coverageSummary:
+      biologicalAge.status === "available"
+        ? `Biological-age coverage ${Math.round(biologicalAge.coverage * 100)}% with ${biologicalAge.imputedBiomarkers.length} imputed biomarkers.`
+        : `Biological-age coverage ${Math.round(biologicalAge.coverage * 100)}% is below the ${Math.round(biologicalAge.minimumCoverage * 100)}% minimum, so only category and biomarker guidance are returned.`,
     overallSummary: flagged.length
       ? `${flagged.length} biomarkers are outside the selected optimal zone. Strongest category: ${strongestCategory?.category ?? "n/a"}; most attention needed: ${weakestCategory?.category ?? "n/a"}.`
       : `All ${evaluatedBiomarkers.length} matched biomarkers sit inside the selected optimal zones. Strongest category: ${strongestCategory?.category ?? "n/a"}.`,
@@ -566,4 +592,49 @@ export function buildBloodworkActionPlan(result: LabResult, input: AnalyzeBloodw
 
 export function getBloodworkCategoryScores(result: LabResult, input: AnalyzeBloodworkInput = {}) {
   return analyzeBloodwork(result, input).categoryScores;
+}
+
+export function getBloodworkTrends(results: LabResult[]) {
+  const history = new Map<string, Array<{ resultedAt: string; value: number; unit: string; name: string }>>();
+
+  for (const result of results) {
+    const evaluated = evaluateBloodworkBiomarkers(result, {});
+    for (const biomarker of evaluated) {
+      const bucket = history.get(biomarker.id) ?? [];
+      bucket.push({
+        resultedAt: result.resultedAt,
+        value: biomarker.value,
+        unit: biomarker.unit,
+        name: biomarker.name,
+      });
+      history.set(biomarker.id, bucket);
+    }
+  }
+
+  return Array.from(history.entries())
+    .map(([biomarkerId, points]) => {
+      const ordered = points.sort((left, right) => left.resultedAt.localeCompare(right.resultedAt));
+      const latest = ordered.at(-1);
+      const previous = ordered.at(-2);
+      const delta = latest && previous ? round(latest.value - previous.value, 2) : undefined;
+      const direction = previous && typeof delta === "number"
+        ? Math.abs(delta) < 0.01
+          ? "stable"
+          : delta > 0
+            ? "worsening"
+            : "improving"
+        : "insufficient-data";
+
+      return {
+        biomarkerId,
+        biomarkerName: latest?.name ?? biomarkerId,
+        latest: latest?.value ?? 0,
+        previous: previous?.value,
+        delta,
+        direction,
+        unit: latest?.unit ?? "",
+        points: ordered,
+      };
+    })
+    .sort((left, right) => left.biomarkerName.localeCompare(right.biomarkerName));
 }

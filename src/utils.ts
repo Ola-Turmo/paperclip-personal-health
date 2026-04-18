@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import type {
   Habit,
   HabitCompletion,
@@ -13,7 +14,7 @@ import type {
 export const INSTANCE_SCOPE = { scopeKind: "instance" as const };
 
 export function generateId(): string {
-  return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+  return randomUUID();
 }
 
 export async function getStateValue<T>(ctx: any, key: string, fallback: T): Promise<T> {

@@ -1,8 +1,10 @@
 import { createHash } from "node:crypto";
 import annotationFile from "./dna/annotations.json";
+import { evaluateBloodworkBiomarkers } from "./bloodwork.js";
 import type {
   AlleleEffect,
   DnaCarrierFinding,
+  DnaBloodworkCorrelation,
   DnaConfidence,
   DnaDiploidType,
   DnaDiseaseRisk,
@@ -20,6 +22,7 @@ import type {
   DnaMonitoringItem,
   DnaVariant,
   DnaVariantAnnotation,
+  LabResult,
 } from "./types.js";
 import { generateId, round } from "./utils.js";
 
@@ -29,6 +32,7 @@ interface AnnotationBundle {
 
 const annotations = (annotationFile as AnnotationBundle).variants;
 const annotationMap = new Map(annotations.map((annotation) => [annotation.rsId.toLowerCase(), annotation]));
+export const DNA_KNOWLEDGE_BASE_VERSION = `curated-${annotations.length}-variants`;
 
 const ancestrySignals: Record<string, Record<string, number>> = {
   rs12913832: { "Northern European": 0.45 },
@@ -223,13 +227,19 @@ export function parseRawDnaReport(input: {
   fileName?: string;
   notes?: string;
   privacyMode?: "living" | "privacy";
+  allowAncestryInference?: boolean;
+  retainVariantLevelData?: boolean;
 }): Omit<DnaReport, "id" | "uploadDate"> {
   const rawData = input.rawData.trim();
   const source = detectDnaSource(rawData, input.fileName);
+  if (source === "other") {
+    throw new Error("Unsupported DNA source. Please import a 23andMe or AncestryDNA raw text export.");
+  }
   const lines = rawData.split(/\r?\n/);
   const parsed = source === "ancestrydna" ? parseAncestry(lines) : parse23AndMe(lines);
   const matchedVariants: DnaVariant[] = [];
   const insights: DnaHealthInsight[] = [];
+  const parseWarnings: string[] = [];
 
   for (const row of parsed) {
     const annotation = annotationMap.get(row.rsId.toLowerCase());
@@ -260,12 +270,15 @@ export function parseRawDnaReport(input: {
   return {
     source,
     fileName: input.fileName,
-    fileHash: createHash("sha256").update(rawData).digest("hex"),
-    ancestryComposition: inferAncestry(matchedVariants),
+    fileHash: input.privacyMode === "privacy" ? undefined : createHash("sha256").update(rawData).digest("hex"),
+    ancestryComposition: input.privacyMode === "privacy" || input.allowAncestryInference === false ? undefined : inferAncestry(matchedVariants),
     healthInsights: insights,
-    variants: matchedVariants,
+    variants: input.privacyMode === "privacy" || input.retainVariantLevelData === false ? [] : matchedVariants,
     rawSnpsImported: parsed.length,
     snpsMatchedToKnowledgeBase: matchedVariants.length,
+    knowledgeBaseVersion: DNA_KNOWLEDGE_BASE_VERSION,
+    parseWarnings,
+    isPrivacyRestricted: input.privacyMode === "privacy" || input.retainVariantLevelData === false,
     notes: input.notes,
     privacyMode: input.privacyMode ?? "living",
   };
@@ -282,6 +295,8 @@ export function createDnaReport(input: {
   rawSnpsImported?: number;
   snpsMatchedToKnowledgeBase?: number;
   privacyMode?: "living" | "privacy";
+  allowAncestryInference?: boolean;
+  retainVariantLevelData?: boolean;
 }): DnaReport {
   if (input.rawData) {
     const parsed = parseRawDnaReport({
@@ -289,6 +304,8 @@ export function createDnaReport(input: {
       fileName: input.fileName,
       notes: input.notes,
       privacyMode: input.privacyMode,
+      allowAncestryInference: input.allowAncestryInference,
+      retainVariantLevelData: input.retainVariantLevelData,
     });
 
     return {
@@ -305,9 +322,12 @@ export function createDnaReport(input: {
     fileName: input.fileName,
     ancestryComposition: input.ancestryComposition,
     healthInsights: input.healthInsights ?? [],
-    variants: input.variants ?? [],
+    variants: input.privacyMode === "privacy" || input.retainVariantLevelData === false ? [] : (input.variants ?? []),
     rawSnpsImported: input.rawSnpsImported ?? input.variants?.length ?? 0,
     snpsMatchedToKnowledgeBase: input.snpsMatchedToKnowledgeBase ?? input.healthInsights?.length ?? 0,
+    knowledgeBaseVersion: DNA_KNOWLEDGE_BASE_VERSION,
+    parseWarnings: input.privacyMode === "privacy" ? ["Variant-level DNA storage has been minimized for privacy mode."] : [],
+    isPrivacyRestricted: input.privacyMode === "privacy" || input.retainVariantLevelData === false,
     notes: input.notes,
     privacyMode: input.privacyMode ?? "living",
   };
@@ -849,7 +869,10 @@ export function getSupplementRecommendations(report: DnaReport): DnaSupplementRe
   return Array.from(bySupplement.values()).sort((left, right) => left.supplement.localeCompare(right.supplement));
 }
 
-export function exportComprehensiveDnaMarkdown(report: DnaReport) {
+export function exportComprehensiveDnaMarkdown(
+  report: DnaReport,
+  options?: { includeSensitive?: boolean },
+) {
   const topInsights = getPriorityFindings(report);
   const diseaseRisks = summarizeDiseaseRisks(report);
   const pharmacogenomics = summarizePharmacogenomics(report);
@@ -859,6 +882,7 @@ export function exportComprehensiveDnaMarkdown(report: DnaReport) {
   const protective = getProtectiveVariants(report);
   const monitoring = getMonitoringPlan(report);
   const supplements = getSupplementRecommendations(report);
+  const includeSensitive = options?.includeSensitive === true && !report.isPrivacyRestricted;
 
   return [
     `# Comprehensive Genetics Report — ${report.fileName ?? report.id}`,
@@ -866,6 +890,7 @@ export function exportComprehensiveDnaMarkdown(report: DnaReport) {
     `Generated: ${new Date().toISOString()}`,
     `Imported SNPs: ${report.rawSnpsImported}`,
     `Matched curated variants: ${report.snpsMatchedToKnowledgeBase}`,
+    `Knowledge base version: ${report.knowledgeBaseVersion ?? DNA_KNOWLEDGE_BASE_VERSION}`,
     "",
     "## Priority Findings",
     ...topInsights.map((finding) => `- **${finding.title}** (${finding.category}) — ${finding.actionableRecommendation ?? "Review with clinician if relevant."}`),
@@ -877,7 +902,9 @@ export function exportComprehensiveDnaMarkdown(report: DnaReport) {
     ...(diseaseRisks.length ? diseaseRisks.map((risk) => `- **${risk.domain} (${risk.level})** — ${risk.rationale}`) : ["- No disease risk domains surfaced."]),
     "",
     "## Carrier Status",
-    ...(carrierStatus.length ? carrierStatus.map((item) => `- **${item.gene}** — ${item.summary}`) : ["- No carrier-pattern findings surfaced in the current marker set."]),
+    ...(includeSensitive
+      ? (carrierStatus.length ? carrierStatus.map((item) => `- **${item.gene}** — ${item.summary}`) : ["- No carrier-pattern findings surfaced in the current marker set."])
+      : ["- Carrier-level details are omitted by default in privacy-safe exports."]),
     "",
     "## Protective Signals",
     ...(protective.length ? protective.map((item) => `- **${item.gene}** — ${item.summary}`) : ["- No protective signals surfaced in the current marker set."]),
@@ -896,10 +923,16 @@ export function exportComprehensiveDnaMarkdown(report: DnaReport) {
     "",
     "## Safety framing",
     "This genetics export is educational and intended to support clinician conversations. It does not diagnose disease or replace genetic counseling, confirmatory testing, or medication review.",
+    includeSensitive
+      ? "Sensitive sections were included because explicit export confirmation was provided."
+      : "Sensitive sections are redacted by default; require explicit confirmation before sharing the full report.",
   ].join("\n");
 }
 
-export function exportDnaInsightsMarkdown(report: DnaReport) {
+export function exportDnaInsightsMarkdown(
+  report: DnaReport,
+  options?: { includeSensitive?: boolean },
+) {
   const protocol = buildActionableProtocol(report);
   const topInsights = getPriorityFindings(report);
   const diseaseRisks = summarizeDiseaseRisks(report);
@@ -910,6 +943,7 @@ export function exportDnaInsightsMarkdown(report: DnaReport) {
   const protective = getProtectiveVariants(report);
   const monitoring = getMonitoringPlan(report);
   const supplements = getSupplementRecommendations(report);
+  const includeSensitive = options?.includeSensitive === true && !report.isPrivacyRestricted;
 
   const variantRows = report.variants
     .slice(0, 20)
@@ -925,12 +959,15 @@ export function exportDnaInsightsMarkdown(report: DnaReport) {
     `Generated: ${new Date().toISOString()}`,
     `Source: ${report.source}`,
     `Privacy mode: ${report.privacyMode ?? "living"}`,
+    `Knowledge base version: ${report.knowledgeBaseVersion ?? DNA_KNOWLEDGE_BASE_VERSION}`,
     "",
     "## Executive Summary",
     `- Imported SNPs: ${report.rawSnpsImported}`,
     `- Knowledge-base matches: ${report.snpsMatchedToKnowledgeBase}`,
     `- Actionable insights: ${report.healthInsights.length}`,
-    report.ancestryComposition ? `- Inferred ancestry signal: ${report.ancestryComposition.overall}` : "- Inferred ancestry signal: not enough markers to infer confidently",
+    report.ancestryComposition && includeSensitive
+      ? `- Inferred ancestry signal: ${report.ancestryComposition.overall}`
+      : "- Inferred ancestry signal: omitted in privacy-safe mode",
     "",
     "## Evidence Ladder",
     "- Tier 1: Practice guideline",
@@ -962,14 +999,14 @@ export function exportDnaInsightsMarkdown(report: DnaReport) {
       : ["- No trait summaries available from current imported markers."]),
     "",
     "## Carrier / Protective Notes",
-    ...(carrierStatus.length
+    ...(includeSensitive && carrierStatus.length
       ? carrierStatus.slice(0, 4).map((item) => `- **Carrier — ${item.gene}**: ${item.summary}`)
       : []),
     ...(protective.length
       ? protective.slice(0, 4).map((item) => `- **Protective — ${item.gene}**: ${item.summary}`)
-      : ["- No carrier or protective highlights surfaced in the current curated set."]),
+      : [includeSensitive ? "- No carrier or protective highlights surfaced in the current curated set." : "- Carrier details are redacted by default; protective highlights remain visible."]),
     "",
-    "## Actionable Health Protocol",
+    "## Clinician Discussion Guide (Actionable Health Protocol)",
     "### Nutrition",
     ...(protocol.nutrition.length ? protocol.nutrition : ["- No nutrition-specific signals surfaced in the curated set yet."]),
     "### Training",
@@ -988,10 +1025,13 @@ export function exportDnaInsightsMarkdown(report: DnaReport) {
     "## Variant Snapshot",
     "| rsID | Gene | Genotype | Category | Impact |",
     "| --- | --- | --- | --- | --- |",
-    variantRows || "| n/a | n/a | n/a | n/a | n/a |",
+    includeSensitive ? (variantRows || "| n/a | n/a | n/a | n/a | n/a |") : "| redacted | redacted | redacted | redacted | redacted |",
     "",
     "## Safety framing",
     "This export is educational and intended to support more informed conversations with a qualified clinician. It does not diagnose disease or recommend starting/stopping medication.",
+    includeSensitive
+      ? "Sensitive sections were included because explicit export confirmation was provided."
+      : "Sensitive sections are redacted by default and should only be shared after explicit review and confirmation.",
   ].join("\n");
 }
 
@@ -1036,6 +1076,109 @@ export function summarizeReport(report: DnaReport) {
     supplementRecommendations: getSupplementRecommendations(report),
     protocol: buildActionableProtocol(report),
   };
+}
+
+function genesInReport(report: DnaReport) {
+  return new Set(report.healthInsights.flatMap((insight) => extractGenes(report, insight)));
+}
+
+export function correlateDnaWithBloodwork(report: DnaReport, result: LabResult): DnaBloodworkCorrelation[] {
+  const genes = genesInReport(report);
+  const evaluated = evaluateBloodworkBiomarkers(result, {});
+  const byId = new Map(evaluated.map((entry) => [entry.id, entry]));
+  const correlations: DnaBloodworkCorrelation[] = [];
+
+  const ldl = byId.get("ldl-cholesterol") ?? byId.get("apolipoprotein-b");
+  if ((genes.has("APOE") || genes.has("LPL") || genes.has("CETP")) && ldl) {
+    correlations.push({
+      id: generateId(),
+      title: "Cardiometabolic genetics + lipid panel",
+      priority: ldl.status === "high" ? "high" : "medium",
+      genes: Array.from(genes).filter((gene) => ["APOE", "LPL", "CETP"].includes(gene)),
+      biomarkers: [ldl.name],
+      summary:
+        ldl.status === "high"
+          ? `${ldl.name} is outside the optimal zone while lipid-handling genes are also present. Use the lab trend, family history, and overall cardiovascular risk picture instead of genetics alone.`
+          : `${ldl.name} is not currently flagged, but lipid-handling genes suggest keeping a close eye on long-term cardiometabolic trends.`,
+      clinicianDiscussion: [
+        "Review LDL / ApoB trend over time instead of a single draw.",
+        "Pair genetics with blood pressure, family history, and lifestyle context.",
+      ],
+    });
+  }
+
+  const ferritin = byId.get("ferritin");
+  if ((genes.has("HFE") || genes.has("TF")) && ferritin) {
+    correlations.push({
+      id: generateId(),
+      title: "Iron-regulation genetics + ferritin",
+      priority: ferritin.status === "high" ? "high" : "medium",
+      genes: Array.from(genes).filter((gene) => ["HFE", "TF"].includes(gene)),
+      biomarkers: [ferritin.name],
+      summary:
+        ferritin.status === "high"
+          ? `${ferritin.name} is elevated while iron-handling genetics are present; discuss iron overload context with a clinician.`
+          : `${ferritin.name} is not overtly elevated, but iron-handling genetics make periodic iron-status review more useful.`,
+      clinicianDiscussion: [
+        "Review ferritin together with iron saturation / transferrin when available.",
+        "Interpret ferritin alongside inflammation context.",
+      ],
+    });
+  }
+
+  const vitaminD = byId.get("vitamin-d");
+  if ((genes.has("VDR") || genes.has("GC") || genes.has("CYP2R1")) && vitaminD) {
+    correlations.push({
+      id: generateId(),
+      title: "Vitamin D genetics + vitamin D biomarker",
+      priority: vitaminD.status === "low" ? "high" : "medium",
+      genes: Array.from(genes).filter((gene) => ["VDR", "GC", "CYP2R1"].includes(gene)),
+      biomarkers: [vitaminD.name],
+      summary:
+        vitaminD.status === "low"
+          ? `${vitaminD.name} is below the selected optimal zone and vitamin D handling genes are also present, making follow-up and retesting more actionable.`
+          : `${vitaminD.name} is not currently low, but vitamin D handling genes still support seasonal retesting.`,
+      clinicianDiscussion: [
+        "Discuss dose, sunlight exposure, and retest timing rather than acting on one result alone.",
+      ],
+    });
+  }
+
+  const inflammation = byId.get("high-sensitivity-crp");
+  if ((genes.has("IL6") || genes.has("TNF") || genes.has("CRP")) && inflammation) {
+    correlations.push({
+      id: generateId(),
+      title: "Inflammation genetics + hsCRP",
+      priority: inflammation.status === "high" ? "high" : "medium",
+      genes: Array.from(genes).filter((gene) => ["IL6", "TNF", "CRP"].includes(gene)),
+      biomarkers: [inflammation.name],
+      summary:
+        inflammation.status === "high"
+          ? `${inflammation.name} is elevated alongside inflammatory signaling variants, so retesting after recovery and reviewing sleep/training context is worthwhile.`
+          : `${inflammation.name} is not elevated now, but inflammatory variants still support tracking recovery and repeat measurements over time.`,
+      clinicianDiscussion: [
+        "Interpret hsCRP after ruling out acute illness or unusually heavy training.",
+      ],
+    });
+  }
+
+  const methylationMarkers = [byId.get("vitamin-b12"), byId.get("folate"), byId.get("mcv")].filter(Boolean);
+  if ((genes.has("MTHFR") || genes.has("MTRR") || genes.has("FUT2") || genes.has("PEMT")) && methylationMarkers.length) {
+    correlations.push({
+      id: generateId(),
+      title: "Methylation / nutrient genes + supportive labs",
+      priority: methylationMarkers.some((entry) => entry?.status === "low" || entry?.status === "high") ? "high" : "medium",
+      genes: Array.from(genes).filter((gene) => ["MTHFR", "MTRR", "FUT2", "PEMT"].includes(gene)),
+      biomarkers: methylationMarkers.map((entry) => entry!.name),
+      summary: `Nutrient-handling genes align with ${methylationMarkers.map((entry) => entry!.name).join(", ")}. Use current physiology to ground genetics interpretation rather than genetics alone.`,
+      clinicianDiscussion: [
+        "Pair genetics with B12 / folate / homocysteine context when available.",
+        "Avoid supplement changes based on genetics alone.",
+      ],
+    });
+  }
+
+  return correlations;
 }
 
 const FOOD_CATALOGUE = [

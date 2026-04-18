@@ -223,10 +223,11 @@ describe("Personal Health plugin", () => {
       age: 34,
       chronologicalAge: 34,
       sex: "male",
-    }) as { success: boolean; analysis: { evaluatedBiomarkers: Array<{ status: string }>; overallSummary: string } };
+    }) as { success: boolean; analysis: { evaluatedBiomarkers: Array<{ status: string }>; overallSummary: string; coverageSummary: string } };
     expect(analysis.success).toBe(true);
     expect(analysis.analysis.evaluatedBiomarkers.length).toBeGreaterThan(8);
     expect(analysis.analysis.overallSummary).toContain("Strongest category");
+    expect(analysis.analysis.coverageSummary).toContain("coverage");
 
     const categoryScores = await harness.performAction(ACTION_KEYS.GET_BLOODWORK_CATEGORY_SCORES, {
       labResultId: added.labResult.id,
@@ -239,8 +240,9 @@ describe("Personal Health plugin", () => {
       labResultId: added.labResult.id,
       chronologicalAge: 34,
       sex: "male",
-    }) as { biologicalAge: { method: string; comboSignals: Array<{ name: string }> } };
+    }) as { biologicalAge: { method: string; status: string; comboSignals: Array<{ name: string }> } };
     expect(biologicalAge.biologicalAge.method).toBe("kdm-style-clinical-clock");
+    expect(biologicalAge.biologicalAge.status).toBe("available");
     expect(biologicalAge.biologicalAge.comboSignals.some((entry) => entry.name === "Metabolic Combo")).toBe(true);
 
     const actionPlan = await harness.performAction(ACTION_KEYS.GET_BLOODWORK_ACTION_PLAN, {
@@ -249,6 +251,288 @@ describe("Personal Health plugin", () => {
       sex: "male",
     }) as { actionPlan: Array<{ biomarkerName: string }> };
     expect(actionPlan.actionPlan.length).toBeGreaterThan(0);
+  });
+
+  it("enforces privacy mode, confirmation gates, and audit logging for DNA", async () => {
+    const added = await harness.performAction(ACTION_KEYS.ADD_DNA_REPORT, {
+      fileName: "private-23andme.txt",
+      rawData: dnaSample23AndMe,
+      privacyMode: "privacy",
+    }) as { dnaReport: { id: string; isPrivacyRestricted: boolean; variants: unknown[]; ancestryComposition?: unknown } };
+
+    expect(added.dnaReport.isPrivacyRestricted).toBe(true);
+    expect(added.dnaReport.variants).toHaveLength(0);
+    expect(added.dnaReport.ancestryComposition).toBeUndefined();
+
+    const reportId = added.dnaReport.id;
+    const variants = await harness.performAction(ACTION_KEYS.GET_DNA_VARIANTS, { reportId }) as { dnaVariants: unknown[]; error?: string };
+    expect(variants.dnaVariants).toHaveLength(0);
+    expect(variants.error).toContain("explicit confirmation");
+
+    const exportAttempt = await harness.performAction(ACTION_KEYS.EXPORT_DNA_INSIGHTS, {
+      reportId,
+      includeSensitive: true,
+      confirmSensitive: true,
+    }) as { error?: string; markdown: string };
+    expect(exportAttempt.error).toContain("Sensitive export disabled");
+
+    const privacyStatus = await harness.performAction(ACTION_KEYS.GET_PRIVACY_STATUS, {}) as { summary: string };
+    expect(privacyStatus.summary.toLowerCase()).toContain("privacy mode");
+
+    const auditLog = await harness.performAction(ACTION_KEYS.GET_HEALTH_AUDIT_LOG, {
+      confirmSensitive: true,
+    }) as { auditLog: Array<{ action: string }> };
+    expect(auditLog.auditLog.some((entry) => entry.action === ACTION_KEYS.ADD_DNA_REPORT)).toBe(true);
+  });
+
+  it("creates bloodwork trends, correlation insights, and withholds biological age when coverage is too low", async () => {
+    const labResult = await harness.performAction(ACTION_KEYS.ADD_LAB_RESULT, {
+      labName: "Function Health",
+      resultedAt: "2026-04-17T09:00:00Z",
+      panels: sampleBloodworkPanels,
+    }) as { labResult: { id: string } };
+
+    await harness.performAction(ACTION_KEYS.ADD_LAB_RESULT, {
+      labName: "Function Health",
+      resultedAt: "2026-05-17T09:00:00Z",
+      panels: [
+        {
+          name: "Cardiometabolic",
+          biomarkers: [
+            { name: "LDL cholesterol", value: 118, unit: "mg/dL" },
+            { name: "Ferritin", value: 55, unit: "ng/mL" },
+          ],
+        },
+      ],
+    });
+
+    const dna = await harness.performAction(ACTION_KEYS.ADD_DNA_REPORT, {
+      fileName: "ola-23andme.txt",
+      rawData: dnaSample23AndMe,
+      privacyMode: "living",
+    }) as { dnaReport: { id: string } };
+
+    const trends = await harness.performAction(ACTION_KEYS.GET_BLOODWORK_TRENDS, {}) as { trends: Array<{ biomarkerName: string; direction: string }> };
+    expect(trends.trends.some((entry) => entry.biomarkerName.toLowerCase().includes("ldl") || entry.biomarkerName.toLowerCase().includes("ferritin"))).toBe(true);
+
+    const correlations = await harness.performAction(ACTION_KEYS.GET_DNA_BLOODWORK_CORRELATIONS, {
+      reportId: dna.dnaReport.id,
+      labResultId: labResult.labResult.id,
+    }) as { correlations: Array<{ title: string }> };
+    expect(correlations.correlations.length).toBeGreaterThan(0);
+    expect(correlations.correlations.some((entry) => /lipid|iron|vitamin/i.test(entry.title))).toBe(true);
+
+    const sparseAge = await harness.performAction(ACTION_KEYS.CALCULATE_BIOLOGICAL_AGE, {
+      labResultId: labResult.labResult.id,
+      chronologicalAge: 34,
+      sex: "male",
+    }) as { biologicalAge: { status: string; biologicalAge: number | null } };
+    expect(sparseAge.biologicalAge.status).toBe("available");
+
+    const insufficientAge = await harness.performAction(ACTION_KEYS.CALCULATE_BIOLOGICAL_AGE, {
+      chronologicalAge: 34,
+      sex: "male",
+      labResultId: (await harness.performAction(ACTION_KEYS.ADD_LAB_RESULT, {
+        labName: "Sparse Panel",
+        resultedAt: "2026-06-17T09:00:00Z",
+        panels: [
+          {
+            name: "Minimal",
+            biomarkers: [
+              { name: "Glucose", value: 99, unit: "mg/dL" },
+              { name: "Albumin", value: 4.2, unit: "g/dL" },
+            ],
+          },
+        ],
+      }) as { labResult: { id: string } }).labResult.id,
+    }) as { biologicalAge: { status: string; biologicalAge: number | null; coverage: number; minimumCoverage: number } };
+    expect(insufficientAge.biologicalAge.status).toBe("insufficient-data");
+    expect(insufficientAge.biologicalAge.biologicalAge).toBeNull();
+    expect(insufficientAge.biologicalAge.coverage).toBeLessThan(insufficientAge.biologicalAge.minimumCoverage);
+  });
+
+
+
+  it("stores privacy-mode DNA imports without variant-level data", async () => {
+    const added = await harness.performAction(ACTION_KEYS.ADD_DNA_REPORT, {
+      fileName: "ola-23andme-private.txt",
+      rawData: dnaSample23AndMe,
+      privacyMode: "privacy",
+    }) as {
+      dnaReport: {
+        id: string;
+        isPrivacyRestricted: boolean;
+        privacyMode: string;
+        variants: Array<unknown>;
+        ancestryComposition?: unknown;
+        fileHash?: string;
+        parseWarnings: string[];
+      };
+      policy: { privacyMode: string; retainVariantLevelData: boolean; allowAncestryInference: boolean };
+    };
+
+    expect(added.dnaReport.isPrivacyRestricted).toBe(true);
+    expect(added.dnaReport.privacyMode).toBe("privacy");
+    expect(added.dnaReport.variants).toEqual([]);
+    expect(added.dnaReport.ancestryComposition).toBeUndefined();
+    expect(added.dnaReport.fileHash).toBeUndefined();
+    expect(added.dnaReport.parseWarnings).toEqual(expect.any(Array));
+    expect(added.policy.privacyMode).toBe("privacy");
+    expect(added.policy.retainVariantLevelData).toBe(false);
+    expect(added.policy.allowAncestryInference).toBe(false);
+
+    const reports = await harness.performAction(ACTION_KEYS.GET_DNA_REPORTS, {}) as {
+      dnaReports: Array<{
+        id: string;
+        variants: Array<unknown>;
+        ancestryComposition?: unknown;
+        fileHash?: string;
+        isPrivacyRestricted?: boolean;
+      }>;
+    };
+    const stored = reports.dnaReports.find((report) => report.id === added.dnaReport.id);
+
+    expect(stored).toMatchObject({
+      id: added.dnaReport.id,
+      isPrivacyRestricted: true,
+      variants: [],
+      ancestryComposition: undefined,
+      fileHash: undefined,
+    });
+  });
+
+  it("requires explicit confirmation before including sensitive DNA export details", async () => {
+    const added = await harness.performAction(ACTION_KEYS.ADD_DNA_REPORT, {
+      fileName: "ola-23andme.txt",
+      rawData: dnaSample23AndMe,
+      privacyMode: "living",
+    }) as { dnaReport: { id: string } };
+
+    await harness.performAction(ACTION_KEYS.UPDATE_PRIVACY_SETTINGS, {
+      privacyMode: "living",
+      allowSensitiveExports: true,
+      retainVariantLevelData: true,
+      allowAncestryInference: true,
+    });
+
+    await expect(
+      harness.performAction(ACTION_KEYS.EXPORT_DNA_INSIGHTS, {
+        reportId: added.dnaReport.id,
+        includeSensitive: true,
+      }),
+    ).rejects.toThrow("confirmSensitive must be true for this sensitive operation.");
+
+    const privacySafe = await harness.performAction(ACTION_KEYS.EXPORT_DNA_INSIGHTS, {
+      reportId: added.dnaReport.id,
+    }) as { markdown: string };
+    expect(privacySafe.markdown).toContain("Inferred ancestry signal: omitted in privacy-safe mode");
+    expect(privacySafe.markdown).toContain("| redacted | redacted | redacted | redacted | redacted |");
+
+    const confirmed = await harness.performAction(ACTION_KEYS.EXPORT_DNA_INSIGHTS, {
+      reportId: added.dnaReport.id,
+      includeSensitive: true,
+      confirmSensitive: true,
+    }) as { markdown: string };
+    expect(confirmed.markdown).not.toContain("Inferred ancestry signal: omitted in privacy-safe mode");
+    expect(confirmed.markdown).toContain("| rs1801133 |");
+    expect(confirmed.markdown).toContain("Sensitive sections were included because explicit export confirmation was provided.");
+  });
+
+  it("withholds biological age when bloodwork coverage is insufficient", async () => {
+    const added = await harness.performAction(ACTION_KEYS.ADD_LAB_RESULT, {
+      labName: "Sparse Panel",
+      resultedAt: "2026-04-18T09:00:00Z",
+      panels: [
+        {
+          name: "Minimal follow-up",
+          biomarkers: [
+            { name: "Albumin", value: 4.3, unit: "g/dL" },
+            { name: "Creatinine", value: 0.9, unit: "mg/dL" },
+            { name: "Glucose", value: 92, unit: "mg/dL" },
+            { name: "LDL cholesterol", value: 101, unit: "mg/dL" },
+            { name: "HDL cholesterol", value: 56, unit: "mg/dL" },
+          ],
+        },
+      ],
+    }) as { labResult: { id: string } };
+
+    const result = await harness.performAction(ACTION_KEYS.CALCULATE_BIOLOGICAL_AGE, {
+      labResultId: added.labResult.id,
+      chronologicalAge: 34,
+      sex: "male",
+    }) as {
+      biologicalAge: {
+        status: string;
+        biologicalAge: number | null;
+        ageDelta: number | null;
+        confidence: string;
+        coverage: number;
+        minimumCoverage: number;
+        notes: string[];
+      };
+    };
+
+    expect(result.biologicalAge.status).toBe("insufficient-data");
+    expect(result.biologicalAge.biologicalAge).toBeNull();
+    expect(result.biologicalAge.ageDelta).toBeNull();
+    expect(result.biologicalAge.coverage).toBeLessThan(result.biologicalAge.minimumCoverage);
+    expect(result.biologicalAge.confidence).toBe("low");
+    expect(result.biologicalAge.notes.some((note) => note.includes("withheld because only"))).toBe(true);
+  });
+
+  it("returns DNA and bloodwork correlations when both datasets are available", async () => {
+    const dna = await harness.performAction(ACTION_KEYS.ADD_DNA_REPORT, {
+      fileName: "ola-23andme.txt",
+      rawData: dnaSample23AndMe,
+      privacyMode: "living",
+    }) as { dnaReport: { id: string } };
+
+    const lab = await harness.performAction(ACTION_KEYS.ADD_LAB_RESULT, {
+      labName: "Function Health",
+      resultedAt: "2026-04-17T09:00:00Z",
+      panels: sampleBloodworkPanels,
+      notes: "fasted morning draw",
+    }) as { labResult: { id: string } };
+
+    const correlationResult = await harness.performAction(ACTION_KEYS.GET_DNA_BLOODWORK_CORRELATIONS, {
+      reportId: dna.dnaReport.id,
+      labResultId: lab.labResult.id,
+    }) as {
+      correlations: Array<{
+        title: string;
+        priority: string;
+        genes: string[];
+        biomarkers: string[];
+        clinicianDiscussion: string[];
+      }>;
+    };
+
+    expect(correlationResult.correlations.length).toBeGreaterThan(0);
+    expect(correlationResult.correlations).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          title: "Cardiometabolic genetics + lipid panel",
+          priority: expect.stringMatching(/high|medium/),
+          genes: expect.arrayContaining(["APOE"]),
+          biomarkers: expect.arrayContaining([expect.stringMatching(/lipoprotein|ldl/i)]),
+          clinicianDiscussion: expect.arrayContaining([
+            expect.stringContaining("family history"),
+          ]),
+        }),
+        expect.objectContaining({
+          title: "Iron-regulation genetics + ferritin",
+          genes: expect.arrayContaining(["HFE"]),
+          biomarkers: expect.arrayContaining([expect.stringMatching(/ferritin/i)]),
+        }),
+      ]),
+    );
+    expect(
+      correlationResult.correlations.some((entry) =>
+        entry.title === "Methylation / nutrient genes + supportive labs"
+        && entry.genes.includes("MTHFR")
+        && entry.biomarkers.some((biomarker) => /mcv|mean corpuscular volume/i.test(biomarker)),
+      ),
+    ).toBe(true);
   });
 
   it("emits ambient nudges once per day when an agent run finishes", async () => {
