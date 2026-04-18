@@ -4,17 +4,23 @@ import {
   annotateVariant,
   compareDnaReports,
   createDnaReport,
+  exportComprehensiveDnaMarkdown,
   exportDnaInsightsMarkdown,
   findFoodMatches,
   getFoodDetail,
   findVariantDetail,
   getAnnotationIndex,
+  getCarrierStatus,
+  getMonitoringPlan,
   getPriorityFindings,
+  getProtectiveVariants,
+  getSupplementRecommendations,
   lookupRsidAcrossReports,
   summarizeDiseaseRisks,
   summarizeGeneticPathways,
   summarizePharmacogenomics,
   summarizeReport,
+  summarizeTraits,
 } from "./dna.js";
 import {
   analyzeBloodwork,
@@ -951,10 +957,46 @@ const plugin = definePlugin({
       return { pathways: report ? summarizeGeneticPathways(report) : [] };
     });
 
+    ctx.actions.register(ACTION_KEYS.GET_DNA_TRAITS, async (params: any) => {
+      const reports = await getArrayState<DnaReport>(ctx, DATA_KEYS.DNA_REPORTS);
+      const report = reports.find((entry) => entry.id === params?.reportId) ?? reports.at(-1);
+      return { traits: report ? summarizeTraits(report) : [] };
+    });
+
+    ctx.actions.register(ACTION_KEYS.GET_DNA_CARRIER_STATUS, async (params: any) => {
+      const reports = await getArrayState<DnaReport>(ctx, DATA_KEYS.DNA_REPORTS);
+      const report = reports.find((entry) => entry.id === params?.reportId) ?? reports.at(-1);
+      return { carrierStatus: report ? getCarrierStatus(report) : [] };
+    });
+
+    ctx.actions.register(ACTION_KEYS.GET_DNA_PROTECTIVE_VARIANTS, async (params: any) => {
+      const reports = await getArrayState<DnaReport>(ctx, DATA_KEYS.DNA_REPORTS);
+      const report = reports.find((entry) => entry.id === params?.reportId) ?? reports.at(-1);
+      return { protectiveVariants: report ? getProtectiveVariants(report) : [] };
+    });
+
+    ctx.actions.register(ACTION_KEYS.GET_DNA_MONITORING_PLAN, async (params: any) => {
+      const reports = await getArrayState<DnaReport>(ctx, DATA_KEYS.DNA_REPORTS);
+      const report = reports.find((entry) => entry.id === params?.reportId) ?? reports.at(-1);
+      return { monitoringPlan: report ? getMonitoringPlan(report) : [] };
+    });
+
+    ctx.actions.register(ACTION_KEYS.GET_DNA_SUPPLEMENT_RECOMMENDATIONS, async (params: any) => {
+      const reports = await getArrayState<DnaReport>(ctx, DATA_KEYS.DNA_REPORTS);
+      const report = reports.find((entry) => entry.id === params?.reportId) ?? reports.at(-1);
+      return { supplementRecommendations: report ? getSupplementRecommendations(report) : [] };
+    });
+
     ctx.actions.register(ACTION_KEYS.EXPORT_DNA_INSIGHTS, async (params: any) => {
       const reports = await getArrayState<DnaReport>(ctx, DATA_KEYS.DNA_REPORTS);
       const report = reports.find((entry) => entry.id === params.reportId) ?? reports.at(-1);
       return { markdown: report ? exportDnaInsightsMarkdown(report) : "No DNA report available." };
+    });
+
+    ctx.actions.register(ACTION_KEYS.EXPORT_DNA_COMPREHENSIVE_REPORT, async (params: any) => {
+      const reports = await getArrayState<DnaReport>(ctx, DATA_KEYS.DNA_REPORTS);
+      const report = reports.find((entry) => entry.id === params.reportId) ?? reports.at(-1);
+      return { markdown: report ? exportComprehensiveDnaMarkdown(report) : "No DNA report available." };
     });
 
     ctx.actions.register(ACTION_KEYS.DELETE_DNA_REPORT, async (params: any) => {

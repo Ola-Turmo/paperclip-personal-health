@@ -151,6 +151,12 @@ export const ACTION_KEYS = {
   GET_DNA_DISEASE_RISKS: "health.get-dna-disease-risks",
   GET_DNA_PHARMACOGENOMICS: "health.get-dna-pharmacogenomics",
   GET_DNA_PATHWAYS: "health.get-dna-pathways",
+  GET_DNA_TRAITS: "health.get-dna-traits",
+  GET_DNA_CARRIER_STATUS: "health.get-dna-carrier-status",
+  GET_DNA_PROTECTIVE_VARIANTS: "health.get-dna-protective-variants",
+  GET_DNA_MONITORING_PLAN: "health.get-dna-monitoring-plan",
+  GET_DNA_SUPPLEMENT_RECOMMENDATIONS: "health.get-dna-supplement-recommendations",
+  EXPORT_DNA_COMPREHENSIVE_REPORT: "health.export-dna-comprehensive-report",
   EXPORT_DNA_INSIGHTS: "health.export-dna-insights",
   DELETE_DNA_REPORT: "health.delete-dna-report",
 

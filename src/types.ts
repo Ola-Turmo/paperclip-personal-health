@@ -117,7 +117,29 @@ export interface HydrationLog {
 }
 
 export type DnaSource = "23andme" | "ancestrydna" | "livedna" | "other";
-export type DnaInsightCategory = "nutrition" | "fitness" | "cardiovascular" | "metabolic" | "pharmacogenomics" | "sleep" | "risk";
+export type DnaInsightCategory =
+  | "nutrition"
+  | "fitness"
+  | "cardiovascular"
+  | "metabolic"
+  | "pharmacogenomics"
+  | "sleep"
+  | "risk"
+  | "inflammation"
+  | "detoxification"
+  | "autoimmune"
+  | "respiratory"
+  | "skin"
+  | "sensory"
+  | "psychiatric"
+  | "cognition"
+  | "longevity"
+  | "pain"
+  | "traits"
+  | "carrier"
+  | "protective"
+  | "bloodtype"
+  | "hormonal";
 export type DnaDiploidType = "heterozygous" | "homozygousdominant" | "homozygousrecessive";
 export type DnaEvidenceTier = 1 | 2 | 3 | 4;
 
@@ -125,6 +147,7 @@ export interface AlleleEffect {
   allele: string;
   effect: string;
   summary: string;
+  impact?: "positive" | "neutral" | "risk";
 }
 
 export interface DnaVariantAnnotation {
@@ -135,6 +158,21 @@ export interface DnaVariantAnnotation {
   impact: "positive" | "neutral" | "risk";
   category: DnaInsightCategory;
   alleleEffects?: AlleleEffect[];
+  evidenceTier?: DnaEvidenceTier;
+  reportGroup?: "lifestyle" | "trait" | "disease" | "drug" | "carrier" | "protective";
+  confidence?: DnaConfidence;
+  pathways?: string[];
+  tags?: string[];
+  medications?: string[];
+  monitoring?: string[];
+  relatedConditions?: string[];
+  traitLabel?: string;
+  traitSummary?: string;
+  supplementRecommendations?: Array<{
+    supplement: string;
+    dose?: string;
+    rationale: string;
+  }>;
 }
 
 export interface DnaVariant {
@@ -189,6 +227,8 @@ export interface DnaSettings {
   researchOptIn: boolean;
 }
 
+export type DnaConfidence = "low" | "medium" | "high";
+
 export interface DnaPriorityFinding {
   gene: string;
   title: string;
@@ -222,6 +262,48 @@ export interface DnaPathwaySummary {
   categories: DnaInsightCategory[];
   genes: string[];
   highlights: string[];
+}
+
+export interface DnaTraitSummary {
+  key: string;
+  title: string;
+  summary: string;
+  category: DnaInsightCategory;
+  confidence?: DnaConfidence;
+  relevantVariants: string[];
+}
+
+export interface DnaCarrierFinding {
+  gene: string;
+  title: string;
+  summary: string;
+  confidence?: DnaConfidence;
+  relatedConditions: string[];
+  followUp: string[];
+  relevantVariants: string[];
+}
+
+export interface DnaProtectiveFinding {
+  gene: string;
+  title: string;
+  summary: string;
+  relevantVariants: string[];
+}
+
+export interface DnaMonitoringItem {
+  focus: string;
+  reason: string;
+  cadence?: string;
+  relatedCategories: DnaInsightCategory[];
+  relevantVariants: string[];
+}
+
+export interface DnaSupplementRecommendation {
+  supplement: string;
+  dose?: string;
+  rationale: string;
+  evidenceLabel?: string;
+  relevantVariants: string[];
 }
 
 export interface Medication {
