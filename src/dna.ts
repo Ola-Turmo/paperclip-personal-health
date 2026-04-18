@@ -3,9 +3,13 @@ import annotationFile from "./dna/annotations.json";
 import type {
   AlleleEffect,
   DnaDiploidType,
+  DnaDiseaseRisk,
   DnaEvidenceTier,
   DnaHealthInsight,
   DnaInsightCategory,
+  DnaPathwaySummary,
+  DnaPharmacogenomicInteraction,
+  DnaPriorityFinding,
   DnaReport,
   DnaSource,
   DnaVariant,
@@ -343,6 +347,85 @@ function protocolLine(title: string, insight: DnaHealthInsight) {
   return `- **${title}:** ${insight.evidenceLabel ?? "Research signal"}${action}`;
 }
 
+function scoreInsightPriority(insight: DnaHealthInsight) {
+  const impactWeight = insight.impact === "risk" ? 3 : insight.impact === "positive" ? 1 : 0;
+  const evidenceWeight = 5 - (insight.evidenceTier ?? 4);
+  const actionWeight = insight.actionableRecommendation ? 2 : 0;
+  const categoryWeight = insight.category === "pharmacogenomics"
+    ? 3
+    : insight.category === "cardiovascular" || insight.category === "metabolic"
+      ? 2
+      : 1;
+  return impactWeight + evidenceWeight + actionWeight + categoryWeight;
+}
+
+function extractGenes(report: DnaReport, insight: DnaHealthInsight) {
+  return insight.relevantVariants
+    .map((rsId) => annotationMap.get(rsId.toLowerCase())?.gene)
+    .filter((gene): gene is string => Boolean(gene));
+}
+
+function inferRiskDomain(insight: DnaHealthInsight) {
+  if (insight.category === "cardiovascular") {
+    return "Cardiovascular";
+  }
+  if (insight.category === "metabolic" || /glucose|insulin|weight|lipid|obesity/i.test(insight.title)) {
+    return "Metabolic";
+  }
+  if (insight.category === "sleep") {
+    return "Sleep & Circadian";
+  }
+  if (insight.category === "nutrition") {
+    return "Nutrient Handling";
+  }
+  if (/apoe|alzheimer|cognition|memory/i.test(insight.title)) {
+    return "Neurocognitive";
+  }
+  return "General Wellness";
+}
+
+function pathwayForInsight(insight: DnaHealthInsight, report: DnaReport) {
+  const genes = extractGenes(report, insight);
+  if (insight.category === "pharmacogenomics" || genes.some((gene) => /^CYP|COMT|SLCO|ABCG/i.test(gene))) {
+    return "Drug Response & Stimulant Handling";
+  }
+  if (insight.category === "nutrition" || genes.some((gene) => /MTHFR|MTRR|PEMT|VDR|GC|FUT2/i.test(gene))) {
+    return "Methylation & Nutrient Handling";
+  }
+  if (insight.category === "cardiovascular" || insight.category === "metabolic" || genes.some((gene) => /APOE|FTO|TCF|PPAR|LPL/i.test(gene))) {
+    return "Cardiometabolic Resilience";
+  }
+  if (insight.category === "sleep" || genes.some((gene) => /PER|CLOCK|ARNTL|ADORA/i.test(gene))) {
+    return "Sleep & Circadian Regulation";
+  }
+  if (insight.category === "fitness" || genes.some((gene) => /ACTN3|ACE|ADRB2/i.test(gene))) {
+    return "Training Response & Recovery";
+  }
+  return "General Health Signalling";
+}
+
+function medicationsForInsight(insight: DnaHealthInsight, report: DnaReport) {
+  const genes = extractGenes(report, insight);
+  const combined = `${insight.title} ${genes.join(" ")}`.toLowerCase();
+
+  if (combined.includes("cyp1a2") || combined.includes("caffeine")) {
+    return ["caffeine", "stimulants"];
+  }
+  if (combined.includes("cyp2c19")) {
+    return ["SSRIs", "clopidogrel", "proton-pump inhibitors"];
+  }
+  if (combined.includes("cyp2d6")) {
+    return ["codeine", "tramadol", "many antidepressants"];
+  }
+  if (combined.includes("comt")) {
+    return ["stimulants", "dopamine-sensitive medications"];
+  }
+  if (combined.includes("apoe")) {
+    return ["lipid-lowering strategy review with clinician"];
+  }
+  return ["review relevant prescriptions with clinician"];
+}
+
 export function buildActionableProtocol(report: DnaReport) {
   const byCategory = groupInsightsByCategory(report);
 
@@ -355,12 +438,89 @@ export function buildActionableProtocol(report: DnaReport) {
   };
 }
 
+export function getPriorityFindings(report: DnaReport): DnaPriorityFinding[] {
+  return report.healthInsights
+    .slice()
+    .sort((left, right) => scoreInsightPriority(right) - scoreInsightPriority(left))
+    .slice(0, 10)
+    .map((insight) => ({
+      gene: extractGenes(report, insight)[0] ?? "Unknown",
+      title: insight.title,
+      category: insight.category,
+      impact: insight.impact,
+      evidenceLabel: insight.evidenceLabel,
+      actionableRecommendation: insight.actionableRecommendation,
+      relevantVariants: insight.relevantVariants,
+      priorityScore: scoreInsightPriority(insight),
+    }));
+}
+
+export function summarizeDiseaseRisks(report: DnaReport): DnaDiseaseRisk[] {
+  const riskInsights = report.healthInsights.filter((insight) => insight.impact === "risk");
+  const grouped = riskInsights.reduce<Record<string, DnaHealthInsight[]>>((acc, insight) => {
+    const domain = inferRiskDomain(insight);
+    acc[domain] ??= [];
+    acc[domain].push(insight);
+    return acc;
+  }, {});
+
+  return Object.entries(grouped).map(([domain, insights]) => {
+    const peakScore = Math.max(...insights.map(scoreInsightPriority));
+    const level: DnaDiseaseRisk["level"] = peakScore >= 8 ? "high" : peakScore >= 5 ? "moderate" : "low";
+    return {
+      domain,
+      level,
+      rationale: insights.map((insight) => insight.title).slice(0, 2).join("; "),
+      genes: Array.from(new Set(insights.flatMap((insight) => extractGenes(report, insight)))),
+      supportingInsights: insights.map((insight) => insight.title),
+      monitoringSuggestions: insights
+        .flatMap((insight) => [insight.actionableRecommendation ?? "", `${domain} markers and symptoms review`])
+        .filter(Boolean)
+        .slice(0, 3),
+    };
+  }).sort((left, right) => left.domain.localeCompare(right.domain));
+}
+
+export function summarizePharmacogenomics(report: DnaReport): DnaPharmacogenomicInteraction[] {
+  return report.healthInsights
+    .filter((insight) => insight.category === "pharmacogenomics")
+    .slice()
+    .sort((left, right) => scoreInsightPriority(right) - scoreInsightPriority(left))
+    .map((insight) => ({
+      gene: extractGenes(report, insight)[0] ?? "Unknown",
+      medications: medicationsForInsight(insight, report),
+      summary: insight.actionableRecommendation ?? insight.description,
+      evidenceLabel: insight.evidenceLabel,
+      relevantVariants: insight.relevantVariants,
+    }));
+}
+
+export function summarizeGeneticPathways(report: DnaReport): DnaPathwaySummary[] {
+  const grouped = report.healthInsights.reduce<Record<string, DnaHealthInsight[]>>((acc, insight) => {
+    const pathway = pathwayForInsight(insight, report);
+    acc[pathway] ??= [];
+    acc[pathway].push(insight);
+    return acc;
+  }, {});
+
+  return Object.entries(grouped).map(([pathway, insights]) => ({
+    pathway,
+    categories: Array.from(new Set(insights.map((insight) => insight.category))),
+    genes: Array.from(new Set(insights.flatMap((insight) => extractGenes(report, insight)))),
+    highlights: insights
+      .slice()
+      .sort((left, right) => scoreInsightPriority(right) - scoreInsightPriority(left))
+      .slice(0, 3)
+      .map((insight) => insight.title),
+  })).sort((left, right) => left.pathway.localeCompare(right.pathway));
+}
+
 export function exportDnaInsightsMarkdown(report: DnaReport) {
   const protocol = buildActionableProtocol(report);
-  const topInsights = report.healthInsights
-    .slice()
-    .sort((left, right) => (left.evidenceTier ?? 4) - (right.evidenceTier ?? 4))
-    .slice(0, 8);
+  const topInsights = getPriorityFindings(report);
+  const diseaseRisks = summarizeDiseaseRisks(report);
+  const pharmacogenomics = summarizePharmacogenomics(report);
+  const pathways = summarizeGeneticPathways(report);
 
   const variantRows = report.variants
     .slice(0, 20)
@@ -390,7 +550,22 @@ export function exportDnaInsightsMarkdown(report: DnaReport) {
     "- Tier 4: Preliminary research",
     "",
     "## Top Actionable Insights",
-    ...topInsights.map((insight) => `- **${insight.title}** (${insight.evidenceLabel ?? "Research signal"}) — ${insight.actionableRecommendation ?? insight.description}`),
+    ...topInsights.map((insight) => `- **${insight.title}** (${insight.evidenceLabel ?? "Research signal"}) — ${insight.actionableRecommendation ?? "Review this signal in context with symptoms, history, and confirmatory testing."}`),
+    "",
+    "## Disease Risk Watchlist",
+    ...(diseaseRisks.length
+      ? diseaseRisks.map((risk) => `- **${risk.domain} (${risk.level})** — ${risk.rationale}. Monitor: ${risk.monitoringSuggestions.join("; ") || "repeat labs / symptom tracking as appropriate"}`)
+      : ["- No risk-domain summaries surfaced from the curated report."]),
+    "",
+    "## Pharmacogenomic Watch-outs",
+    ...(pharmacogenomics.length
+      ? pharmacogenomics.slice(0, 8).map((item) => `- **${item.gene}** — ${item.summary} Relevant meds: ${item.medications.join(", ")}.`)
+      : ["- No pharmacogenomic watch-outs surfaced in the current curated set."]),
+    "",
+    "## Pathway Map",
+    ...(pathways.length
+      ? pathways.map((pathway) => `- **${pathway.pathway}** — genes: ${pathway.genes.join(", ") || "n/a"}; highlights: ${pathway.highlights.join(", ")}`)
+      : ["- No pathway groupings available."]),
     "",
     "## Actionable Health Protocol",
     "### Nutrition",
@@ -444,7 +619,10 @@ export function summarizeReport(report: DnaReport) {
   return {
     reportId: report.id,
     summary: `${watchCount} watch-outs and ${positiveCount} favorable signals across ${report.healthInsights.length} curated insights`,
-    topInsights: impactful.slice(0, 5),
+    topInsights: getPriorityFindings(report).slice(0, 5),
+    diseaseRisks: summarizeDiseaseRisks(report),
+    pharmacogenomics: summarizePharmacogenomics(report).slice(0, 5),
+    pathways: summarizeGeneticPathways(report),
     protocol: buildActionableProtocol(report),
   };
 }

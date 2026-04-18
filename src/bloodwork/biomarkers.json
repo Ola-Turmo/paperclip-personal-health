@@ -1,0 +1,4122 @@
+{
+  "source": "/root/work/bloodwork/biomarkers/v1.0.0/biomarkers.yaml",
+  "biomarkers": [
+    {
+      "id": "apolipoprotein-b",
+      "name": "Apolipoprotein B",
+      "abbreviation": "ApoB",
+      "aliases": [
+        "Apo-B",
+        "Apolipoprotein B100"
+      ],
+      "category": "Heart Health",
+      "secondary_categories": [
+        "Metabolism"
+      ],
+      "unit_of_measure": "mg/dL",
+      "specimen_type": "serum",
+      "optimal_ranges": [
+        {
+          "sex": "male",
+          "age_min": 20,
+          "age_max": 39,
+          "low": 40,
+          "high": 100,
+          "source": "NHANES"
+        },
+        {
+          "sex": "male",
+          "age_min": 40,
+          "age_max": 59,
+          "low": 50,
+          "high": 110,
+          "source": "NHANES"
+        },
+        {
+          "sex": "male",
+          "age_min": 60,
+          "age_max": 120,
+          "low": 60,
+          "high": 120,
+          "source": "NHANES"
+        },
+        {
+          "sex": "female",
+          "age_min": 20,
+          "age_max": 39,
+          "low": 35,
+          "high": 85,
+          "source": "NHANES"
+        },
+        {
+          "sex": "female",
+          "age_min": 40,
+          "age_max": 59,
+          "low": 45,
+          "high": 95,
+          "source": "NHANES"
+        },
+        {
+          "sex": "female",
+          "age_min": 60,
+          "age_max": 120,
+          "low": 55,
+          "high": 105,
+          "source": "NHANES"
+        }
+      ],
+      "clinical_reference_ranges": {
+        "adult": {
+          "low": 40,
+          "high": 130,
+          "unit": "mg/dL"
+        }
+      },
+      "physiological_role": "Apolipoprotein B is the primary structural protein of LDL (low-density lipoprotein) particles. It serves as a ligand for LDL receptors and mediates the uptake of cholesterol by peripheral tissues. Elevated ApoB levels are associated with increased cardiovascular disease risk as it is the particle number indicator for atherogenic lipoproteins.\n",
+      "associated_health_outcomes": [
+        {
+          "outcome": "Cardiovascular disease risk",
+          "direction": "high",
+          "evidence": "Strong epidemiological evidence; ApoB is considered a superior marker to LDL-C for cardiovascular risk prediction"
+        },
+        {
+          "outcome": "Atherosclerosis",
+          "direction": "high",
+          "evidence": "Direct role in arterial plaque formation"
+        }
+      ],
+      "dietary_interventions": [
+        {
+          "intervention": "Reduce saturated fat intake",
+          "effect": "decreases",
+          "evidence_level": "strong"
+        },
+        {
+          "intervention": "Increase soluble fiber intake",
+          "effect": "decreases",
+          "evidence_level": "strong"
+        },
+        {
+          "intervention": "Replace refined carbohydrates with whole grains",
+          "effect": "decreases",
+          "evidence_level": "moderate"
+        }
+      ],
+      "supplement_considerations": [
+        {
+          "supplement": "Psyllium husk",
+          "effect": "decreases",
+          "dosage": "5-10g daily",
+          "evidence_level": "strong"
+        },
+        {
+          "supplement": "Plant sterols",
+          "effect": "decreases",
+          "dosage": "2g daily",
+          "evidence_level": "strong"
+        },
+        {
+          "supplement": "Omega-3 fatty acids",
+          "effect": "normalizes",
+          "dosage": "1-4g daily",
+          "evidence_level": "moderate"
+        }
+      ],
+      "biomarker_interactions": [
+        {
+          "interacts_with": "ldl-cholesterol",
+          "interaction_type": "metabolic",
+          "description": "ApoB is the protein component of LDL particles; they are highly correlated"
+        },
+        {
+          "interacts_with": "triglycerides",
+          "interaction_type": "metabolic",
+          "description": "VLDL remnants also contain ApoB"
+        },
+        {
+          "interacts_with": "hdl-cholesterol",
+          "interaction_type": "regulatory",
+          "description": "Inverse relationship in lipid metabolism"
+        }
+      ],
+      "nhanes_variable_code": "LBXAPB"
+    },
+    {
+      "id": "thyroid-stimulating-hormone",
+      "name": "Thyroid-stimulating hormone",
+      "abbreviation": "TSH",
+      "aliases": [
+        "Thyrotropin",
+        "TSH"
+      ],
+      "category": "Heart Health",
+      "secondary_categories": [
+        "Hormone Balance",
+        "Metabolism"
+      ],
+      "unit_of_measure": "mIU/L",
+      "specimen_type": "serum",
+      "optimal_ranges": [
+        {
+          "sex": "all",
+          "age_min": 20,
+          "age_max": 39,
+          "low": 0.4,
+          "high": 2.5,
+          "source": "clinical_guidelines"
+        },
+        {
+          "sex": "all",
+          "age_min": 40,
+          "age_max": 59,
+          "low": 0.4,
+          "high": 3.0,
+          "source": "clinical_guidelines"
+        },
+        {
+          "sex": "all",
+          "age_min": 60,
+          "age_max": 120,
+          "low": 0.5,
+          "high": 3.5,
+          "source": "clinical_guidelines"
+        }
+      ],
+      "clinical_reference_ranges": {
+        "adult": {
+          "low": 0.4,
+          "high": 4.0,
+          "unit": "mIU/L"
+        }
+      },
+      "physiological_role": "TSH is produced by the anterior pituitary gland and regulates thyroid hormone production (T3 and T4). It is the primary screening test for thyroid function and reflects the hypothalamic-pituitary-thyroid axis status. TSH influences metabolic rate, heart function, and cholesterol metabolism.\n",
+      "associated_health_outcomes": [
+        {
+          "outcome": "Hypothyroidism",
+          "direction": "high",
+          "evidence": "Elevated TSH with low T4 indicates primary hypothyroidism"
+        },
+        {
+          "outcome": "Hyperthyroidism",
+          "direction": "low",
+          "evidence": "Low TSH with elevated T3/T4 indicates hyperthyroidism"
+        },
+        {
+          "outcome": "Cardiovascular disease",
+          "direction": "both",
+          "evidence": "Both high and low TSH associated with increased CV risk"
+        }
+      ],
+      "dietary_interventions": [
+        {
+          "intervention": "Ensure adequate iodine intake",
+          "effect": "normalizes",
+          "evidence_level": "strong"
+        },
+        {
+          "intervention": "Reduce goitrogenic foods (soy, cruciferous) if iodine deficient",
+          "effect": "normalizes",
+          "evidence_level": "moderate"
+        }
+      ],
+      "supplement_considerations": [
+        {
+          "supplement": "Iodine",
+          "effect": "normalizes",
+          "dosage": "150mcg daily (if deficient)",
+          "evidence_level": "strong"
+        },
+        {
+          "supplement": "Selenium",
+          "effect": "normalizes",
+          "dosage": "200mcg daily",
+          "evidence_level": "moderate"
+        }
+      ],
+      "biomarker_interactions": [
+        {
+          "interacts_with": "free-thyroxine",
+          "interaction_type": "regulatory",
+          "description": "TSH regulates T4 production; negative feedback loop"
+        },
+        {
+          "interacts_with": "free-triiodothyronine",
+          "interaction_type": "regulatory",
+          "description": "TSH stimulates T3 production"
+        }
+      ],
+      "nhanes_variable_code": "LBXTSH"
+    },
+    {
+      "id": "hdl-cholesterol",
+      "name": "High-density lipoprotein cholesterol",
+      "abbreviation": "HDL",
+      "aliases": [
+        "HDL-C",
+        "High-density lipoprotein"
+      ],
+      "category": "Gut Health",
+      "secondary_categories": [
+        "Heart Health",
+        "Hormone Balance"
+      ],
+      "unit_of_measure": "mg/dL",
+      "specimen_type": "serum",
+      "optimal_ranges": [
+        {
+          "sex": "male",
+          "age_min": 20,
+          "age_max": 120,
+          "low": 50,
+          "high": 80,
+          "source": "NHANES"
+        },
+        {
+          "sex": "female",
+          "age_min": 20,
+          "age_max": 120,
+          "low": 60,
+          "high": 90,
+          "source": "NHANES"
+        }
+      ],
+      "clinical_reference_ranges": {
+        "adult": {
+          "low": 40,
+          "high": 60,
+          "unit": "mg/dL"
+        }
+      },
+      "physiological_role": "HDL cholesterol is known as \"good cholesterol\" because it mediates reverse cholesterol transport, carrying excess cholesterol from peripheral tissues to the liver for excretion. HDL also has anti-inflammatory, antioxidant, and endothelial protective effects.\n",
+      "associated_health_outcomes": [
+        {
+          "outcome": "Cardiovascular disease",
+          "direction": "low",
+          "evidence": "Low HDL is an independent cardiovascular risk factor"
+        },
+        {
+          "outcome": "Metabolic syndrome",
+          "direction": "low",
+          "evidence": "Low HDL is a component of metabolic syndrome diagnosis"
+        }
+      ],
+      "dietary_interventions": [
+        {
+          "intervention": "Increase monounsaturated fat intake (olive oil, nuts)",
+          "effect": "increases",
+          "evidence_level": "strong"
+        },
+        {
+          "intervention": "Regular aerobic exercise",
+          "effect": "increases",
+          "evidence_level": "strong"
+        },
+        {
+          "intervention": "Reduce trans fat intake",
+          "effect": "increases",
+          "evidence_level": "strong"
+        },
+        {
+          "intervention": "Moderate alcohol consumption",
+          "effect": "increases",
+          "evidence_level": "moderate"
+        }
+      ],
+      "supplement_considerations": [
+        {
+          "supplement": "Niacin (Vitamin B3)",
+          "effect": "increases",
+          "dosage": "500-2000mg daily",
+          "evidence_level": "moderate"
+        },
+        {
+          "supplement": "Omega-3 fatty acids",
+          "effect": "increases",
+          "dosage": "1-4g daily",
+          "evidence_level": "moderate"
+        }
+      ],
+      "biomarker_interactions": [
+        {
+          "interacts_with": "ldl-cholesterol",
+          "interaction_type": "metabolic",
+          "description": "Inverse relationship; HDL helps remove cholesterol from arteries"
+        },
+        {
+          "interacts_with": "triglycerides",
+          "interaction_type": "metabolic",
+          "description": "Inverse relationship; high TG often with low HDL"
+        },
+        {
+          "interacts_with": "apolipoprotein-b",
+          "interaction_type": "regulatory",
+          "description": "ApoB/HDL ratio is used for risk assessment"
+        }
+      ],
+      "nhanes_variable_code": "LBDHDD"
+    },
+    {
+      "id": "ldl-cholesterol",
+      "name": "Low-density lipoprotein cholesterol",
+      "abbreviation": "LDL",
+      "aliases": [
+        "LDL-C",
+        "Low-density lipoprotein"
+      ],
+      "category": "Heart Health",
+      "unit_of_measure": "mg/dL",
+      "specimen_type": "serum",
+      "optimal_ranges": [
+        {
+          "sex": "all",
+          "age_min": 20,
+          "age_max": 39,
+          "low": 0,
+          "high": 100,
+          "source": "NHANES"
+        },
+        {
+          "sex": "all",
+          "age_min": 40,
+          "age_max": 59,
+          "low": 0,
+          "high": 115,
+          "source": "NHANES"
+        },
+        {
+          "sex": "all",
+          "age_min": 60,
+          "age_max": 120,
+          "low": 0,
+          "high": 130,
+          "source": "NHANES"
+        }
+      ],
+      "clinical_reference_ranges": {
+        "adult": {
+          "low": 0,
+          "high": 100,
+          "unit": "mg/dL"
+        }
+      },
+      "physiological_role": "LDL is the primary carrier of cholesterol to peripheral tissues and is central to atherosclerotic plaque formation. When LDL particles become oxidized or modified, they infiltrate arterial walls and contribute to plaque development.\n",
+      "associated_health_outcomes": [
+        {
+          "outcome": "Atherosclerosis",
+          "direction": "high",
+          "evidence": "Direct role in arterial plaque formation; LDL-C lowering reduces CV events"
+        },
+        {
+          "outcome": "Cardiovascular disease",
+          "direction": "high",
+          "evidence": "Strong dose-response relationship between LDL-C and CV risk"
+        }
+      ],
+      "dietary_interventions": [
+        {
+          "intervention": "Reduce saturated fat intake",
+          "effect": "decreases",
+          "evidence_level": "strong"
+        },
+        {
+          "intervention": "Increase soluble fiber intake",
+          "effect": "decreases",
+          "evidence_level": "strong"
+        },
+        {
+          "intervention": "Replace refined carbs with whole grains",
+          "effect": "decreases",
+          "evidence_level": "moderate"
+        },
+        {
+          "intervention": "Add plant sterols/stanols",
+          "effect": "decreases",
+          "evidence_level": "strong"
+        }
+      ],
+      "supplement_considerations": [
+        {
+          "supplement": "Red yeast rice",
+          "effect": "decreases",
+          "dosage": "1200-2400mg daily",
+          "evidence_level": "strong"
+        },
+        {
+          "supplement": "Berberine",
+          "effect": "decreases",
+          "dosage": "500-1500mg daily",
+          "evidence_level": "strong"
+        },
+        {
+          "supplement": "Psyllium husk",
+          "effect": "decreases",
+          "dosage": "10-20g daily",
+          "evidence_level": "strong"
+        }
+      ],
+      "biomarker_interactions": [
+        {
+          "interacts_with": "apolipoprotein-b",
+          "interaction_type": "metabolic",
+          "description": "LDL particles contain ApoB protein; directly correlated"
+        },
+        {
+          "interacts_with": "hdl-cholesterol",
+          "interaction_type": "metabolic",
+          "description": "Inverse relationship in cardiovascular risk"
+        },
+        {
+          "interacts_with": "triglycerides",
+          "interaction_type": "metabolic",
+          "description": "VLDL remnants contribute to small dense LDL"
+        }
+      ],
+      "nhanes_variable_code": "LBDLDL"
+    },
+    {
+      "id": "triglycerides",
+      "name": "Triglycerides",
+      "abbreviation": "TG",
+      "aliases": [
+        "Triacylglycerol",
+        "TG"
+      ],
+      "category": "Heart Health",
+      "secondary_categories": [
+        "Metabolism",
+        "Gut Health"
+      ],
+      "unit_of_measure": "mg/dL",
+      "specimen_type": "serum",
+      "optimal_ranges": [
+        {
+          "sex": "male",
+          "age_min": 20,
+          "age_max": 120,
+          "low": 0,
+          "high": 150,
+          "source": "NHANES"
+        },
+        {
+          "sex": "female",
+          "age_min": 20,
+          "age_max": 120,
+          "low": 0,
+          "high": 150,
+          "source": "NHANES"
+        }
+      ],
+      "clinical_reference_ranges": {
+        "adult": {
+          "low": 0,
+          "high": 150,
+          "unit": "mg/dL"
+        }
+      },
+      "physiological_role": "Triglycerides are the main form of fat stored in adipose tissue and are transported in blood as VLDL particles. Elevated triglycerides contribute to arterial inflammation and are associated with increased cardiovascular risk, particularly when combined with low HDL.\n",
+      "associated_health_outcomes": [
+        {
+          "outcome": "Cardiovascular disease",
+          "direction": "high",
+          "evidence": "Independent risk factor, especially with low HDL"
+        },
+        {
+          "outcome": "Pancreatitis",
+          "direction": "high",
+          "evidence": "Severe hypertriglyceridemia (>500mg/dL) increases pancreatitis risk"
+        },
+        {
+          "outcome": "Metabolic syndrome",
+          "direction": "high",
+          "evidence": "Elevated TG is a component of metabolic syndrome"
+        }
+      ],
+      "dietary_interventions": [
+        {
+          "intervention": "Reduce added sugars and refined carbohydrates",
+          "effect": "decreases",
+          "evidence_level": "strong"
+        },
+        {
+          "intervention": "Limit alcohol consumption",
+          "effect": "decreases",
+          "evidence_level": "strong"
+        },
+        {
+          "intervention": "Increase omega-3 fatty acid intake",
+          "effect": "decreases",
+          "evidence_level": "strong"
+        },
+        {
+          "intervention": "Lose excess body weight",
+          "effect": "decreases",
+          "evidence_level": "strong"
+        }
+      ],
+      "supplement_considerations": [
+        {
+          "supplement": "Omega-3 fatty acids (EPA/DHA)",
+          "effect": "decreases",
+          "dosage": "2-4g daily",
+          "evidence_level": "strong"
+        },
+        {
+          "supplement": "Berberine",
+          "effect": "decreases",
+          "dosage": "500-1500mg daily",
+          "evidence_level": "moderate"
+        }
+      ],
+      "biomarker_interactions": [
+        {
+          "interacts_with": "hdl-cholesterol",
+          "interaction_type": "metabolic",
+          "description": "Inverse relationship; high TG typically with low HDL"
+        },
+        {
+          "interacts_with": "ldl-cholesterol",
+          "interaction_type": "metabolic",
+          "description": "VLDL metabolism affects LDL levels"
+        },
+        {
+          "interacts_with": "glucose",
+          "interaction_type": "metabolic",
+          "description": "Both elevated in insulin resistance"
+        }
+      ],
+      "nhanes_variable_code": "LBXTR"
+    },
+    {
+      "id": "total-cholesterol",
+      "name": "Total cholesterol",
+      "abbreviation": "TC",
+      "aliases": [
+        "Total Chol",
+        "Total Cholesterol"
+      ],
+      "category": "Heart Health",
+      "secondary_categories": [
+        "Metabolism"
+      ],
+      "unit_of_measure": "mg/dL",
+      "specimen_type": "serum",
+      "optimal_ranges": [
+        {
+          "sex": "male",
+          "age_min": 20,
+          "age_max": 120,
+          "low": 125,
+          "high": 200,
+          "source": "NHANES"
+        },
+        {
+          "sex": "female",
+          "age_min": 20,
+          "age_max": 120,
+          "low": 125,
+          "high": 200,
+          "source": "NHANES"
+        }
+      ],
+      "clinical_reference_ranges": {
+        "adult": {
+          "low": 125,
+          "high": 200,
+          "unit": "mg/dL"
+        }
+      },
+      "physiological_role": "Total cholesterol encompasses all cholesterol carried in lipoproteins (LDL, HDL, VLDL). While it's a useful screening measure, the distribution among lipoprotein fractions and the total-to-HDL ratio provide more actionable information about cardiovascular risk.\n",
+      "associated_health_outcomes": [
+        {
+          "outcome": "Cardiovascular disease",
+          "direction": "high",
+          "evidence": "Elevated total cholesterol increases CV risk, especially with high LDL"
+        }
+      ],
+      "dietary_interventions": [
+        {
+          "intervention": "Reduce saturated and trans fat intake",
+          "effect": "decreases",
+          "evidence_level": "strong"
+        },
+        {
+          "intervention": "Increase fruit, vegetable, and whole grain intake",
+          "effect": "decreases",
+          "evidence_level": "moderate"
+        }
+      ],
+      "supplement_considerations": [
+        {
+          "supplement": "Plant sterols",
+          "effect": "decreases",
+          "dosage": "2g daily",
+          "evidence_level": "strong"
+        }
+      ],
+      "biomarker_interactions": [
+        {
+          "interacts_with": "ldl-cholesterol",
+          "interaction_type": "metabolic",
+          "description": "LDL-C contributes the largest portion to total cholesterol"
+        },
+        {
+          "interacts_with": "hdl-cholesterol",
+          "interaction_type": "metabolic",
+          "description": "HDL-C is a component of total cholesterol"
+        }
+      ],
+      "nhanes_variable_code": "LBXTC"
+    },
+    {
+      "id": "high-sensitivity-crp",
+      "name": "High-sensitivity C-reactive protein",
+      "abbreviation": "hsCRP",
+      "aliases": [
+        "hs-CRP",
+        "High-sensitivity C-reactive protein",
+        "CRP"
+      ],
+      "category": "Heart Health",
+      "secondary_categories": [
+        "Sleep",
+        "Inflammation",
+        "Recovery",
+        "Gut Health"
+      ],
+      "unit_of_measure": "mg/L",
+      "specimen_type": "serum",
+      "optimal_ranges": [
+        {
+          "sex": "all",
+          "age_min": 20,
+          "age_max": 120,
+          "low": 0,
+          "high": 1.0,
+          "source": "clinical_guidelines"
+        }
+      ],
+      "clinical_reference_ranges": {
+        "adult": {
+          "low": 0,
+          "high": 3.0,
+          "unit": "mg/L"
+        }
+      },
+      "physiological_role": "hsCRP is an acute-phase inflammatory marker produced by the liver in response to inflammation, infection, or tissue injury. It is used as a sensitive marker of systemic inflammation and is an independent predictor of cardiovascular events. The high-sensitivity assay detects lower levels suitable for cardiovascular risk assessment.\n",
+      "associated_health_outcomes": [
+        {
+          "outcome": "Cardiovascular disease",
+          "direction": "high",
+          "evidence": "Elevated hsCRP is an independent predictor of MI, stroke, and CV death"
+        },
+        {
+          "outcome": "Chronic inflammation",
+          "direction": "high",
+          "evidence": "Persistently elevated hsCRP indicates chronic inflammatory state"
+        },
+        {
+          "outcome": "Infection",
+          "direction": "high",
+          "evidence": "Rapidly elevated in acute bacterial and viral infections"
+        }
+      ],
+      "dietary_interventions": [
+        {
+          "intervention": "Anti-inflammatory diet (Mediterranean-style)",
+          "effect": "decreases",
+          "evidence_level": "strong"
+        },
+        {
+          "intervention": "Increase omega-3 fatty acids",
+          "effect": "decreases",
+          "evidence_level": "strong"
+        },
+        {
+          "intervention": "Weight loss (if overweight)",
+          "effect": "decreases",
+          "evidence_level": "strong"
+        },
+        {
+          "intervention": "Reduce processed food intake",
+          "effect": "decreases",
+          "evidence_level": "moderate"
+        }
+      ],
+      "supplement_considerations": [
+        {
+          "supplement": "Fish oil (EPA/DHA)",
+          "effect": "decreases",
+          "dosage": "2-4g daily",
+          "evidence_level": "strong"
+        },
+        {
+          "supplement": "Vitamin C",
+          "effect": "decreases",
+          "dosage": "500-1000mg daily",
+          "evidence_level": "moderate"
+        },
+        {
+          "supplement": "Curcumin",
+          "effect": "decreases",
+          "dosage": "500-1000mg daily",
+          "evidence_level": "moderate"
+        }
+      ],
+      "biomarker_interactions": [
+        {
+          "interacts_with": "white-blood-cell-count",
+          "interaction_type": "metabolic",
+          "description": "Both are inflammatory markers; WBC is less specific"
+        },
+        {
+          "interacts_with": "ferritin",
+          "interaction_type": "metabolic",
+          "description": "Iron can promote inflammatory oxidation"
+        },
+        {
+          "interacts_with": "interleukin-6",
+          "interaction_type": "regulatory",
+          "description": "IL-6 stimulates hepatic CRP production"
+        }
+      ],
+      "nhanes_variable_code": "LBXHSCRP"
+    },
+    {
+      "id": "estradiol",
+      "name": "Estradiol",
+      "abbreviation": "E2",
+      "aliases": [
+        "17beta-estradiol",
+        "E2"
+      ],
+      "category": "Hormone Balance",
+      "unit_of_measure": "pg/mL",
+      "specimen_type": "serum",
+      "optimal_ranges": [
+        {
+          "sex": "male",
+          "age_min": 20,
+          "age_max": 120,
+          "low": 10,
+          "high": 40,
+          "source": "clinical_guidelines"
+        },
+        {
+          "sex": "female",
+          "age_min": 20,
+          "age_max": 39,
+          "low": 30,
+          "high": 400,
+          "source": "clinical_guidelines"
+        },
+        {
+          "sex": "female",
+          "age_min": 40,
+          "age_max": 120,
+          "low": 20,
+          "high": 200,
+          "source": "clinical_guidelines"
+        }
+      ],
+      "clinical_reference_ranges": {
+        "adult": {
+          "low": 10,
+          "high": 400,
+          "unit": "pg/mL"
+        }
+      },
+      "physiological_role": "Estradiol is the primary female sex hormone (estrogen) and is also present in males. In women, it regulates menstrual cycles, bone maintenance, and cardiovascular health. In men, it is important for bone health and sexual function. It is produced by ovaries, adipose tissue, and in men by aromatization of testosterone.\n",
+      "associated_health_outcomes": [
+        {
+          "outcome": "Reproductive health",
+          "direction": "both",
+          "evidence": "Optimal levels required for menstrual and reproductive function"
+        },
+        {
+          "outcome": "Osteoporosis",
+          "direction": "low",
+          "evidence": "Low E2 in postmenopausal women increases bone loss"
+        },
+        {
+          "outcome": "Cardiovascular disease",
+          "direction": "both",
+          "evidence": "Optimal E2 is protective; both deficiency and excess may increase risk"
+        }
+      ],
+      "dietary_interventions": [
+        {
+          "intervention": "Phytoestrogen-rich foods (soy, flaxseed)",
+          "effect": "normalizes",
+          "evidence_level": "moderate"
+        },
+        {
+          "intervention": "Maintain healthy body fat percentage",
+          "effect": "normalizes",
+          "evidence_level": "moderate"
+        }
+      ],
+      "supplement_considerations": [
+        {
+          "supplement": "Vitamin D",
+          "effect": "normalizes",
+          "dosage": "1000-2000 IU daily",
+          "evidence_level": "moderate"
+        }
+      ],
+      "biomarker_interactions": [
+        {
+          "interacts_with": "progesterone",
+          "interaction_type": "regulatory",
+          "description": "E2/P4 ratio important for hormonal balance"
+        },
+        {
+          "interacts_with": "testosterone",
+          "interaction_type": "metabolic",
+          "description": "Aromatase converts testosterone to E2"
+        },
+        {
+          "interacts_with": "shbg",
+          "interaction_type": "regulatory",
+          "description": "SHBG binds and regulates bioavailable E2"
+        }
+      ],
+      "nhanes_variable_code": "LBXEGT"
+    },
+    {
+      "id": "progesterone",
+      "name": "Progesterone",
+      "abbreviation": "P4",
+      "aliases": [
+        "Progesterone",
+        "P4"
+      ],
+      "category": "Hormone Balance",
+      "unit_of_measure": "ng/mL",
+      "specimen_type": "serum",
+      "optimal_ranges": [
+        {
+          "sex": "female",
+          "age_min": 20,
+          "age_max": 49,
+          "low": 0.1,
+          "high": 27,
+          "source": "clinical_guidelines"
+        },
+        {
+          "sex": "female",
+          "age_min": 50,
+          "age_max": 120,
+          "low": 0.1,
+          "high": 0.8,
+          "source": "clinical_guidelines"
+        },
+        {
+          "sex": "male",
+          "age_min": 20,
+          "age_max": 120,
+          "low": 0.2,
+          "high": 1.4,
+          "source": "clinical_guidelines"
+        }
+      ],
+      "clinical_reference_ranges": {
+        "adult": {
+          "low": 0.1,
+          "high": 27,
+          "unit": "ng/mL"
+        }
+      },
+      "physiological_role": "Progesterone is a steroid hormone essential for female reproductive health. It prepares the endometrium for pregnancy after ovulation and maintains pregnancy. In men, it serves as a precursor to other hormones and has roles in neuroprotection and myelin formation.\n",
+      "associated_health_outcomes": [
+        {
+          "outcome": "Infertility",
+          "direction": "low",
+          "evidence": "Inadequate progesterone in luteal phase linked to infertility"
+        },
+        {
+          "outcome": "Premenstrual symptoms",
+          "direction": "both",
+          "evidence": "Progesterone fluctuations affect mood and physical symptoms"
+        }
+      ],
+      "dietary_interventions": [
+        {
+          "intervention": "Adequate cholesterol intake (precursor)",
+          "effect": "normalizes",
+          "evidence_level": "moderate"
+        }
+      ],
+      "biomarker_interactions": [
+        {
+          "interacts_with": "estradiol",
+          "interaction_type": "regulatory",
+          "description": "E2/P4 ratio important for hormonal balance"
+        },
+        {
+          "interacts_with": "lh",
+          "interaction_type": "regulatory",
+          "description": "LH stimulates progesterone production in ovaries"
+        }
+      ],
+      "nhanes_variable_code": "LBXPG"
+    },
+    {
+      "id": "insulin",
+      "name": "Insulin",
+      "abbreviation": "INS",
+      "aliases": [
+        "Insulin",
+        "INS"
+      ],
+      "category": "Hormone Balance",
+      "secondary_categories": [
+        "Sleep",
+        "Metabolism",
+        "Cognition",
+        "Endurance"
+      ],
+      "unit_of_measure": "uIU/mL",
+      "specimen_type": "serum",
+      "optimal_ranges": [
+        {
+          "sex": "all",
+          "age_min": 20,
+          "age_max": 120,
+          "low": 2.6,
+          "high": 25,
+          "source": "NHANES"
+        }
+      ],
+      "clinical_reference_ranges": {
+        "adult": {
+          "low": 2.6,
+          "high": 25,
+          "unit": "uIU/mL"
+        }
+      },
+      "physiological_role": "Insulin is a peptide hormone produced by pancreatic beta cells that regulates blood glucose levels. It promotes cellular glucose uptake, glycogen synthesis, and inhibits gluconeogenesis. Insulin resistance is a hallmark of metabolic syndrome and type 2 diabetes.\n",
+      "associated_health_outcomes": [
+        {
+          "outcome": "Type 2 diabetes",
+          "direction": "high",
+          "evidence": "Insulin resistance precedes and predicts T2DM development"
+        },
+        {
+          "outcome": "Metabolic syndrome",
+          "direction": "high",
+          "evidence": "Hyperinsulinemia is a component of metabolic syndrome"
+        },
+        {
+          "outcome": "Cardiovascular disease",
+          "direction": "high",
+          "evidence": "Insulin resistance associated with increased CV risk"
+        }
+      ],
+      "dietary_interventions": [
+        {
+          "intervention": "Reduce refined carbohydrate intake",
+          "effect": "decreases",
+          "evidence_level": "strong"
+        },
+        {
+          "intervention": "Increase fiber intake",
+          "effect": "decreases",
+          "evidence_level": "strong"
+        },
+        {
+          "intervention": "Lose excess body weight",
+          "effect": "decreases",
+          "evidence_level": "strong"
+        },
+        {
+          "intervention": "Regular physical activity",
+          "effect": "decreases",
+          "evidence_level": "strong"
+        }
+      ],
+      "supplement_considerations": [
+        {
+          "supplement": "Chromium",
+          "effect": "normalizes",
+          "dosage": "200-1000mcg daily",
+          "evidence_level": "moderate"
+        },
+        {
+          "supplement": "Magnesium",
+          "effect": "improves_sensitivity",
+          "dosage": "200-400mg daily",
+          "evidence_level": "moderate"
+        },
+        {
+          "supplement": "Berberine",
+          "effect": "decreases",
+          "dosage": "500-1500mg daily",
+          "evidence_level": "strong"
+        }
+      ],
+      "biomarker_interactions": [
+        {
+          "interacts_with": "glucose",
+          "interaction_type": "regulatory",
+          "description": "Insulin regulates blood glucose levels"
+        },
+        {
+          "interacts_with": "hemoglobin-a1c",
+          "interaction_type": "metabolic",
+          "description": "Chronic hyperglycemia reflected in HbA1c"
+        },
+        {
+          "interacts_with": "c-peptide",
+          "interaction_type": "metabolic",
+          "description": "C-peptide is co-secreted with insulin"
+        }
+      ],
+      "nhanes_variable_code": "LBXIN"
+    },
+    {
+      "id": "dheas",
+      "name": "Dehydroepiandrosterone sulfate",
+      "abbreviation": "DHEAS",
+      "aliases": [
+        "DHEA-S",
+        "DHEA sulfate"
+      ],
+      "category": "Fitness",
+      "secondary_categories": [
+        "Hormone Balance"
+      ],
+      "unit_of_measure": "ug/dL",
+      "specimen_type": "serum",
+      "optimal_ranges": [
+        {
+          "sex": "female",
+          "age_min": 20,
+          "age_max": 120,
+          "low": 35,
+          "high": 430,
+          "source": "NHANES"
+        },
+        {
+          "sex": "male",
+          "age_min": 20,
+          "age_max": 120,
+          "low": 80,
+          "high": 560,
+          "source": "NHANES"
+        }
+      ],
+      "clinical_reference_ranges": {
+        "adult": {
+          "low": 35,
+          "high": 560,
+          "unit": "ug/dL"
+        }
+      },
+      "physiological_role": "DHEAS is the most abundant circulating steroid hormone and serves as a precursor to testosterone and estrogens. It has direct androgenic and estrogenic effects and is involved in immune function, bone health, and well-being. DHEAS levels decline with age.\n",
+      "associated_health_outcomes": [
+        {
+          "outcome": "Adrenal insufficiency",
+          "direction": "low",
+          "evidence": "Low DHEAS indicates adrenal dysfunction"
+        },
+        {
+          "outcome": "Age-related decline",
+          "direction": "low",
+          "evidence": "DHEAS declines significantly after age 30"
+        },
+        {
+          "outcome": "Bone density",
+          "direction": "both",
+          "evidence": "DHEAS linked to bone mineral density in elderly"
+        }
+      ],
+      "dietary_interventions": [
+        {
+          "intervention": "Adequate sleep",
+          "effect": "normalizes",
+          "evidence_level": "moderate"
+        },
+        {
+          "intervention": "Stress reduction",
+          "effect": "normalizes",
+          "evidence_level": "moderate"
+        }
+      ],
+      "biomarker_interactions": [
+        {
+          "interacts_with": "testosterone",
+          "interaction_type": "metabolic",
+          "description": "DHEA is the precursor to testosterone"
+        },
+        {
+          "interacts_with": "cortisol",
+          "interaction_type": "regulatory",
+          "description": "Both produced by adrenal glands; inverse relationship"
+        }
+      ],
+      "nhanes_variable_code": "LBXDE"
+    },
+    {
+      "id": "free-testosterone",
+      "name": "Free testosterone",
+      "abbreviation": "Free T",
+      "aliases": [
+        "Unbound testosterone",
+        "Free testosterone"
+      ],
+      "category": "Hormone Balance",
+      "secondary_categories": [
+        "Fitness"
+      ],
+      "unit_of_measure": "pg/mL",
+      "specimen_type": "serum",
+      "optimal_ranges": [
+        {
+          "sex": "male",
+          "age_min": 20,
+          "age_max": 39,
+          "low": 47,
+          "high": 244,
+          "source": "clinical_guidelines"
+        },
+        {
+          "sex": "male",
+          "age_min": 40,
+          "age_max": 120,
+          "low": 35,
+          "high": 230,
+          "source": "clinical_guidelines"
+        },
+        {
+          "sex": "female",
+          "age_min": 20,
+          "age_max": 120,
+          "low": 0.3,
+          "high": 1.9,
+          "source": "clinical_guidelines"
+        }
+      ],
+      "clinical_reference_ranges": {
+        "adult": {
+          "low": 0.3,
+          "high": 244,
+          "unit": "pg/mL"
+        }
+      },
+      "physiological_role": "Free testosterone represents the unbound, biologically active fraction of testosterone circulating in blood. Total testosterone includes both free and protein-bound (to SHBG and albumin) fractions. Free T is important for assessing androgen status, particularly in older men and women with symptoms.\n",
+      "associated_health_outcomes": [
+        {
+          "outcome": "Hypogonadism",
+          "direction": "low",
+          "evidence": "Low free T with symptoms indicates androgen deficiency"
+        },
+        {
+          "outcome": "Muscle mass and strength",
+          "direction": "low",
+          "evidence": "Testosterone essential for maintaining muscle mass"
+        },
+        {
+          "outcome": "Libido and sexual function",
+          "direction": "both",
+          "evidence": "Testosterone modulates sexual desire and function"
+        }
+      ],
+      "dietary_interventions": [
+        {
+          "intervention": "Adequate sleep (7-9 hours)",
+          "effect": "normalizes",
+          "evidence_level": "moderate"
+        },
+        {
+          "intervention": "Maintain healthy body weight",
+          "effect": "normalizes",
+          "evidence_level": "moderate"
+        },
+        {
+          "intervention": "Reduce excessive alcohol",
+          "effect": "normalizes",
+          "evidence_level": "moderate"
+        }
+      ],
+      "supplement_considerations": [
+        {
+          "supplement": "Vitamin D",
+          "effect": "supports",
+          "dosage": "1000-2000 IU daily",
+          "evidence_level": "moderate"
+        },
+        {
+          "supplement": "Zinc",
+          "effect": "supports",
+          "dosage": "15-30mg daily",
+          "evidence_level": "moderate"
+        }
+      ],
+      "biomarker_interactions": [
+        {
+          "interacts_with": "testosterone",
+          "interaction_type": "metabolic",
+          "description": "Free T is a fraction of total testosterone"
+        },
+        {
+          "interacts_with": "shbg",
+          "interaction_type": "regulatory",
+          "description": "SHBG binds testosterone, reducing free fraction"
+        },
+        {
+          "interacts_with": "albumin",
+          "interaction_type": "metabolic",
+          "description": "Albumin loosely binds testosterone"
+        }
+      ],
+      "nhanes_variable_code": "LBXTAD"
+    },
+    {
+      "id": "calcium",
+      "name": "Calcium",
+      "abbreviation": "Ca",
+      "aliases": [
+        "Calcium",
+        "Ca",
+        "Total calcium"
+      ],
+      "category": "Hormone Balance",
+      "secondary_categories": [
+        "Recovery"
+      ],
+      "unit_of_measure": "mg/dL",
+      "specimen_type": "serum",
+      "optimal_ranges": [
+        {
+          "sex": "all",
+          "age_min": 20,
+          "age_max": 120,
+          "low": 8.6,
+          "high": 10.2,
+          "source": "clinical_guidelines"
+        }
+      ],
+      "clinical_reference_ranges": {
+        "adult": {
+          "low": 8.5,
+          "high": 10.5,
+          "unit": "mg/dL"
+        }
+      },
+      "physiological_role": "Calcium is essential for bone structure, muscle contraction, nerve transmission, blood coagulation, and cellular signaling. About 99% of body calcium is in bone; the remainder circulates in blood. Serum calcium is tightly regulated by parathyroid hormone, vitamin D, and calcitonin.\n",
+      "associated_health_outcomes": [
+        {
+          "outcome": "Bone health and osteoporosis",
+          "direction": "both",
+          "evidence": "Both low and high calcium affect bone metabolism"
+        },
+        {
+          "outcome": "Parathyroid disorders",
+          "direction": "both",
+          "evidence": "PTH regulates calcium homeostasis"
+        }
+      ],
+      "dietary_interventions": [
+        {
+          "intervention": "Adequate dairy or calcium-fortified foods",
+          "effect": "normalizes",
+          "evidence_level": "strong"
+        },
+        {
+          "intervention": "Vitamin D supplementation",
+          "effect": "improves_absorption",
+          "evidence_level": "strong"
+        }
+      ],
+      "supplement_considerations": [
+        {
+          "supplement": "Calcium citrate or carbonate",
+          "effect": "normalizes",
+          "dosage": "500-1000mg daily (split doses)",
+          "evidence_level": "strong"
+        },
+        {
+          "supplement": "Vitamin D3",
+          "effect": "improves_absorption",
+          "dosage": "1000-2000 IU daily",
+          "evidence_level": "strong"
+        }
+      ],
+      "biomarker_interactions": [
+        {
+          "interacts_with": "vitamin-d",
+          "interaction_type": "regulatory",
+          "description": "Vitamin D enhances calcium absorption"
+        },
+        {
+          "interacts_with": "parathyroid-hormone",
+          "interaction_type": "regulatory",
+          "description": "PTH regulates serum calcium levels"
+        },
+        {
+          "interacts_with": "phosphorus",
+          "interaction_type": "metabolic",
+          "description": "Calcium-phosphorus product important for bone health"
+        }
+      ],
+      "nhanes_variable_code": "LBXCA"
+    },
+    {
+      "id": "cortisol",
+      "name": "Cortisol",
+      "abbreviation": "COR",
+      "aliases": [
+        "Hydrocortisone",
+        "Stress hormone"
+      ],
+      "category": "Hormone Balance",
+      "secondary_categories": [
+        "Sleep",
+        "Cognition",
+        "Fitness",
+        "Recovery",
+        "Gut Health"
+      ],
+      "unit_of_measure": "ug/dL",
+      "specimen_type": "serum",
+      "optimal_ranges": [
+        {
+          "sex": "all",
+          "age_min": 20,
+          "age_max": 120,
+          "low": 6.2,
+          "high": 19.4,
+          "source": "clinical_guidelines"
+        }
+      ],
+      "clinical_reference_ranges": {
+        "adult": {
+          "low": 6.2,
+          "high": 19.4,
+          "unit": "ug/dL"
+        }
+      },
+      "physiological_role": "Cortisol is the primary glucocorticoid produced by the adrenal cortex in response to stress and circadian rhythm. It regulates metabolism, immune function, blood pressure, and the sleep-wake cycle. Chronic elevation is associated with weight gain, insulin resistance, and cardiovascular risk.\n",
+      "associated_health_outcomes": [
+        {
+          "outcome": "Cushing syndrome",
+          "direction": "high",
+          "evidence": "Persistently elevated cortisol causes characteristic symptoms"
+        },
+        {
+          "outcome": "Adrenal insufficiency",
+          "direction": "low",
+          "evidence": "Low cortisol causes fatigue, hypotension, and weakness"
+        },
+        {
+          "outcome": "Chronic stress effects",
+          "direction": "high",
+          "evidence": "Prolonged cortisol elevation linked to weight gain and metabolic dysfunction"
+        }
+      ],
+      "dietary_interventions": [
+        {
+          "intervention": "Stress reduction techniques (meditation, yoga)",
+          "effect": "decreases",
+          "evidence_level": "strong"
+        },
+        {
+          "intervention": "Regular sleep schedule",
+          "effect": "normalizes",
+          "evidence_level": "strong"
+        },
+        {
+          "intervention": "Reduce caffeine intake",
+          "effect": "decreases",
+          "evidence_level": "moderate"
+        }
+      ],
+      "supplement_considerations": [
+        {
+          "supplement": "Ashwagandha",
+          "effect": "decreases",
+          "dosage": "300-600mg daily",
+          "evidence_level": "moderate"
+        },
+        {
+          "supplement": "Phosphatidylserine",
+          "effect": "decreases",
+          "dosage": "300-600mg daily",
+          "evidence_level": "moderate"
+        },
+        {
+          "supplement": "Magnesium",
+          "effect": "supports",
+          "dosage": "200-400mg daily",
+          "evidence_level": "moderate"
+        }
+      ],
+      "biomarker_interactions": [
+        {
+          "interacts_with": "crp",
+          "interaction_type": "regulatory",
+          "description": "Cortisol has anti-inflammatory effects but chronic elevation promotes inflammation"
+        },
+        {
+          "interacts_with": "glucose",
+          "interaction_type": "metabolic",
+          "description": "Cortisol increases gluconeogenesis and blood glucose"
+        },
+        {
+          "interacts_with": "dheas",
+          "interaction_type": "regulatory",
+          "description": "Inverse relationship in adrenal hormone balance"
+        }
+      ],
+      "nhanes_variable_code": "LBXCORT"
+    },
+    {
+      "id": "shbg",
+      "name": "Sex-hormone binding globulin",
+      "abbreviation": "SHBG",
+      "aliases": [
+        "Sex hormone binding globulin",
+        "SHBG"
+      ],
+      "category": "Hormone Balance",
+      "secondary_categories": [
+        "Fitness"
+      ],
+      "unit_of_measure": "nmol/L",
+      "specimen_type": "serum",
+      "optimal_ranges": [
+        {
+          "sex": "male",
+          "age_min": 20,
+          "age_max": 120,
+          "low": 14.5,
+          "high": 71.4,
+          "source": "NHANES"
+        },
+        {
+          "sex": "female",
+          "age_min": 20,
+          "age_max": 120,
+          "low": 18.0,
+          "high": 114.0,
+          "source": "NHANES"
+        }
+      ],
+      "clinical_reference_ranges": {
+        "adult": {
+          "low": 14.5,
+          "high": 114,
+          "unit": "nmol/L"
+        }
+      },
+      "physiological_role": "SHBG is a glycoprotein that binds and transports testosterone, estradiol, and other steroid hormones in blood. It regulates the availability of free (biologically active) hormones. SHBG levels are influenced by hormones, insulin, liver function, and inflammatory state.\n",
+      "associated_health_outcomes": [
+        {
+          "outcome": "Androgen excess or deficiency",
+          "direction": "both",
+          "evidence": "SHBG affects bioavailable testosterone"
+        },
+        {
+          "outcome": "Polycystic ovary syndrome",
+          "direction": "low",
+          "evidence": "Low SHBG common in PCOS with insulin resistance"
+        },
+        {
+          "outcome": "Metabolic syndrome",
+          "direction": "low",
+          "evidence": "Low SHBG associated with insulin resistance and obesity"
+        }
+      ],
+      "dietary_interventions": [
+        {
+          "intervention": "Weight loss (if overweight)",
+          "effect": "increases",
+          "evidence_level": "moderate"
+        },
+        {
+          "intervention": "Reduce refined carbohydrate intake",
+          "effect": "increases",
+          "evidence_level": "moderate"
+        }
+      ],
+      "biomarker_interactions": [
+        {
+          "interacts_with": "free-testosterone",
+          "interaction_type": "regulatory",
+          "description": "SHBG binds free testosterone, reducing bioavailable fraction"
+        },
+        {
+          "interacts_with": "testosterone",
+          "interaction_type": "regulatory",
+          "description": "Reciprocal regulation with testosterone"
+        },
+        {
+          "interacts_with": "insulin",
+          "interaction_type": "regulatory",
+          "description": "Insulin suppresses SHBG production"
+        }
+      ],
+      "nhanes_variable_code": "LBXSHBG"
+    },
+    {
+      "id": "testosterone",
+      "name": "Testosterone",
+      "abbreviation": "T",
+      "aliases": [
+        "Total testosterone",
+        "Testosterone"
+      ],
+      "category": "Hormone Balance",
+      "secondary_categories": [
+        "Sleep",
+        "Fitness"
+      ],
+      "unit_of_measure": "ng/dL",
+      "specimen_type": "serum",
+      "optimal_ranges": [
+        {
+          "sex": "male",
+          "age_min": 20,
+          "age_max": 39,
+          "low": 300,
+          "high": 1000,
+          "source": "clinical_guidelines"
+        },
+        {
+          "sex": "male",
+          "age_min": 40,
+          "age_max": 120,
+          "low": 200,
+          "high": 900,
+          "source": "clinical_guidelines"
+        },
+        {
+          "sex": "female",
+          "age_min": 20,
+          "age_max": 120,
+          "low": 15,
+          "high": 70,
+          "source": "clinical_guidelines"
+        }
+      ],
+      "clinical_reference_ranges": {
+        "adult": {
+          "low": 15,
+          "high": 1000,
+          "unit": "ng/dL"
+        }
+      },
+      "physiological_role": "Testosterone is the primary male sex hormone (androgen) produced mainly by the testes in men and ovaries in women, with adrenal contribution. It is essential for male reproductive development, muscle mass, bone density, red blood cell production, and well-being. Levels decline with age in men.\n",
+      "associated_health_outcomes": [
+        {
+          "outcome": "Hypogonadism",
+          "direction": "low",
+          "evidence": "Low testosterone causes symptoms of androgen deficiency"
+        },
+        {
+          "outcome": "Sarcopenia",
+          "direction": "low",
+          "evidence": "Testosterone helps maintain muscle mass and strength"
+        },
+        {
+          "outcome": "Osteoporosis",
+          "direction": "low",
+          "evidence": "Testosterone is important for bone health in men"
+        }
+      ],
+      "dietary_interventions": [
+        {
+          "intervention": "Adequate sleep",
+          "effect": "normalizes",
+          "evidence_level": "moderate"
+        },
+        {
+          "intervention": "Weight training exercises",
+          "effect": "increases",
+          "evidence_level": "strong"
+        },
+        {
+          "intervention": "Maintain healthy body weight",
+          "effect": "normalizes",
+          "evidence_level": "moderate"
+        }
+      ],
+      "biomarker_interactions": [
+        {
+          "interacts_with": "shbg",
+          "interaction_type": "regulatory",
+          "description": "SHBG binds testosterone, regulating free fraction"
+        },
+        {
+          "interacts_with": "lh",
+          "interaction_type": "regulatory",
+          "description": "LH stimulates testosterone production"
+        },
+        {
+          "interacts_with": "dheas",
+          "interaction_type": "metabolic",
+          "description": "DHEA is the precursor to testosterone"
+        }
+      ],
+      "nhanes_variable_code": "LBXTREC"
+    },
+    {
+      "id": "vitamin-d",
+      "name": "Vitamin D (25-hydroxyvitamin D)",
+      "abbreviation": "Vit D",
+      "aliases": [
+        "25-hydroxyvitamin D",
+        "25(OH)D",
+        "Calcidiol"
+      ],
+      "category": "Hormone Balance",
+      "secondary_categories": [
+        "Sleep",
+        "Inflammation",
+        "Recovery",
+        "Cognition"
+      ],
+      "unit_of_measure": "ng/mL",
+      "specimen_type": "serum",
+      "optimal_ranges": [
+        {
+          "sex": "all",
+          "age_min": 20,
+          "age_max": 120,
+          "low": 30,
+          "high": 80,
+          "source": "clinical_guidelines"
+        }
+      ],
+      "clinical_reference_ranges": {
+        "adult": {
+          "low": 20,
+          "high": 50,
+          "unit": "ng/mL"
+        }
+      },
+      "physiological_role": "Vitamin D is a fat-soluble vitamin that functions as a hormone, regulating calcium absorption, bone metabolism, immune function, and cell growth. It is synthesized in skin upon sun exposure or obtained from diet and supplements. 25-hydroxyvitamin D is the major circulating form and best reflects vitamin D status.\n",
+      "associated_health_outcomes": [
+        {
+          "outcome": "Osteoporosis and bone fractures",
+          "direction": "low",
+          "evidence": "Vitamin D essential for calcium absorption and bone health"
+        },
+        {
+          "outcome": "Muscle weakness",
+          "direction": "low",
+          "evidence": "Vitamin D deficiency causes proximal muscle weakness"
+        },
+        {
+          "outcome": "Immune dysfunction",
+          "direction": "low",
+          "evidence": "Vitamin D modulates both innate and adaptive immunity"
+        },
+        {
+          "outcome": "Depression",
+          "direction": "low",
+          "evidence": "Low vitamin D associated with depression in some studies"
+        }
+      ],
+      "dietary_interventions": [
+        {
+          "intervention": "Sun exposure (10-30 minutes daily)",
+          "effect": "increases",
+          "evidence_level": "strong"
+        },
+        {
+          "intervention": "Vitamin D-rich foods (fatty fish, fortified foods)",
+          "effect": "increases",
+          "evidence_level": "moderate"
+        }
+      ],
+      "supplement_considerations": [
+        {
+          "supplement": "Vitamin D3 (cholecalciferol)",
+          "effect": "increases",
+          "dosage": "1000-4000 IU daily (adjust based on baseline)",
+          "evidence_level": "strong"
+        },
+        {
+          "supplement": "Vitamin K2",
+          "effect": "supports",
+          "dosage": "100-200mcg daily",
+          "evidence_level": "moderate"
+        }
+      ],
+      "biomarker_interactions": [
+        {
+          "interacts_with": "calcium",
+          "interaction_type": "metabolic",
+          "description": "Vitamin D enhances intestinal calcium absorption"
+        },
+        {
+          "interacts_with": "parathyroid-hormone",
+          "interaction_type": "regulatory",
+          "description": "PTH increases when vitamin D is low"
+        },
+        {
+          "interacts_with": "phosphorus",
+          "interaction_type": "metabolic",
+          "description": "Vitamin D enhances phosphorus absorption"
+        }
+      ],
+      "nhanes_variable_code": "LBXVIDMS"
+    },
+    {
+      "id": "rbc-magnesium",
+      "name": "Red blood cell magnesium",
+      "abbreviation": "RBC Mg",
+      "aliases": [
+        "Erythrocyte magnesium",
+        "RBC magnesium"
+      ],
+      "category": "Hormone Balance",
+      "secondary_categories": [
+        "Sleep",
+        "Recovery"
+      ],
+      "unit_of_measure": "mg/dL",
+      "specimen_type": "RBC",
+      "optimal_ranges": [
+        {
+          "sex": "all",
+          "age_min": 20,
+          "age_max": 120,
+          "low": 4.2,
+          "high": 6.8,
+          "source": "clinical_guidelines"
+        }
+      ],
+      "clinical_reference_ranges": {
+        "adult": {
+          "low": 4.2,
+          "high": 6.8,
+          "unit": "mg/dL"
+        }
+      },
+      "physiological_role": "RBC magnesium measures magnesium levels inside red blood cells, providing a better indicator of intracellular magnesium status than serum magnesium. Magnesium is essential for over 300 enzymatic reactions, including ATP production, muscle function, and nerve transmission.\n",
+      "associated_health_outcomes": [
+        {
+          "outcome": "Magnesium deficiency",
+          "direction": "low",
+          "evidence": "Low RBC Mg indicates cellular magnesium depletion"
+        },
+        {
+          "outcome": "Muscle cramps and spasms",
+          "direction": "low",
+          "evidence": "Magnesium deficiency causes neuromuscular irritability"
+        },
+        {
+          "outcome": "Cardiac arrhythmias",
+          "direction": "low",
+          "evidence": "Magnesium critical for cardiac electrical activity"
+        }
+      ],
+      "dietary_interventions": [
+        {
+          "intervention": "Magnesium-rich foods (leafy greens, nuts, seeds)",
+          "effect": "increases",
+          "evidence_level": "moderate"
+        },
+        {
+          "intervention": "Reduce excessive caffeine and alcohol",
+          "effect": "normalizes",
+          "evidence_level": "moderate"
+        }
+      ],
+      "supplement_considerations": [
+        {
+          "supplement": "Magnesium glycinate or citrate",
+          "effect": "increases",
+          "dosage": "200-400mg daily",
+          "evidence_level": "strong"
+        }
+      ],
+      "biomarker_interactions": [
+        {
+          "interacts_with": "magnesium",
+          "interaction_type": "metabolic",
+          "description": "RBC Mg and serum Mg reflect different magnesium pools"
+        },
+        {
+          "interacts_with": "potassium",
+          "interaction_type": "metabolic",
+          "description": "Magnesium is required for potassium intracellular shift"
+        },
+        {
+          "interacts_with": "calcium",
+          "interaction_type": "metabolic",
+          "description": "Magnesium-calcium balance important for muscle function"
+        }
+      ],
+      "nhanes_variable_code": "LBXRBMG"
+    },
+    {
+      "id": "magnesium",
+      "name": "Magnesium",
+      "abbreviation": "Mg",
+      "aliases": [
+        "Serum magnesium",
+        "Total magnesium"
+      ],
+      "category": "Hormone Balance",
+      "secondary_categories": [
+        "Sleep",
+        "Recovery"
+      ],
+      "unit_of_measure": "mg/dL",
+      "specimen_type": "serum",
+      "optimal_ranges": [
+        {
+          "sex": "all",
+          "age_min": 20,
+          "age_max": 120,
+          "low": 1.7,
+          "high": 2.2,
+          "source": "clinical_guidelines"
+        }
+      ],
+      "clinical_reference_ranges": {
+        "adult": {
+          "low": 1.7,
+          "high": 2.2,
+          "unit": "mg/dL"
+        }
+      },
+      "physiological_role": "Magnesium is a critical mineral involved in energy metabolism, protein synthesis, muscle and nerve function, blood glucose control, and blood pressure regulation. It serves as a cofactor for many enzymes and is important for ATP-dependent reactions.\n",
+      "associated_health_outcomes": [
+        {
+          "outcome": "Hypertension",
+          "direction": "low",
+          "evidence": "Low magnesium associated with elevated blood pressure"
+        },
+        {
+          "outcome": "Type 2 diabetes",
+          "direction": "low",
+          "evidence": "Magnesium involved in insulin action and glucose metabolism"
+        },
+        {
+          "outcome": "Cardiovascular disease",
+          "direction": "both",
+          "evidence": "Both low and high magnesium affect cardiovascular risk"
+        }
+      ],
+      "dietary_interventions": [
+        {
+          "intervention": "Increase magnesium-rich foods (leafy greens, nuts, legumes)",
+          "effect": "increases",
+          "evidence_level": "moderate"
+        },
+        {
+          "intervention": "Reduce processed food intake",
+          "effect": "normalizes",
+          "evidence_level": "moderate"
+        }
+      ],
+      "supplement_considerations": [
+        {
+          "supplement": "Magnesium glycinate or citrate",
+          "effect": "increases",
+          "dosage": "200-400mg daily",
+          "evidence_level": "strong"
+        },
+        {
+          "supplement": "Magnesium threonate",
+          "effect": "supports",
+          "dosage": "100-200mg daily",
+          "evidence_level": "moderate"
+        }
+      ],
+      "biomarker_interactions": [
+        {
+          "interacts_with": "rbc-magnesium",
+          "interaction_type": "metabolic",
+          "description": "Both reflect magnesium status; RBC may be more sensitive"
+        },
+        {
+          "interacts_with": "potassium",
+          "interaction_type": "metabolic",
+          "description": "Magnesium required to maintain potassium intracellularly"
+        },
+        {
+          "interacts_with": "calcium",
+          "interaction_type": "metabolic",
+          "description": "Magnesium-calcium balance important for vascular tone"
+        }
+      ],
+      "nhanes_variable_code": "LBXMG"
+    },
+    {
+      "id": "glucose",
+      "name": "Glucose",
+      "abbreviation": "GLU",
+      "aliases": [
+        "Blood glucose",
+        "Fasting glucose",
+        "Blood sugar"
+      ],
+      "category": "Sleep",
+      "secondary_categories": [
+        "Metabolism",
+        "Cognition",
+        "Endurance",
+        "Gut Health"
+      ],
+      "unit_of_measure": "mg/dL",
+      "specimen_type": "serum",
+      "optimal_ranges": [
+        {
+          "sex": "all",
+          "age_min": 20,
+          "age_max": 120,
+          "low": 70,
+          "high": 99,
+          "source": "NHANES"
+        }
+      ],
+      "clinical_reference_ranges": {
+        "adult": {
+          "low": 70,
+          "high": 100,
+          "unit": "mg/dL"
+        }
+      },
+      "physiological_role": "Glucose is the primary energy source for cells and the only energy source for the brain under normal conditions. Blood glucose levels are tightly regulated by insulin and glucagon. Impaired fasting glucose indicates insulin resistance and is a prediabetic state.\n",
+      "associated_health_outcomes": [
+        {
+          "outcome": "Type 2 diabetes",
+          "direction": "high",
+          "evidence": "Elevated fasting glucose is diagnostic of diabetes when >=126 mg/dL"
+        },
+        {
+          "outcome": "Prediabetes",
+          "direction": "high",
+          "evidence": "Impaired fasting glucose (100-125 mg/dL) indicates prediabetes"
+        },
+        {
+          "outcome": "Hypoglycemia",
+          "direction": "low",
+          "evidence": "Glucose <70 mg/dL causes neurological symptoms"
+        }
+      ],
+      "dietary_interventions": [
+        {
+          "intervention": "Reduce refined carbohydrate intake",
+          "effect": "decreases",
+          "evidence_level": "strong"
+        },
+        {
+          "intervention": "Increase fiber intake",
+          "effect": "normalizes",
+          "evidence_level": "strong"
+        },
+        {
+          "intervention": "Regular meal timing",
+          "effect": "normalizes",
+          "evidence_level": "moderate"
+        },
+        {
+          "intervention": "Weight management",
+          "effect": "normalizes",
+          "evidence_level": "strong"
+        }
+      ],
+      "supplement_considerations": [
+        {
+          "supplement": "Chromium",
+          "effect": "normalizes",
+          "dosage": "200-500mcg daily",
+          "evidence_level": "moderate"
+        },
+        {
+          "supplement": "Alpha-lipoic acid",
+          "effect": "improves_sensitivity",
+          "dosage": "300-600mg daily",
+          "evidence_level": "moderate"
+        }
+      ],
+      "biomarker_interactions": [
+        {
+          "interacts_with": "insulin",
+          "interaction_type": "regulatory",
+          "description": "Insulin regulates glucose uptake into cells"
+        },
+        {
+          "interacts_with": "hemoglobin-a1c",
+          "interaction_type": "metabolic",
+          "description": "HbA1c reflects average glucose over 2-3 months"
+        },
+        {
+          "interacts_with": "cortisol",
+          "interaction_type": "regulatory",
+          "description": "Cortisol increases blood glucose"
+        }
+      ],
+      "nhanes_variable_code": "LBXGLU"
+    },
+    {
+      "id": "hemoglobin-a1c",
+      "name": "Hemoglobin A1c",
+      "abbreviation": "HbA1c",
+      "aliases": [
+        "Glycated hemoglobin",
+        "HbA1c",
+        "A1c"
+      ],
+      "category": "Sleep",
+      "secondary_categories": [
+        "Metabolism",
+        "Cognition",
+        "Gut Health"
+      ],
+      "unit_of_measure": "%",
+      "specimen_type": "whole blood",
+      "optimal_ranges": [
+        {
+          "sex": "all",
+          "age_min": 20,
+          "age_max": 120,
+          "low": 4.0,
+          "high": 5.6,
+          "source": "clinical_guidelines"
+        }
+      ],
+      "clinical_reference_ranges": {
+        "adult": {
+          "low": 4.0,
+          "high": 5.7,
+          "unit": "%"
+        }
+      },
+      "physiological_role": "HbA1c is hemoglobin with attached glucose (glycation) and reflects average blood glucose levels over the preceding 2-3 months (lifespan of red blood cells). It is used for diagnosing diabetes and prediabetes and for monitoring long-term glycemic control.\n",
+      "associated_health_outcomes": [
+        {
+          "outcome": "Diabetes complications",
+          "direction": "high",
+          "evidence": "Higher HbA1c associated with increased risk of microvascular complications"
+        },
+        {
+          "outcome": "Cardiovascular disease",
+          "direction": "high",
+          "evidence": "Elevated HbA1c is an independent CV risk factor"
+        }
+      ],
+      "dietary_interventions": [
+        {
+          "intervention": "Reduce added sugar intake",
+          "effect": "decreases",
+          "evidence_level": "strong"
+        },
+        {
+          "intervention": "Increase whole grain intake",
+          "effect": "decreases",
+          "evidence_level": "strong"
+        },
+        {
+          "intervention": "Weight loss",
+          "effect": "decreases",
+          "evidence_level": "strong"
+        }
+      ],
+      "supplement_considerations": [
+        {
+          "supplement": "Chromium",
+          "effect": "normalizes",
+          "dosage": "200-500mcg daily",
+          "evidence_level": "moderate"
+        },
+        {
+          "supplement": "Berberine",
+          "effect": "decreases",
+          "dosage": "500-1500mg daily",
+          "evidence_level": "strong"
+        }
+      ],
+      "biomarker_interactions": [
+        {
+          "interacts_with": "glucose",
+          "interaction_type": "metabolic",
+          "description": "HbA1c reflects average blood glucose over 2-3 months"
+        },
+        {
+          "interacts_with": "fasting-glucose",
+          "interaction_type": "metabolic",
+          "description": "Both reflect glycemic status"
+        },
+        {
+          "interacts_with": "insulin",
+          "interaction_type": "metabolic",
+          "description": "Insulin resistance drives elevated HbA1c"
+        }
+      ],
+      "nhanes_variable_code": "LBXGH"
+    },
+    {
+      "id": "white-blood-cell-count",
+      "name": "White blood cell count",
+      "abbreviation": "WBC",
+      "aliases": [
+        "Leukocyte count",
+        "WBC",
+        "White blood cells"
+      ],
+      "category": "Inflammation",
+      "secondary_categories": [
+        "Sleep",
+        "Endurance"
+      ],
+      "unit_of_measure": "cells/mcL",
+      "specimen_type": "whole blood",
+      "optimal_ranges": [
+        {
+          "sex": "all",
+          "age_min": 20,
+          "age_max": 120,
+          "low": 4500,
+          "high": 11000,
+          "source": "NHANES"
+        }
+      ],
+      "clinical_reference_ranges": {
+        "adult": {
+          "low": 4500,
+          "high": 11000,
+          "unit": "cells/mcL"
+        }
+      },
+      "physiological_role": "White blood cells are the immune system's effector cells, protecting against infections and foreign substances. Different WBC types (neutrophils, lymphocytes, monocytes, eosinophils, basophils) have distinct functions in innate and adaptive immunity.\n",
+      "associated_health_outcomes": [
+        {
+          "outcome": "Infection",
+          "direction": "both",
+          "evidence": "Elevated WBC indicates infection; very low increases infection risk"
+        },
+        {
+          "outcome": "Chronic inflammation",
+          "direction": "high",
+          "evidence": "Elevated WBC associated with cardiovascular disease and metabolic syndrome"
+        },
+        {
+          "outcome": "Hematologic malignancies",
+          "direction": "both",
+          "evidence": "Abnormal WBC counts may indicate leukemia or lymphoma"
+        }
+      ],
+      "dietary_interventions": [
+        {
+          "intervention": "Anti-inflammatory diet",
+          "effect": "decreases",
+          "evidence_level": "moderate"
+        },
+        {
+          "intervention": "Omega-3 fatty acids",
+          "effect": "normalizes",
+          "evidence_level": "moderate"
+        },
+        {
+          "intervention": "Weight loss (if overweight)",
+          "effect": "decreases",
+          "evidence_level": "moderate"
+        }
+      ],
+      "supplement_considerations": [
+        {
+          "supplement": "Vitamin C",
+          "effect": "supports",
+          "dosage": "500-1000mg daily",
+          "evidence_level": "moderate"
+        }
+      ],
+      "biomarker_interactions": [
+        {
+          "interacts_with": "neutrophils",
+          "interaction_type": "metabolic",
+          "description": "Neutrophils are the largest WBC fraction"
+        },
+        {
+          "interacts_with": "lymphocytes",
+          "interaction_type": "metabolic",
+          "description": "Lymphocytes are key adaptive immune cells"
+        },
+        {
+          "interacts_with": "crp",
+          "interaction_type": "metabolic",
+          "description": "Both are inflammatory markers"
+        }
+      ],
+      "nhanes_variable_code": "LBXWBCSI"
+    },
+    {
+      "id": "neutrophils",
+      "name": "Neutrophils",
+      "abbreviation": "NEUT",
+      "aliases": [
+        "Neutrophil count",
+        "Neutrophils (segmented)"
+      ],
+      "category": "Inflammation",
+      "secondary_categories": [
+        "Endurance"
+      ],
+      "unit_of_measure": "cells/mcL",
+      "specimen_type": "whole blood",
+      "optimal_ranges": [
+        {
+          "sex": "all",
+          "age_min": 20,
+          "age_max": 120,
+          "low": 1800,
+          "high": 7000,
+          "source": "NHANES"
+        }
+      ],
+      "clinical_reference_ranges": {
+        "adult": {
+          "low": 1800,
+          "high": 7700,
+          "unit": "cells/mcL"
+        }
+      },
+      "physiological_role": "Neutrophils are the most abundant white blood cells and serve as the primary defense against bacterial infections. They are phagocytic cells that engulf and destroy pathogens. Elevated neutrophils (neutrophilia) indicates acute bacterial infection or inflammatory condition.\n",
+      "associated_health_outcomes": [
+        {
+          "outcome": "Bacterial infection",
+          "direction": "high",
+          "evidence": "Neutrophilia is a hallmark of acute bacterial infection"
+        },
+        {
+          "outcome": "Chronic inflammation",
+          "direction": "high",
+          "evidence": "Elevated neutrophils associated with chronic inflammatory states"
+        }
+      ],
+      "dietary_interventions": [
+        {
+          "intervention": "Anti-inflammatory diet",
+          "effect": "decreases",
+          "evidence_level": "moderate"
+        }
+      ],
+      "biomarker_interactions": [
+        {
+          "interacts_with": "white-blood-cell-count",
+          "interaction_type": "metabolic",
+          "description": "Neutrophils are a major component of total WBC"
+        },
+        {
+          "interacts_with": "lymphocytes",
+          "interaction_type": "regulatory",
+          "description": "NLR (neutrophil/lymphocyte ratio) is a marker of inflammation"
+        }
+      ],
+      "nhanes_variable_code": "LBXNEPCT"
+    },
+    {
+      "id": "basophils",
+      "name": "Basophils",
+      "abbreviation": "BASO",
+      "aliases": [
+        "Basophil count"
+      ],
+      "category": "Inflammation",
+      "unit_of_measure": "cells/mcL",
+      "specimen_type": "whole blood",
+      "optimal_ranges": [
+        {
+          "sex": "all",
+          "age_min": 20,
+          "age_max": 120,
+          "low": 0,
+          "high": 200,
+          "source": "NHANES"
+        }
+      ],
+      "clinical_reference_ranges": {
+        "adult": {
+          "low": 0,
+          "high": 200,
+          "unit": "cells/mcL"
+        }
+      },
+      "physiological_role": "Basophils are rare white blood cells that play roles in allergic reactions, asthma, and parasite infections. They release histamine and heparin and are involved in modulating immune responses.\n",
+      "associated_health_outcomes": [
+        {
+          "outcome": "Allergic reactions",
+          "direction": "both",
+          "evidence": "Basophil activation in immediate hypersensitivity reactions"
+        },
+        {
+          "outcome": "Myeloproliferative disorders",
+          "direction": "high",
+          "evidence": "Basophilia may indicate chronic myeloid leukemia"
+        }
+      ],
+      "biomarker_interactions": [
+        {
+          "interacts_with": "white-blood-cell-count",
+          "interaction_type": "metabolic",
+          "description": "Basophils are a small fraction of total WBC"
+        },
+        {
+          "interacts_with": "eosinophils",
+          "interaction_type": "metabolic",
+          "description": "Both involved in allergic/parasitic responses"
+        }
+      ],
+      "nhanes_variable_code": "LBXBAPCT"
+    },
+    {
+      "id": "eosinophils",
+      "name": "Eosinophils",
+      "abbreviation": "EOS",
+      "aliases": [
+        "Eosinophil count"
+      ],
+      "category": "Inflammation",
+      "unit_of_measure": "cells/mcL",
+      "specimen_type": "whole blood",
+      "optimal_ranges": [
+        {
+          "sex": "all",
+          "age_min": 20,
+          "age_max": 120,
+          "low": 0,
+          "high": 500,
+          "source": "NHANES"
+        }
+      ],
+      "clinical_reference_ranges": {
+        "adult": {
+          "low": 0,
+          "high": 500,
+          "unit": "cells/mcL"
+        }
+      },
+      "physiological_role": "Eosinophils are white blood cells involved in combating parasitic infections and in allergic/immune reactions. They release cytotoxic granule contents that damage parasites but can also cause tissue damage in allergic conditions.\n",
+      "associated_health_outcomes": [
+        {
+          "outcome": "Parasitic infections",
+          "direction": "high",
+          "evidence": "Eosinophilia is characteristic of parasitic infections"
+        },
+        {
+          "outcome": "Allergic conditions and asthma",
+          "direction": "high",
+          "evidence": "Elevated eosinophils in allergic diseases and eosinophilic asthma"
+        },
+        {
+          "outcome": "Hypereosinophilic syndrome",
+          "direction": "high",
+          "evidence": "Persistently elevated eosinophils can cause organ damage"
+        }
+      ],
+      "biomarker_interactions": [
+        {
+          "interacts_with": "basophils",
+          "interaction_type": "metabolic",
+          "description": "Both involved in allergic/parasitic responses"
+        },
+        {
+          "interacts_with": "crp",
+          "interaction_type": "metabolic",
+          "description": "Both indicate inflammatory/allergic processes"
+        }
+      ],
+      "nhanes_variable_code": "LBXEOPCT"
+    },
+    {
+      "id": "lymphocytes",
+      "name": "Lymphocytes",
+      "abbreviation": "LYMPH",
+      "aliases": [
+        "Lymphocyte count"
+      ],
+      "category": "Inflammation",
+      "unit_of_measure": "cells/mcL",
+      "specimen_type": "whole blood",
+      "optimal_ranges": [
+        {
+          "sex": "all",
+          "age_min": 20,
+          "age_max": 120,
+          "low": 1000,
+          "high": 4800,
+          "source": "NHANES"
+        }
+      ],
+      "clinical_reference_ranges": {
+        "adult": {
+          "low": 1000,
+          "high": 4800,
+          "unit": "cells/mcL"
+        }
+      },
+      "physiological_role": "Lymphocytes are the key cells of adaptive immunity, including T cells (cellular immunity), B cells (humoral immunity), and NK cells (innate immunity). They are essential for specific recognition of pathogens and immunological memory.\n",
+      "associated_health_outcomes": [
+        {
+          "outcome": "Immunodeficiency",
+          "direction": "low",
+          "evidence": "Low lymphocytes (lymphopenia) increases infection risk"
+        },
+        {
+          "outcome": "HIV/AIDS",
+          "direction": "low",
+          "evidence": "CD4+ T cell count is key marker of HIV progression"
+        },
+        {
+          "outcome": "Lymphoproliferative disorders",
+          "direction": "both",
+          "evidence": "Elevated lymphocytes may indicate CLL or lymphoma"
+        }
+      ],
+      "dietary_interventions": [
+        {
+          "intervention": "Adequate protein intake",
+          "effect": "supports",
+          "evidence_level": "moderate"
+        },
+        {
+          "intervention": "Zinc sufficiency",
+          "effect": "supports",
+          "evidence_level": "moderate"
+        }
+      ],
+      "biomarker_interactions": [
+        {
+          "interacts_with": "white-blood-cell-count",
+          "interaction_type": "metabolic",
+          "description": "Lymphocytes are a major WBC fraction"
+        },
+        {
+          "interacts_with": "neutrophils",
+          "interaction_type": "regulatory",
+          "description": "NLR ratio is an inflammatory marker"
+        }
+      ],
+      "nhanes_variable_code": "LBXLYPCT"
+    },
+    {
+      "id": "monocytes",
+      "name": "Monocytes",
+      "abbreviation": "MONO",
+      "aliases": [
+        "Monocyte count"
+      ],
+      "category": "Inflammation",
+      "unit_of_measure": "cells/mcL",
+      "specimen_type": "whole blood",
+      "optimal_ranges": [
+        {
+          "sex": "all",
+          "age_min": 20,
+          "age_max": 120,
+          "low": 200,
+          "high": 950,
+          "source": "NHANES"
+        }
+      ],
+      "clinical_reference_ranges": {
+        "adult": {
+          "low": 200,
+          "high": 950,
+          "unit": "cells/mcL"
+        }
+      },
+      "physiological_role": "Monocytes are large phagocytic leukocytes that differentiate into macrophages and dendritic cells in tissues. They are important for phagocytosis of pathogens, antigen presentation, and cytokine production in immune responses.\n",
+      "associated_health_outcomes": [
+        {
+          "outcome": "Chronic inflammation",
+          "direction": "high",
+          "evidence": "Monocytes drive chronic inflammatory responses and atherosclerosis"
+        },
+        {
+          "outcome": "Autoimmune diseases",
+          "direction": "both",
+          "evidence": "Monocyte dysfunction seen in various autoimmune conditions"
+        }
+      ],
+      "dietary_interventions": [
+        {
+          "intervention": "Anti-inflammatory diet",
+          "effect": "decreases",
+          "evidence_level": "moderate"
+        }
+      ],
+      "biomarker_interactions": [
+        {
+          "interacts_with": "crp",
+          "interaction_type": "metabolic",
+          "description": "Monocytes produce inflammatory cytokines that stimulate CRP"
+        }
+      ],
+      "nhanes_variable_code": "LBXMOPCT"
+    },
+    {
+      "id": "ferritin",
+      "name": "Ferritin",
+      "abbreviation": "FERR",
+      "aliases": [
+        "Serum ferritin",
+        "Ferritin"
+      ],
+      "category": "Inflammation",
+      "secondary_categories": [
+        "Endurance",
+        "Recovery"
+      ],
+      "unit_of_measure": "ng/mL",
+      "specimen_type": "serum",
+      "optimal_ranges": [
+        {
+          "sex": "male",
+          "age_min": 20,
+          "age_max": 120,
+          "low": 20,
+          "high": 300,
+          "source": "NHANES"
+        },
+        {
+          "sex": "female",
+          "age_min": 20,
+          "age_max": 120,
+          "low": 12,
+          "high": 150,
+          "source": "NHANES"
+        }
+      ],
+      "clinical_reference_ranges": {
+        "adult": {
+          "low": 12,
+          "high": 300,
+          "unit": "ng/mL"
+        }
+      },
+      "physiological_role": "Ferritin is the primary iron storage protein and reflects body iron stores. It is also an acute-phase reactant elevated in inflammation, infection, and liver disease. Ferritin is essential for diagnosing iron deficiency (low) and iron overload (high) conditions.\n",
+      "associated_health_outcomes": [
+        {
+          "outcome": "Iron deficiency anemia",
+          "direction": "low",
+          "evidence": "Low ferritin with low hemoglobin indicates iron deficiency"
+        },
+        {
+          "outcome": "Iron overload/hemochromatosis",
+          "direction": "high",
+          "evidence": "Persistently elevated ferritin suggests iron overload"
+        },
+        {
+          "outcome": "Chronic disease anemia",
+          "direction": "high",
+          "evidence": "Ferritin elevated in anemia of chronic disease"
+        }
+      ],
+      "dietary_interventions": [
+        {
+          "intervention": "Iron-rich foods (red meat, spinach, legumes)",
+          "effect": "increases",
+          "evidence_level": "strong"
+        },
+        {
+          "intervention": "Vitamin C to enhance iron absorption",
+          "effect": "increases",
+          "evidence_level": "strong"
+        },
+        {
+          "intervention": "Avoid excessive red meat (if iron overloaded)",
+          "effect": "decreases",
+          "evidence_level": "moderate"
+        }
+      ],
+      "supplement_considerations": [
+        {
+          "supplement": "Iron (if deficient)",
+          "effect": "increases",
+          "dosage": "18-45mg daily (as directed)",
+          "evidence_level": "strong"
+        }
+      ],
+      "biomarker_interactions": [
+        {
+          "interacts_with": "iron",
+          "interaction_type": "metabolic",
+          "description": "Ferritin stores iron; directly correlated with iron stores"
+        },
+        {
+          "interacts_with": "transferrin-saturation",
+          "interaction_type": "metabolic",
+          "description": "Both reflect iron status"
+        },
+        {
+          "interacts_with": "tibc",
+          "interaction_type": "regulatory",
+          "description": "T IBC increases when iron is low"
+        },
+        {
+          "interacts_with": "crp",
+          "interaction_type": "metabolic",
+          "description": "Ferritin is an acute phase reactant"
+        }
+      ],
+      "nhanes_variable_code": "LBXFERI"
+    },
+    {
+      "id": "alt",
+      "name": "Alanine aminotransferase",
+      "abbreviation": "ALT",
+      "aliases": [
+        "Alanine transaminase",
+        "SGPT"
+      ],
+      "category": "Metabolism",
+      "secondary_categories": [
+        "Recovery"
+      ],
+      "unit_of_measure": "IU/L",
+      "specimen_type": "serum",
+      "optimal_ranges": [
+        {
+          "sex": "male",
+          "age_min": 20,
+          "age_max": 120,
+          "low": 7,
+          "high": 56,
+          "source": "NHANES"
+        },
+        {
+          "sex": "female",
+          "age_min": 20,
+          "age_max": 120,
+          "low": 7,
+          "high": 45,
+          "source": "NHANES"
+        }
+      ],
+      "clinical_reference_ranges": {
+        "adult": {
+          "low": 7,
+          "high": 56,
+          "unit": "IU/L"
+        }
+      },
+      "physiological_role": "ALT is an enzyme found primarily in liver cells. It is released into blood when hepatocytes are damaged and is a sensitive marker of liver injury. ALT is used to screen for liver disease and monitor liver function during drug therapy.\n",
+      "associated_health_outcomes": [
+        {
+          "outcome": "Liver disease",
+          "direction": "high",
+          "evidence": "Elevated ALT indicates hepatocyte injury"
+        },
+        {
+          "outcome": "Metabolic dysfunction-associated steatotic liver disease (MASLD)",
+          "direction": "high",
+          "evidence": "ALT often elevated in fatty liver disease"
+        }
+      ],
+      "dietary_interventions": [
+        {
+          "intervention": "Reduce alcohol intake",
+          "effect": "decreases",
+          "evidence_level": "strong"
+        },
+        {
+          "intervention": "Lose excess body weight",
+          "effect": "decreases",
+          "evidence_level": "strong"
+        },
+        {
+          "intervention": "Reduce processed food intake",
+          "effect": "decreases",
+          "evidence_level": "moderate"
+        }
+      ],
+      "biomarker_interactions": [
+        {
+          "interacts_with": "ast",
+          "interaction_type": "metabolic",
+          "description": "AST/ALT ratio used to differentiate liver disease causes"
+        },
+        {
+          "interacts_with": "ggt",
+          "interaction_type": "metabolic",
+          "description": "GGT elevated in biliary disease and alcohol use"
+        }
+      ],
+      "nhanes_variable_code": "LBXALT"
+    },
+    {
+      "id": "ast",
+      "name": "Aspartate aminotransferase",
+      "abbreviation": "AST",
+      "aliases": [
+        "Aspartate transaminase",
+        "SGOT"
+      ],
+      "category": "Recovery",
+      "unit_of_measure": "IU/L",
+      "specimen_type": "serum",
+      "optimal_ranges": [
+        {
+          "sex": "male",
+          "age_min": 20,
+          "age_max": 120,
+          "low": 10,
+          "high": 40,
+          "source": "NHANES"
+        },
+        {
+          "sex": "female",
+          "age_min": 20,
+          "age_max": 120,
+          "low": 9,
+          "high": 32,
+          "source": "NHANES"
+        }
+      ],
+      "clinical_reference_ranges": {
+        "adult": {
+          "low": 10,
+          "high": 40,
+          "unit": "IU/L"
+        }
+      },
+      "physiological_role": "AST is an enzyme found in liver, heart, skeletal muscle, and red blood cells. It is released with tissue damage and is less liver-specific than ALT. AST/ALT ratio helps differentiate causes of liver injury.\n",
+      "associated_health_outcomes": [
+        {
+          "outcome": "Liver disease",
+          "direction": "high",
+          "evidence": "Elevated AST with ALT helps characterize liver disease"
+        },
+        {
+          "outcome": "Muscle damage",
+          "direction": "high",
+          "evidence": "AST elevated with strenuous exercise or muscle injury"
+        }
+      ],
+      "dietary_interventions": [
+        {
+          "intervention": "Reduce alcohol intake",
+          "effect": "decreases",
+          "evidence_level": "strong"
+        }
+      ],
+      "biomarker_interactions": [
+        {
+          "interacts_with": "alt",
+          "interaction_type": "metabolic",
+          "description": "AST/ALT ratio used clinically; ratio >2 suggests alcoholic liver disease"
+        },
+        {
+          "interacts_with": "ck",
+          "interaction_type": "metabolic",
+          "description": "Both elevated in muscle damage"
+        }
+      ],
+      "nhanes_variable_code": "LBXAST"
+    },
+    {
+      "id": "ggt",
+      "name": "Gamma-glutamyl transpeptidase",
+      "abbreviation": "GGT",
+      "aliases": [
+        "Gamma-glutamyl transferase",
+        "GGTP"
+      ],
+      "category": "Recovery",
+      "unit_of_measure": "IU/L",
+      "specimen_type": "serum",
+      "optimal_ranges": [
+        {
+          "sex": "male",
+          "age_min": 20,
+          "age_max": 120,
+          "low": 8,
+          "high": 61,
+          "source": "NHANES"
+        },
+        {
+          "sex": "female",
+          "age_min": 20,
+          "age_max": 120,
+          "low": 5,
+          "high": 36,
+          "source": "NHANES"
+        }
+      ],
+      "clinical_reference_ranges": {
+        "adult": {
+          "low": 8,
+          "high": 61,
+          "unit": "IU/L"
+        }
+      },
+      "physiological_role": "GGT is an enzyme involved in glutathione metabolism and amino acid transport. It is found in liver, biliary tract, and kidney. GGT is a sensitive marker of biliary obstruction, liver disease, and alcohol use. It is often elevated before other liver enzymes in liver disease.\n",
+      "associated_health_outcomes": [
+        {
+          "outcome": "Biliary disease",
+          "direction": "high",
+          "evidence": "GGT highly sensitive to biliary obstruction"
+        },
+        {
+          "outcome": "Alcohol use",
+          "direction": "high",
+          "evidence": "GGT elevated with chronic alcohol consumption"
+        },
+        {
+          "outcome": "Cardiovascular disease",
+          "direction": "high",
+          "evidence": "Elevated GGT associated with CV events even within normal range"
+        }
+      ],
+      "dietary_interventions": [
+        {
+          "intervention": "Reduce alcohol consumption",
+          "effect": "decreases",
+          "evidence_level": "strong"
+        }
+      ],
+      "biomarker_interactions": [
+        {
+          "interacts_with": "alt",
+          "interaction_type": "metabolic",
+          "description": "GGT often elevated with other liver enzymes"
+        },
+        {
+          "interacts_with": "ast",
+          "interaction_type": "metabolic",
+          "description": "AST/ALT/GGT pattern helps identify liver disease cause"
+        }
+      ],
+      "nhanes_variable_code": "LBXGGT"
+    },
+    {
+      "id": "albumin",
+      "name": "Albumin",
+      "abbreviation": "ALB",
+      "aliases": [
+        "Serum albumin"
+      ],
+      "category": "Recovery",
+      "unit_of_measure": "g/dL",
+      "specimen_type": "serum",
+      "optimal_ranges": [
+        {
+          "sex": "all",
+          "age_min": 20,
+          "age_max": 120,
+          "low": 3.5,
+          "high": 5.0,
+          "source": "NHANES"
+        }
+      ],
+      "clinical_reference_ranges": {
+        "adult": {
+          "low": 3.5,
+          "high": 5.5,
+          "unit": "g/dL"
+        }
+      },
+      "physiological_role": "Albumin is the most abundant plasma protein, produced by the liver. It maintains oncotic pressure, transports hormones, drugs, and nutrients, and serves as a marker of nutritional status and liver function.\n",
+      "associated_health_outcomes": [
+        {
+          "outcome": "Malnutrition",
+          "direction": "low",
+          "evidence": "Low albumin indicates protein malnutrition"
+        },
+        {
+          "outcome": "Liver disease",
+          "direction": "low",
+          "evidence": "Low albumin reflects impaired liver synthetic function"
+        },
+        {
+          "outcome": "Chronic inflammation",
+          "direction": "low",
+          "evidence": "Albumin decreases in inflammatory states (negative acute phase reactant)"
+        }
+      ],
+      "dietary_interventions": [
+        {
+          "intervention": "Adequate protein intake",
+          "effect": "normalizes",
+          "evidence_level": "strong"
+        }
+      ],
+      "biomarker_interactions": [
+        {
+          "interacts_with": "prealbumin",
+          "interaction_type": "metabolic",
+          "description": "Both reflect nutritional status; prealbumin turns over faster"
+        },
+        {
+          "interacts_with": "crp",
+          "interaction_type": "regulatory",
+          "description": "CRP elevated when albumin is low (negative acute phase reactant)"
+        }
+      ],
+      "nhanes_variable_code": "LBXAL"
+    },
+    {
+      "id": "creatine-kinase",
+      "name": "Creatine kinase",
+      "abbreviation": "CK",
+      "aliases": [
+        "Creatine phosphokinase",
+        "CPK"
+      ],
+      "category": "Recovery",
+      "unit_of_measure": "IU/L",
+      "specimen_type": "serum",
+      "optimal_ranges": [
+        {
+          "sex": "male",
+          "age_min": 20,
+          "age_max": 120,
+          "low": 22,
+          "high": 198,
+          "source": "NHANES"
+        },
+        {
+          "sex": "female",
+          "age_min": 20,
+          "age_max": 120,
+          "low": 15,
+          "high": 140,
+          "source": "NHANES"
+        }
+      ],
+      "clinical_reference_ranges": {
+        "adult": {
+          "low": 22,
+          "high": 198,
+          "unit": "IU/L"
+        }
+      },
+      "physiological_role": "Creatine kinase is an enzyme found in skeletal muscle, heart, and brain. It catalyzes the transfer of phosphate from phosphocreatine to ADP, regenerating ATP. CK is released with muscle damage and is used to monitor athletic training and muscle injury.\n",
+      "associated_health_outcomes": [
+        {
+          "outcome": "Muscle damage/injury",
+          "direction": "high",
+          "evidence": "CK elevated after muscle injury, strenuous exercise"
+        },
+        {
+          "outcome": "Rhabdomyolysis",
+          "direction": "high",
+          "evidence": "Very high CK indicates muscle breakdown"
+        },
+        {
+          "outcome": "Heart attack",
+          "direction": "high",
+          "evidence": "CK-MB isoform specific for cardiac muscle"
+        }
+      ],
+      "dietary_interventions": [
+        {
+          "intervention": "Hydration",
+          "effect": "normalizes",
+          "evidence_level": "moderate"
+        },
+        {
+          "intervention": "Gradual exercise progression",
+          "effect": "normalizes",
+          "evidence_level": "moderate"
+        }
+      ],
+      "biomarker_interactions": [
+        {
+          "interacts_with": "ast",
+          "interaction_type": "metabolic",
+          "description": "Both elevated with muscle damage"
+        },
+        {
+          "interacts_with": "ldh",
+          "interaction_type": "metabolic",
+          "description": "LDH elevated with tissue damage"
+        }
+      ],
+      "nhanes_variable_code": "LBXCK"
+    },
+    {
+      "id": "sodium",
+      "name": "Sodium",
+      "abbreviation": "Na",
+      "aliases": [
+        "Serum sodium"
+      ],
+      "category": "Recovery",
+      "unit_of_measure": "mmol/L",
+      "specimen_type": "serum",
+      "optimal_ranges": [
+        {
+          "sex": "all",
+          "age_min": 20,
+          "age_max": 120,
+          "low": 136,
+          "high": 145,
+          "source": "clinical_guidelines"
+        }
+      ],
+      "clinical_reference_ranges": {
+        "adult": {
+          "low": 136,
+          "high": 145,
+          "unit": "mmol/L"
+        }
+      },
+      "physiological_role": "Sodium is the primary extracellular cation and is essential for maintaining fluid balance, blood pressure, and nerve/muscle function. Serum sodium is tightly regulated by the kidneys, aldosterone, and antidiuretic hormone.\n",
+      "associated_health_outcomes": [
+        {
+          "outcome": "Hyponatremia",
+          "direction": "low",
+          "evidence": "Low sodium causes neurological symptoms and can be life-threatening"
+        },
+        {
+          "outcome": "Hypernatremia",
+          "direction": "high",
+          "evidence": "High sodium causes dehydration and neurological symptoms"
+        },
+        {
+          "outcome": "Dehydration",
+          "direction": "high",
+          "evidence": "Elevated sodium indicates fluid loss"
+        }
+      ],
+      "dietary_interventions": [
+        {
+          "intervention": "Moderate sodium intake (2-3g daily)",
+          "effect": "normalizes",
+          "evidence_level": "strong"
+        },
+        {
+          "intervention": "Adequate hydration",
+          "effect": "normalizes",
+          "evidence_level": "strong"
+        }
+      ],
+      "biomarker_interactions": [
+        {
+          "interacts_with": "potassium",
+          "interaction_type": "regulatory",
+          "description": "Sodium-potassium pump maintains balance"
+        },
+        {
+          "interacts_with": "chloride",
+          "interaction_type": "metabolic",
+          "description": "Both are major extracellular electrolytes"
+        }
+      ],
+      "nhanes_variable_code": "LBXNA"
+    },
+    {
+      "id": "potassium",
+      "name": "Potassium",
+      "abbreviation": "K",
+      "aliases": [
+        "Serum potassium"
+      ],
+      "category": "Recovery",
+      "unit_of_measure": "mmol/L",
+      "specimen_type": "serum",
+      "optimal_ranges": [
+        {
+          "sex": "all",
+          "age_min": 20,
+          "age_max": 120,
+          "low": 3.5,
+          "high": 5.1,
+          "source": "clinical_guidelines"
+        }
+      ],
+      "clinical_reference_ranges": {
+        "adult": {
+          "low": 3.5,
+          "high": 5.1,
+          "unit": "mmol/L"
+        }
+      },
+      "physiological_role": "Potassium is the primary intracellular cation, essential for nerve conduction, muscle contraction, and maintaining cellular electrical potential. It is critical for cardiac function and is regulated by the kidneys, aldosterone, and acid-base status.\n",
+      "associated_health_outcomes": [
+        {
+          "outcome": "Cardiac arrhythmias",
+          "direction": "both",
+          "evidence": "Both high and low potassium can cause fatal arrhythmias"
+        },
+        {
+          "outcome": "Muscle weakness",
+          "direction": "both",
+          "evidence": "Potassium imbalances affect muscle function"
+        }
+      ],
+      "dietary_interventions": [
+        {
+          "intervention": "Potassium-rich foods (bananas, leafy greens, potatoes)",
+          "effect": "increases",
+          "evidence_level": "strong"
+        },
+        {
+          "intervention": "Reduce excessive sodium",
+          "effect": "normalizes",
+          "evidence_level": "moderate"
+        }
+      ],
+      "supplement_considerations": [
+        {
+          "supplement": "Potassium citrate",
+          "effect": "normalizes",
+          "dosage": "As directed (typical 99mg)",
+          "evidence_level": "strong"
+        }
+      ],
+      "biomarker_interactions": [
+        {
+          "interacts_with": "sodium",
+          "interaction_type": "regulatory",
+          "description": "Sodium-potassium pump maintains gradient"
+        },
+        {
+          "interacts_with": "magnesium",
+          "interaction_type": "metabolic",
+          "description": "Magnesium required for potassium intracellular balance"
+        }
+      ],
+      "nhanes_variable_code": "LBXK"
+    },
+    {
+      "id": "vitamin-b12",
+      "name": "Vitamin B12",
+      "abbreviation": "B12",
+      "aliases": [
+        "Cobalamin",
+        "B12"
+      ],
+      "category": "Cognition",
+      "secondary_categories": [
+        "Endurance",
+        "Fitness"
+      ],
+      "unit_of_measure": "pg/mL",
+      "specimen_type": "serum",
+      "optimal_ranges": [
+        {
+          "sex": "all",
+          "age_min": 20,
+          "age_max": 120,
+          "low": 200,
+          "high": 900,
+          "source": "clinical_guidelines"
+        }
+      ],
+      "clinical_reference_ranges": {
+        "adult": {
+          "low": 200,
+          "high": 900,
+          "unit": "pg/mL"
+        }
+      },
+      "physiological_role": "Vitamin B12 is essential for DNA synthesis, red blood cell formation, and neurological function. It serves as a cofactor for methionine synthase and methylmalonyl-CoA mutase. Deficiency causes megaloblastic anemia and neurological damage.\n",
+      "associated_health_outcomes": [
+        {
+          "outcome": "Pernicious anemia",
+          "direction": "low",
+          "evidence": "B12 deficiency causes megaloblastic anemia"
+        },
+        {
+          "outcome": "Neuropathy and cognitive decline",
+          "direction": "low",
+          "evidence": "B12 deficiency causes irreversible neurological damage"
+        },
+        {
+          "outcome": "Methylation defects",
+          "direction": "low",
+          "evidence": "B12 required for methylation cycle"
+        }
+      ],
+      "dietary_interventions": [
+        {
+          "intervention": "Animal products (meat, fish, dairy)",
+          "effect": "normalizes",
+          "evidence_level": "strong"
+        },
+        {
+          "intervention": "B12-fortified foods (for vegans)",
+          "effect": "normalizes",
+          "evidence_level": "strong"
+        }
+      ],
+      "supplement_considerations": [
+        {
+          "supplement": "Vitamin B12",
+          "effect": "normalizes",
+          "dosage": "500-1000mcg daily (sublingual)",
+          "evidence_level": "strong"
+        }
+      ],
+      "biomarker_interactions": [
+        {
+          "interacts_with": "folate",
+          "interaction_type": "metabolic",
+          "description": "Both involved in methylation cycle; B12 activates folate"
+        },
+        {
+          "interacts_with": "homocysteine",
+          "interaction_type": "regulatory",
+          "description": "B12 and folate normalize elevated homocysteine"
+        },
+        {
+          "interacts_with": "methylmalonic-acid",
+          "interaction_type": "metabolic",
+          "description": "MMA elevated specifically in B12 deficiency"
+        }
+      ],
+      "nhanes_variable_code": "LBXB12"
+    },
+    {
+      "id": "folate",
+      "name": "Folate",
+      "abbreviation": "FOL",
+      "aliases": [
+        "Folic acid",
+        "Vitamin B9"
+      ],
+      "category": "Cognition",
+      "secondary_categories": [
+        "Fitness"
+      ],
+      "unit_of_measure": "ng/mL",
+      "specimen_type": "serum",
+      "optimal_ranges": [
+        {
+          "sex": "all",
+          "age_min": 20,
+          "age_max": 120,
+          "low": 2.7,
+          "high": 17.0,
+          "source": "NHANES"
+        }
+      ],
+      "clinical_reference_ranges": {
+        "adult": {
+          "low": 2.7,
+          "high": 17.0,
+          "unit": "ng/mL"
+        }
+      },
+      "physiological_role": "Folate is essential for DNA synthesis, amino acid metabolism, and methylation reactions. It works with B12 in the methylation cycle and is critical for cell division and neural tube development.\n",
+      "associated_health_outcomes": [
+        {
+          "outcome": "Megaloblastic anemia",
+          "direction": "low",
+          "evidence": "Folate deficiency causes large red blood cells"
+        },
+        {
+          "outcome": "Neural tube defects (in pregnancy)",
+          "direction": "low",
+          "evidence": "Folate essential for fetal neural tube closure"
+        },
+        {
+          "outcome": "Elevated homocysteine",
+          "direction": "low",
+          "evidence": "Folate deficiency raises homocysteine levels"
+        }
+      ],
+      "dietary_interventions": [
+        {
+          "intervention": "Leafy green vegetables, legumes, fortified grains",
+          "effect": "normalizes",
+          "evidence_level": "strong"
+        }
+      ],
+      "supplement_considerations": [
+        {
+          "supplement": "Folic acid",
+          "effect": "normalizes",
+          "dosage": "400-800mcg daily",
+          "evidence_level": "strong"
+        }
+      ],
+      "biomarker_interactions": [
+        {
+          "interacts_with": "vitamin-b12",
+          "interaction_type": "metabolic",
+          "description": "B12 activates folate; deficiency of either raises homocysteine"
+        },
+        {
+          "interacts_with": "homocysteine",
+          "interaction_type": "regulatory",
+          "description": "Folate normalizes elevated homocysteine"
+        }
+      ],
+      "nhanes_variable_code": "LBXRBF"
+    },
+    {
+      "id": "hemoglobin",
+      "name": "Hemoglobin",
+      "abbreviation": "HGB",
+      "aliases": [
+        "Hb",
+        "Hemoglobin"
+      ],
+      "category": "Endurance",
+      "unit_of_measure": "g/dL",
+      "specimen_type": "whole blood",
+      "optimal_ranges": [
+        {
+          "sex": "male",
+          "age_min": 20,
+          "age_max": 120,
+          "low": 13.5,
+          "high": 17.5,
+          "source": "NHANES"
+        },
+        {
+          "sex": "female",
+          "age_min": 20,
+          "age_max": 120,
+          "low": 12.0,
+          "high": 16.0,
+          "source": "NHANES"
+        }
+      ],
+      "clinical_reference_ranges": {
+        "adult": {
+          "low": 12.0,
+          "high": 17.5,
+          "unit": "g/dL"
+        }
+      },
+      "physiological_role": "Hemoglobin is the oxygen-carrying protein in red blood cells, composed of four heme groups each containing iron. It binds oxygen in the lungs and releases it in peripheral tissues. Hemoglobin concentration is a key indicator of blood's oxygen-carrying capacity.\n",
+      "associated_health_outcomes": [
+        {
+          "outcome": "Anemia",
+          "direction": "low",
+          "evidence": "Low hemoglobin defines anemia"
+        },
+        {
+          "outcome": "Polycythemia",
+          "direction": "high",
+          "evidence": "Elevated hemoglobin may indicate polycythemia or dehydration"
+        },
+        {
+          "outcome": "Fatigue and exercise intolerance",
+          "direction": "low",
+          "evidence": "Low hemoglobin reduces oxygen delivery to tissues"
+        }
+      ],
+      "dietary_interventions": [
+        {
+          "intervention": "Iron-rich foods",
+          "effect": "increases",
+          "evidence_level": "strong"
+        },
+        {
+          "intervention": "Vitamin C to enhance iron absorption",
+          "effect": "increases",
+          "evidence_level": "strong"
+        }
+      ],
+      "biomarker_interactions": [
+        {
+          "interacts_with": "hematocrit",
+          "interaction_type": "metabolic",
+          "description": "Hematocrit is the volume fraction of RBCs; closely linked to HGB"
+        },
+        {
+          "interacts_with": "iron",
+          "interaction_type": "metabolic",
+          "description": "Iron is essential for hemoglobin synthesis"
+        },
+        {
+          "interacts_with": "ferritin",
+          "interaction_type": "metabolic",
+          "description": "Ferritin reflects iron stores available for HGB production"
+        }
+      ],
+      "nhanes_variable_code": "LBXHGB"
+    },
+    {
+      "id": "platelets",
+      "name": "Platelets",
+      "abbreviation": "PLT",
+      "aliases": [
+        "Thrombocytes",
+        "Platelet count"
+      ],
+      "category": "Endurance",
+      "unit_of_measure": "cells/mcL",
+      "specimen_type": "whole blood",
+      "optimal_ranges": [
+        {
+          "sex": "all",
+          "age_min": 20,
+          "age_max": 120,
+          "low": 150000,
+          "high": 400000,
+          "source": "NHANES"
+        }
+      ],
+      "clinical_reference_ranges": {
+        "adult": {
+          "low": 150000,
+          "high": 400000,
+          "unit": "cells/mcL"
+        }
+      },
+      "physiological_role": "Platelets are small blood fragments essential for hemostasis and thrombosis. They adhere to damaged blood vessels, aggregate to form clots, and release growth factors. Platelet count and function are important for cardiovascular and wound healing.\n",
+      "associated_health_outcomes": [
+        {
+          "outcome": "Thrombocytopenia",
+          "direction": "low",
+          "evidence": "Low platelets increase bleeding risk"
+        },
+        {
+          "outcome": "Thrombocytosis",
+          "direction": "high",
+          "evidence": "Elevated platelets increase thrombosis risk"
+        }
+      ],
+      "dietary_interventions": [
+        {
+          "intervention": "Omega-3 fatty acids",
+          "effect": "decreases",
+          "evidence_level": "moderate"
+        }
+      ],
+      "biomarker_interactions": [
+        {
+          "interacts_with": "mpv",
+          "interaction_type": "metabolic",
+          "description": "MPV reflects platelet size and activation"
+        },
+        {
+          "interacts_with": "crp",
+          "interaction_type": "metabolic",
+          "description": "Inflammation affects platelet function"
+        }
+      ],
+      "nhanes_variable_code": "LBXPLTSI"
+    },
+    {
+      "id": "transferrin-saturation",
+      "name": "Transferrin saturation",
+      "abbreviation": "TS",
+      "aliases": [
+        "Iron saturation",
+        "Transferrin saturation"
+      ],
+      "category": "Endurance",
+      "unit_of_measure": "%",
+      "specimen_type": "serum",
+      "optimal_ranges": [
+        {
+          "sex": "male",
+          "age_min": 20,
+          "age_max": 120,
+          "low": 20,
+          "high": 50,
+          "source": "clinical_guidelines"
+        },
+        {
+          "sex": "female",
+          "age_min": 20,
+          "age_max": 120,
+          "low": 15,
+          "high": 50,
+          "source": "clinical_guidelines"
+        }
+      ],
+      "clinical_reference_ranges": {
+        "adult": {
+          "low": 20,
+          "high": 50,
+          "unit": "%"
+        }
+      },
+      "physiological_role": "Transferrin saturation (TSAT) is the percentage of transferrin (iron- transport protein) that is saturated with iron. It indicates how much iron is available for tissues and is used with ferritin to assess iron status.\n",
+      "associated_health_outcomes": [
+        {
+          "outcome": "Iron deficiency",
+          "direction": "low",
+          "evidence": "Low TSAT with high TIBC indicates iron deficiency"
+        },
+        {
+          "outcome": "Iron overload",
+          "direction": "high",
+          "evidence": "High TSAT (>45%) suggests iron overload"
+        }
+      ],
+      "dietary_interventions": [
+        {
+          "intervention": "Iron supplementation (if deficient)",
+          "effect": "increases",
+          "evidence_level": "strong"
+        }
+      ],
+      "biomarker_interactions": [
+        {
+          "interacts_with": "iron",
+          "interaction_type": "metabolic",
+          "description": "TSAT = (serum iron / TIBC) x 100"
+        },
+        {
+          "interacts_with": "tibc",
+          "interaction_type": "metabolic",
+          "description": "TIBC increases when iron is low"
+        },
+        {
+          "interacts_with": "ferritin",
+          "interaction_type": "metabolic",
+          "description": "Both assess iron status"
+        }
+      ],
+      "nhanes_variable_code": "LBXRIS"
+    },
+    {
+      "id": "tibc",
+      "name": "Total iron binding capacity",
+      "abbreviation": "TIBC",
+      "aliases": [
+        "TIBC"
+      ],
+      "category": "Endurance",
+      "unit_of_measure": "ug/dL",
+      "specimen_type": "serum",
+      "optimal_ranges": [
+        {
+          "sex": "all",
+          "age_min": 20,
+          "age_max": 120,
+          "low": 250,
+          "high": 450,
+          "source": "NHANES"
+        }
+      ],
+      "clinical_reference_ranges": {
+        "adult": {
+          "low": 250,
+          "high": 450,
+          "unit": "ug/dL"
+        }
+      },
+      "physiological_role": "TIBC measures the maximum amount of iron that transferrin can bind. It increases when iron stores are low and decreases in iron overload, chronic disease, or malnutrition. TIBC is used with serum iron to calculate transferrin saturation.\n",
+      "associated_health_outcomes": [
+        {
+          "outcome": "Iron deficiency",
+          "direction": "high",
+          "evidence": "High TIBC with low iron indicates iron deficiency anemia"
+        },
+        {
+          "outcome": "Chronic disease anemia",
+          "direction": "low",
+          "evidence": "Low TIBC in anemia of chronic disease"
+        }
+      ],
+      "biomarker_interactions": [
+        {
+          "interacts_with": "iron",
+          "interaction_type": "metabolic",
+          "description": "TSAT = (serum iron / TIBC) x 100"
+        },
+        {
+          "interacts_with": "transferrin-saturation",
+          "interaction_type": "metabolic",
+          "description": "TIBC used to calculate transferrin saturation"
+        },
+        {
+          "interacts_with": "ferritin",
+          "interaction_type": "metabolic",
+          "description": "Ferritin and TIBC provide complementary iron status info"
+        }
+      ],
+      "nhanes_variable_code": "LBXRIT"
+    },
+    {
+      "id": "iron",
+      "name": "Iron",
+      "abbreviation": "FE",
+      "aliases": [
+        "Serum iron",
+        "Fe"
+      ],
+      "category": "Endurance",
+      "unit_of_measure": "ug/dL",
+      "specimen_type": "serum",
+      "optimal_ranges": [
+        {
+          "sex": "male",
+          "age_min": 20,
+          "age_max": 120,
+          "low": 65,
+          "high": 175,
+          "source": "NHANES"
+        },
+        {
+          "sex": "female",
+          "age_min": 20,
+          "age_max": 120,
+          "low": 50,
+          "high": 170,
+          "source": "NHANES"
+        }
+      ],
+      "clinical_reference_ranges": {
+        "adult": {
+          "low": 50,
+          "high": 175,
+          "unit": "ug/dL"
+        }
+      },
+      "physiological_role": "Serum iron is the amount of circulating iron bound to transferrin. Iron is essential for oxygen transport (hemoglobin), electron transport (cytochromes), and as a cofactor for many enzymes. Iron levels fluctuate throughout the day and with inflammation.\n",
+      "associated_health_outcomes": [
+        {
+          "outcome": "Iron deficiency anemia",
+          "direction": "low",
+          "evidence": "Low iron with low ferritin indicates iron deficiency"
+        },
+        {
+          "outcome": "Iron overload",
+          "direction": "high",
+          "evidence": "High iron may indicate hemochromatosis or iron overload"
+        }
+      ],
+      "dietary_interventions": [
+        {
+          "intervention": "Heme iron (red meat, poultry)",
+          "effect": "increases",
+          "evidence_level": "strong"
+        },
+        {
+          "intervention": "Non-heme iron (legumes, fortified foods)",
+          "effect": "increases",
+          "evidence_level": "moderate"
+        },
+        {
+          "intervention": "Vitamin C with iron-rich foods",
+          "effect": "increases",
+          "evidence_level": "strong"
+        }
+      ],
+      "biomarker_interactions": [
+        {
+          "interacts_with": "ferritin",
+          "interaction_type": "metabolic",
+          "description": "Ferritin stores iron; together assess iron status"
+        },
+        {
+          "interacts_with": "tibc",
+          "interaction_type": "metabolic",
+          "description": "TIBC measures iron-binding capacity"
+        },
+        {
+          "interacts_with": "transferrin-saturation",
+          "interaction_type": "metabolic",
+          "description": "TSAT = (serum iron / TIBC) x 100"
+        }
+      ],
+      "nhanes_variable_code": "LBXIR"
+    },
+    {
+      "id": "hematocrit",
+      "name": "Hematocrit",
+      "abbreviation": "HCT",
+      "aliases": [
+        "Packed cell volume",
+        "PCV"
+      ],
+      "category": "Endurance",
+      "unit_of_measure": "%",
+      "specimen_type": "whole blood",
+      "optimal_ranges": [
+        {
+          "sex": "male",
+          "age_min": 20,
+          "age_max": 120,
+          "low": 38.3,
+          "high": 48.6,
+          "source": "NHANES"
+        },
+        {
+          "sex": "female",
+          "age_min": 20,
+          "age_max": 120,
+          "low": 35.5,
+          "high": 44.9,
+          "source": "NHANES"
+        }
+      ],
+      "clinical_reference_ranges": {
+        "adult": {
+          "low": 35.5,
+          "high": 48.6,
+          "unit": "%"
+        }
+      },
+      "physiological_role": "Hematocrit is the percentage of total blood volume that is red blood cells. It reflects the blood's oxygen-carrying capacity and is used to diagnose and monitor anemia, polycythemia, and hydration status.\n",
+      "associated_health_outcomes": [
+        {
+          "outcome": "Anemia",
+          "direction": "low",
+          "evidence": "Low hematocrit indicates anemia"
+        },
+        {
+          "outcome": "Polycythemia",
+          "direction": "high",
+          "evidence": "Elevated hematocrit increases blood viscosity and thrombosis risk"
+        }
+      ],
+      "dietary_interventions": [
+        {
+          "intervention": "Iron-rich foods (if anemic)",
+          "effect": "increases",
+          "evidence_level": "strong"
+        }
+      ],
+      "biomarker_interactions": [
+        {
+          "interacts_with": "hemoglobin",
+          "interaction_type": "metabolic",
+          "description": "HCT is approximately 3x HGB; closely linked"
+        },
+        {
+          "interacts_with": "rbc",
+          "interaction_type": "metabolic",
+          "description": "HCT reflects RBC volume fraction"
+        }
+      ],
+      "nhanes_variable_code": "LBXHCT"
+    },
+    {
+      "id": "mpv",
+      "name": "Mean platelet volume",
+      "abbreviation": "MPV",
+      "aliases": [
+        "Mean platelet volume"
+      ],
+      "category": "Endurance",
+      "unit_of_measure": "fL",
+      "specimen_type": "whole blood",
+      "optimal_ranges": [
+        {
+          "sex": "all",
+          "age_min": 20,
+          "age_max": 120,
+          "low": 7.5,
+          "high": 11.5,
+          "source": "clinical_guidelines"
+        }
+      ],
+      "clinical_reference_ranges": {
+        "adult": {
+          "low": 7.5,
+          "high": 11.5,
+          "unit": "fL"
+        }
+      },
+      "physiological_role": "MPV measures the average size of platelets. Larger platelets are younger and more reactive. MPV is used to evaluate platelet production and destruction and is associated with inflammatory conditions and cardiovascular risk.\n",
+      "associated_health_outcomes": [
+        {
+          "outcome": "Cardiovascular disease",
+          "direction": "high",
+          "evidence": "Elevated MPV associated with increased platelet reactivity and CV risk"
+        },
+        {
+          "outcome": "Inflammatory conditions",
+          "direction": "high",
+          "evidence": "MPV elevated in acute inflammation"
+        }
+      ],
+      "biomarker_interactions": [
+        {
+          "interacts_with": "platelets",
+          "interaction_type": "metabolic",
+          "description": "MPV and platelet count often have inverse relationship"
+        }
+      ],
+      "nhanes_variable_code": "LBXMPV"
+    },
+    {
+      "id": "rbc-count",
+      "name": "Red blood cell count",
+      "abbreviation": "RBC",
+      "aliases": [
+        "Erythrocyte count",
+        "RBC count"
+      ],
+      "category": "Endurance",
+      "unit_of_measure": "cells/mcL",
+      "specimen_type": "whole blood",
+      "optimal_ranges": [
+        {
+          "sex": "male",
+          "age_min": 20,
+          "age_max": 120,
+          "low": 4.3,
+          "high": 5.9,
+          "source": "NHANES"
+        },
+        {
+          "sex": "female",
+          "age_min": 20,
+          "age_max": 120,
+          "low": 3.8,
+          "high": 5.1,
+          "source": "NHANES"
+        }
+      ],
+      "clinical_reference_ranges": {
+        "adult": {
+          "low": 3.8,
+          "high": 5.9,
+          "unit": "cells/mcL"
+        }
+      },
+      "physiological_role": "RBC count measures the number of red blood cells per volume of blood. RBCs contain hemoglobin and transport oxygen from lungs to tissues. RBC count is part of the complete blood count and helps diagnose anemia and polycythemia.\n",
+      "associated_health_outcomes": [
+        {
+          "outcome": "Anemia",
+          "direction": "low",
+          "evidence": "Low RBC count indicates anemia"
+        },
+        {
+          "outcome": "Polycythemia",
+          "direction": "high",
+          "evidence": "Elevated RBC suggests polycythemia vera or secondary erythrocytosis"
+        }
+      ],
+      "biomarker_interactions": [
+        {
+          "interacts_with": "hemoglobin",
+          "interaction_type": "metabolic",
+          "description": "RBC, HGB, and HCT all reflect oxygen-carrying capacity"
+        },
+        {
+          "interacts_with": "hematocrit",
+          "interaction_type": "metabolic",
+          "description": "RBC and HCT are closely correlated"
+        }
+      ],
+      "nhanes_variable_code": "LBXRBC"
+    },
+    {
+      "id": "mch",
+      "name": "Mean cell hemoglobin",
+      "abbreviation": "MCH",
+      "aliases": [
+        "Mean corpuscular hemoglobin",
+        "Average hemoglobin content per RBC"
+      ],
+      "category": "Endurance",
+      "unit_of_measure": "pg",
+      "specimen_type": "whole blood",
+      "optimal_ranges": [
+        {
+          "sex": "all",
+          "age_min": 20,
+          "age_max": 120,
+          "low": 27.5,
+          "high": 33.5,
+          "source": "NHANES"
+        }
+      ],
+      "clinical_reference_ranges": {
+        "adult": {
+          "low": 27.5,
+          "high": 33.5,
+          "unit": "pg"
+        }
+      },
+      "physiological_role": "MCH is the average amount of hemoglobin per red blood cell, calculated from hemoglobin and RBC count. It classifies anemia as normocytic, microcytic, or macrocytic and helps determine the cause of abnormal hemoglobin values.\n",
+      "associated_health_outcomes": [
+        {
+          "outcome": "Microcytic anemia",
+          "direction": "low",
+          "evidence": "Low MCH (<27) indicates iron deficiency or thalassemia"
+        },
+        {
+          "outcome": "Macrocytic anemia",
+          "direction": "high",
+          "evidence": "High MCH (>33) seen in B12/folate deficiency"
+        }
+      ],
+      "biomarker_interactions": [
+        {
+          "interacts_with": "mchc",
+          "interaction_type": "metabolic",
+          "description": "MCH and MCHC are related; both classify RBCs"
+        },
+        {
+          "interacts_with": "mcV",
+          "interaction_type": "metabolic",
+          "description": "All RBC indices related"
+        }
+      ],
+      "nhanes_variable_code": "LBXMCH"
+    },
+    {
+      "id": "mchc",
+      "name": "Mean cell hemoglobin concentration",
+      "abbreviation": "MCHC",
+      "aliases": [
+        "Mean corpuscular hemoglobin concentration",
+        "Average hemoglobin concentration per RBC"
+      ],
+      "category": "Endurance",
+      "unit_of_measure": "g/dL",
+      "specimen_type": "whole blood",
+      "optimal_ranges": [
+        {
+          "sex": "all",
+          "age_min": 20,
+          "age_max": 120,
+          "low": 32.0,
+          "high": 36.0,
+          "source": "NHANES"
+        }
+      ],
+      "clinical_reference_ranges": {
+        "adult": {
+          "low": 32.0,
+          "high": 36.0,
+          "unit": "g/dL"
+        }
+      },
+      "physiological_role": "MCHC is the average concentration of hemoglobin in red blood cells, expressed as grams per deciliter of RBCs. It is useful for classifying anemia and detecting abnormalities in hemoglobin concentration.\n",
+      "associated_health_outcomes": [
+        {
+          "outcome": "Hyperchromic anemia",
+          "direction": "high",
+          "evidence": "High MCHC (>36) seen in hereditary spherocytosis"
+        },
+        {
+          "outcome": "Hypochromic anemia",
+          "direction": "low",
+          "evidence": "Low MCHC (<32) indicates iron deficiency"
+        }
+      ],
+      "biomarker_interactions": [
+        {
+          "interacts_with": "mch",
+          "interaction_type": "metabolic",
+          "description": "MCH and MCHC related; both classify RBCs"
+        },
+        {
+          "interacts_with": "mcV",
+          "interaction_type": "metabolic",
+          "description": "All RBC indices related"
+        }
+      ],
+      "nhanes_variable_code": "LBXMCHC"
+    },
+    {
+      "id": "rdw",
+      "name": "Red cell distribution width",
+      "abbreviation": "RDW",
+      "aliases": [
+        "Red cell distribution width",
+        "RCDW"
+      ],
+      "category": "Endurance",
+      "unit_of_measure": "%",
+      "specimen_type": "whole blood",
+      "optimal_ranges": [
+        {
+          "sex": "all",
+          "age_min": 20,
+          "age_max": 120,
+          "low": 11.5,
+          "high": 14.5,
+          "source": "NHANES"
+        }
+      ],
+      "clinical_reference_ranges": {
+        "adult": {
+          "low": 11.5,
+          "high": 14.5,
+          "unit": "%"
+        }
+      },
+      "physiological_role": "RDW measures the variation in red blood cell size (anisocytosis). It is elevated in conditions where RBCs are abnormally small (microcytes) or large (macrocytes), such as iron deficiency, B12/folate deficiency, or thalassemia.\n",
+      "associated_health_outcomes": [
+        {
+          "outcome": "Iron deficiency anemia",
+          "direction": "high",
+          "evidence": "High RDW with low MCV indicates iron deficiency"
+        },
+        {
+          "outcome": "B12/folate deficiency",
+          "direction": "high",
+          "evidence": "High RDW with high MCV suggests megaloblastic anemia"
+        },
+        {
+          "outcome": "Mixed deficiency",
+          "direction": "high",
+          "evidence": "Very high RDW may indicate multiple nutritional deficiencies"
+        }
+      ],
+      "biomarker_interactions": [
+        {
+          "interacts_with": "mcV",
+          "interaction_type": "metabolic",
+          "description": "RDW and MCV together help classify anemia"
+        },
+        {
+          "interacts_with": "hemoglobin",
+          "interaction_type": "metabolic",
+          "description": "Both used in anemia workup"
+        }
+      ],
+      "nhanes_variable_code": "LBXRDW"
+    },
+    {
+      "id": "mcv",
+      "name": "Mean corpuscular volume",
+      "abbreviation": "MCV",
+      "aliases": [
+        "Mean cell volume",
+        "Average red blood cell size"
+      ],
+      "category": "Endurance",
+      "unit_of_measure": "fL",
+      "specimen_type": "whole blood",
+      "optimal_ranges": [
+        {
+          "sex": "all",
+          "age_min": 20,
+          "age_max": 120,
+          "low": 80.0,
+          "high": 100.0,
+          "source": "NHANES"
+        }
+      ],
+      "clinical_reference_ranges": {
+        "adult": {
+          "low": 80.0,
+          "high": 100.0,
+          "unit": "fL"
+        }
+      },
+      "physiological_role": "MCV is the average volume of red blood cells, used to classify anemia as normocytic (normal), microcytic (small), or macrocytic (large). It helps identify the underlying cause of abnormal hemoglobin levels.\n",
+      "associated_health_outcomes": [
+        {
+          "outcome": "Microcytic anemia",
+          "direction": "low",
+          "evidence": "MCV <80 indicates iron deficiency or thalassemia"
+        },
+        {
+          "outcome": "Macrocytic anemia",
+          "direction": "high",
+          "evidence": "MCV >100 indicates B12/folate deficiency or liver disease"
+        }
+      ],
+      "biomarker_interactions": [
+        {
+          "interacts_with": "mch",
+          "interaction_type": "metabolic",
+          "description": "MCV and MCH are correlated"
+        },
+        {
+          "interacts_with": "rdw",
+          "interaction_type": "metabolic",
+          "description": "RDW and MCV together classify anemia"
+        }
+      ],
+      "nhanes_variable_code": "LBXMCV"
+    }
+  ]
+}

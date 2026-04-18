@@ -9,9 +9,21 @@ import {
   getFoodDetail,
   findVariantDetail,
   getAnnotationIndex,
+  getPriorityFindings,
   lookupRsidAcrossReports,
+  summarizeDiseaseRisks,
+  summarizeGeneticPathways,
+  summarizePharmacogenomics,
   summarizeReport,
 } from "./dna.js";
+import {
+  analyzeBloodwork,
+  buildBloodworkActionPlan,
+  calculateBiologicalAge,
+  getBloodworkBiomarker,
+  getBloodworkBiomarkers,
+  getBloodworkCategoryScores,
+} from "./bloodwork.js";
 import type {
   Appointment,
   DailyHealthSummary,
@@ -215,10 +227,12 @@ const plugin = definePlugin({
       const workouts = await getArrayState<WorkoutLog>(ctx, DATA_KEYS.WORKOUT_LOGS);
       const meals = await getArrayState<MealLog>(ctx, DATA_KEYS.MEAL_LOGS);
       const reports = await getArrayState<DnaReport>(ctx, DATA_KEYS.DNA_REPORTS);
+      const labResults = await getArrayState<LabResult>(ctx, DATA_KEYS.LAB_RESULTS);
       return {
         workoutSummary: computeWorkoutSummary(workouts),
         mealsLogged: meals.length,
         dna: reports.at(-1) ? summarizeReport(reports.at(-1)!) : null,
+        bloodwork: labResults.at(-1) ? analyzeBloodwork(labResults.at(-1)!, {}).overallSummary : null,
       };
     });
 
@@ -660,6 +674,85 @@ const plugin = definePlugin({
       trends: computeLabTrendSummary(await getArrayState<LabResult>(ctx, DATA_KEYS.LAB_RESULTS)),
     }));
 
+    ctx.actions.register(ACTION_KEYS.GET_BLOODWORK_BIOMARKERS, async (params: any) => ({
+      biomarkers: getBloodworkBiomarkers({
+        category: params?.category,
+        query: params?.query,
+      }),
+    }));
+
+    ctx.actions.register(ACTION_KEYS.GET_BLOODWORK_BIOMARKER, async (params: any) => ({
+      biomarker: params?.id ? getBloodworkBiomarker(params.id) : getBloodworkBiomarker(params?.query ?? ""),
+    }));
+
+    ctx.actions.register(ACTION_KEYS.ANALYZE_BLOODWORK, async (params: any) => {
+      const results = await getArrayState<LabResult>(ctx, DATA_KEYS.LAB_RESULTS);
+      const result = results.find((entry) => entry.id === params?.labResultId) ?? results.at(-1);
+      if (!result) {
+        return { success: false, error: "No lab result available to analyze." };
+      }
+
+      return {
+        success: true,
+        analysis: analyzeBloodwork(result, {
+          age: params?.age,
+          chronologicalAge: params?.chronologicalAge,
+          sex: params?.sex,
+        }),
+      };
+    });
+
+    ctx.actions.register(ACTION_KEYS.GET_BLOODWORK_CATEGORY_SCORES, async (params: any) => {
+      const results = await getArrayState<LabResult>(ctx, DATA_KEYS.LAB_RESULTS);
+      const result = results.find((entry) => entry.id === params?.labResultId) ?? results.at(-1);
+      if (!result) {
+        return { success: false, error: "No lab result available to score." };
+      }
+
+      return {
+        success: true,
+        categoryScores: getBloodworkCategoryScores(result, {
+          age: params?.age,
+          chronologicalAge: params?.chronologicalAge,
+          sex: params?.sex,
+        }),
+      };
+    });
+
+    ctx.actions.register(ACTION_KEYS.CALCULATE_BIOLOGICAL_AGE, async (params: any) => {
+      const results = await getArrayState<LabResult>(ctx, DATA_KEYS.LAB_RESULTS);
+      const result = results.find((entry) => entry.id === params?.labResultId) ?? results.at(-1);
+      if (!result) {
+        return { success: false, error: "No lab result available for biological-age calculation." };
+      }
+
+      return {
+        success: true,
+        biologicalAge: calculateBiologicalAge(result, {
+          age: params?.age,
+          chronologicalAge: params?.chronologicalAge,
+          sex: params?.sex,
+        }),
+      };
+    });
+
+    ctx.actions.register(ACTION_KEYS.GET_BLOODWORK_ACTION_PLAN, async (params: any) => {
+      const results = await getArrayState<LabResult>(ctx, DATA_KEYS.LAB_RESULTS);
+      const result = results.find((entry) => entry.id === params?.labResultId) ?? results.at(-1);
+      if (!result) {
+        return { success: false, error: "No lab result available for action-plan generation." };
+      }
+
+      return {
+        success: true,
+        actionPlan: buildBloodworkActionPlan(result, {
+          age: params?.age,
+          chronologicalAge: params?.chronologicalAge,
+          sex: params?.sex,
+        }),
+      };
+    });
+
     ctx.actions.register(ACTION_KEYS.ADD_HABIT, async (params: any) => {
       const habit: Habit = {
         id: generateId(),
@@ -832,6 +925,30 @@ const plugin = definePlugin({
         return { success: false, error: "Both reports must exist to compare them." };
       }
       return { success: true, comparison: compareDnaReports(left, right) };
+    });
+
+    ctx.actions.register(ACTION_KEYS.GET_DNA_PRIORITY_FINDINGS, async (params: any) => {
+      const reports = await getArrayState<DnaReport>(ctx, DATA_KEYS.DNA_REPORTS);
+      const report = reports.find((entry) => entry.id === params?.reportId) ?? reports.at(-1);
+      return { priorityFindings: report ? getPriorityFindings(report) : [] };
+    });
+
+    ctx.actions.register(ACTION_KEYS.GET_DNA_DISEASE_RISKS, async (params: any) => {
+      const reports = await getArrayState<DnaReport>(ctx, DATA_KEYS.DNA_REPORTS);
+      const report = reports.find((entry) => entry.id === params?.reportId) ?? reports.at(-1);
+      return { diseaseRisks: report ? summarizeDiseaseRisks(report) : [] };
+    });
+
+    ctx.actions.register(ACTION_KEYS.GET_DNA_PHARMACOGENOMICS, async (params: any) => {
+      const reports = await getArrayState<DnaReport>(ctx, DATA_KEYS.DNA_REPORTS);
+      const report = reports.find((entry) => entry.id === params?.reportId) ?? reports.at(-1);
+      return { pharmacogenomics: report ? summarizePharmacogenomics(report) : [] };
+    });
+
+    ctx.actions.register(ACTION_KEYS.GET_DNA_PATHWAYS, async (params: any) => {
+      const reports = await getArrayState<DnaReport>(ctx, DATA_KEYS.DNA_REPORTS);
+      const report = reports.find((entry) => entry.id === params?.reportId) ?? reports.at(-1);
+      return { pathways: report ? summarizeGeneticPathways(report) : [] };
     });
 
     ctx.actions.register(ACTION_KEYS.EXPORT_DNA_INSIGHTS, async (params: any) => {

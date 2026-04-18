@@ -13,6 +13,38 @@ rs429358\t19\t44908684\tCT
 rs4683\t22\t19963748\tAA
 `;
 
+const sampleBloodworkPanels = [
+  {
+    name: "Cardiometabolic",
+    biomarkers: [
+      { name: "Albumin", value: 4.1, unit: "g/dL" },
+      { name: "Creatinine", value: 1.05, unit: "mg/dL" },
+      { name: "Glucose", value: 102, unit: "mg/dL" },
+      { name: "High-sensitivity C-reactive protein", value: 2.4, unit: "mg/L" },
+      { name: "LDL cholesterol", value: 132, unit: "mg/dL" },
+      { name: "HDL cholesterol", value: 43, unit: "mg/dL" },
+      { name: "Total cholesterol", value: 214, unit: "mg/dL" },
+      { name: "Triglycerides", value: 168, unit: "mg/dL" },
+      { name: "Hemoglobin A1c", value: 5.8, unit: "%" },
+    ],
+  },
+  {
+    name: "CBC / Recovery",
+    biomarkers: [
+      { name: "Lymphocyte %", value: 24, unit: "%" },
+      { name: "MCV", value: 92, unit: "fL" },
+      { name: "RDW", value: 13.8, unit: "%" },
+      { name: "Alkaline phosphatase", value: 88, unit: "U/L" },
+      { name: "Blood urea nitrogen", value: 19, unit: "mg/dL" },
+      { name: "Vitamin D (25-hydroxyvitamin D)", value: 26, unit: "ng/mL" },
+      { name: "Magnesium", value: 1.8, unit: "mg/dL" },
+      { name: "Ferritin", value: 42, unit: "ng/mL" },
+      { name: "Free testosterone", value: 72, unit: "pg/mL" },
+      { name: "Sex-hormone binding globulin", value: 48, unit: "nmol/L" },
+    ],
+  },
+];
+
 describe("Personal Health plugin", () => {
   let harness: Awaited<ReturnType<typeof buildHarness>>;
 
@@ -110,6 +142,67 @@ describe("Personal Health plugin", () => {
     const exported = await harness.performAction(ACTION_KEYS.EXPORT_DNA_INSIGHTS, { reportId }) as { markdown: string };
     expect(exported.markdown).toContain("Actionable Health Protocol");
     expect(exported.markdown).toContain("MTHFR");
+    expect(exported.markdown).toContain("Disease Risk Watchlist");
+    expect(exported.markdown).toContain("Pharmacogenomic Watch-outs");
+
+    const priority = await harness.performAction(ACTION_KEYS.GET_DNA_PRIORITY_FINDINGS, { reportId }) as { priorityFindings: Array<{ title: string }> };
+    expect(priority.priorityFindings[0].title.length).toBeGreaterThan(0);
+
+    const diseaseRisks = await harness.performAction(ACTION_KEYS.GET_DNA_DISEASE_RISKS, { reportId }) as { diseaseRisks: Array<{ domain: string }> };
+    expect(diseaseRisks.diseaseRisks.length).toBeGreaterThan(0);
+
+    const pharmacogenomics = await harness.performAction(ACTION_KEYS.GET_DNA_PHARMACOGENOMICS, { reportId }) as { pharmacogenomics: Array<{ gene: string }> };
+    expect(pharmacogenomics.pharmacogenomics.length).toBeGreaterThan(0);
+
+    const pathways = await harness.performAction(ACTION_KEYS.GET_DNA_PATHWAYS, { reportId }) as { pathways: Array<{ pathway: string }> };
+    expect(pathways.pathways.length).toBeGreaterThan(0);
+  });
+
+  it("analyzes bloodwork against BloodWork-inspired biomarker logic and biological age", async () => {
+    const added = await harness.performAction(ACTION_KEYS.ADD_LAB_RESULT, {
+      labName: "Function Health",
+      resultedAt: "2026-04-17T09:00:00Z",
+      panels: sampleBloodworkPanels,
+      notes: "fasted morning draw",
+    }) as { labResult: { id: string } };
+
+    const biomarkerLookup = await harness.performAction(ACTION_KEYS.GET_BLOODWORK_BIOMARKER, {
+      query: "vitamin d",
+    }) as { biomarker: { id: string; category: string } };
+    expect(biomarkerLookup.biomarker.id).toBe("vitamin-d");
+    expect(biomarkerLookup.biomarker.category).toBe("Hormone Balance");
+
+    const analysis = await harness.performAction(ACTION_KEYS.ANALYZE_BLOODWORK, {
+      labResultId: added.labResult.id,
+      age: 34,
+      chronologicalAge: 34,
+      sex: "male",
+    }) as { success: boolean; analysis: { evaluatedBiomarkers: Array<{ status: string }>; overallSummary: string } };
+    expect(analysis.success).toBe(true);
+    expect(analysis.analysis.evaluatedBiomarkers.length).toBeGreaterThan(8);
+    expect(analysis.analysis.overallSummary).toContain("Strongest category");
+
+    const categoryScores = await harness.performAction(ACTION_KEYS.GET_BLOODWORK_CATEGORY_SCORES, {
+      labResultId: added.labResult.id,
+      age: 34,
+      sex: "male",
+    }) as { categoryScores: Array<{ category: string; score: number }> };
+    expect(categoryScores.categoryScores.some((entry) => entry.category === "Heart Health")).toBe(true);
+
+    const biologicalAge = await harness.performAction(ACTION_KEYS.CALCULATE_BIOLOGICAL_AGE, {
+      labResultId: added.labResult.id,
+      chronologicalAge: 34,
+      sex: "male",
+    }) as { biologicalAge: { method: string; comboSignals: Array<{ name: string }> } };
+    expect(biologicalAge.biologicalAge.method).toBe("kdm-style-clinical-clock");
+    expect(biologicalAge.biologicalAge.comboSignals.some((entry) => entry.name === "Metabolic Combo")).toBe(true);
+
+    const actionPlan = await harness.performAction(ACTION_KEYS.GET_BLOODWORK_ACTION_PLAN, {
+      labResultId: added.labResult.id,
+      age: 34,
+      sex: "male",
+    }) as { actionPlan: Array<{ biomarkerName: string }> };
+    expect(actionPlan.actionPlan.length).toBeGreaterThan(0);
   });
 
   it("emits ambient nudges once per day when an agent run finishes", async () => {

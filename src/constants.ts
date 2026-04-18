@@ -114,6 +114,12 @@ export const ACTION_KEYS = {
   ADD_LAB_RESULT: "health.add-lab-result",
   GET_LAB_RESULTS: "health.get-lab-results",
   REVIEW_LAB_TRENDS: "health.review-lab-trends",
+  GET_BLOODWORK_BIOMARKERS: "health.get-bloodwork-biomarkers",
+  GET_BLOODWORK_BIOMARKER: "health.get-bloodwork-biomarker",
+  ANALYZE_BLOODWORK: "health.analyze-bloodwork",
+  GET_BLOODWORK_CATEGORY_SCORES: "health.get-bloodwork-category-scores",
+  CALCULATE_BIOLOGICAL_AGE: "health.calculate-biological-age",
+  GET_BLOODWORK_ACTION_PLAN: "health.get-bloodwork-action-plan",
 
   // Habits
   ADD_HABIT: "health.add-habit",
@@ -141,6 +147,10 @@ export const ACTION_KEYS = {
   LOOKUP_RSID: "health.lookup-rsid",
   ANNOTATE_VARIANT: "health.annotate-variant",
   COMPARE_DNA_REPORTS: "health.compare-dna-reports",
+  GET_DNA_PRIORITY_FINDINGS: "health.get-dna-priority-findings",
+  GET_DNA_DISEASE_RISKS: "health.get-dna-disease-risks",
+  GET_DNA_PHARMACOGENOMICS: "health.get-dna-pharmacogenomics",
+  GET_DNA_PATHWAYS: "health.get-dna-pathways",
   EXPORT_DNA_INSIGHTS: "health.export-dna-insights",
   DELETE_DNA_REPORT: "health.delete-dna-report",
 

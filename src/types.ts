@@ -189,6 +189,41 @@ export interface DnaSettings {
   researchOptIn: boolean;
 }
 
+export interface DnaPriorityFinding {
+  gene: string;
+  title: string;
+  category: DnaInsightCategory;
+  impact: "positive" | "neutral" | "risk";
+  evidenceLabel?: string;
+  actionableRecommendation?: string;
+  relevantVariants: string[];
+  priorityScore: number;
+}
+
+export interface DnaDiseaseRisk {
+  domain: string;
+  level: "low" | "moderate" | "high";
+  rationale: string;
+  genes: string[];
+  supportingInsights: string[];
+  monitoringSuggestions: string[];
+}
+
+export interface DnaPharmacogenomicInteraction {
+  gene: string;
+  medications: string[];
+  summary: string;
+  evidenceLabel?: string;
+  relevantVariants: string[];
+}
+
+export interface DnaPathwaySummary {
+  pathway: string;
+  categories: DnaInsightCategory[];
+  genes: string[];
+  highlights: string[];
+}
+
 export interface Medication {
   id: string;
   name: string;
@@ -263,6 +298,140 @@ export interface LabBiomarker {
   referenceRangeLow?: number;
   referenceRangeHigh?: number;
   outOfRange?: boolean;
+}
+
+export type BiologicalSex = "male" | "female" | "all";
+
+export type HealthspanCategory =
+  | "Heart Health"
+  | "Hormone Balance"
+  | "Sleep"
+  | "Inflammation"
+  | "Metabolism"
+  | "Recovery"
+  | "Cognition"
+  | "Endurance"
+  | "Fitness"
+  | "Gut Health";
+
+export interface BiomarkerOptimalRange {
+  sex: BiologicalSex;
+  ageMin: number;
+  ageMax: number;
+  low: number;
+  high: number;
+  source?: string;
+}
+
+export interface ClinicalReferenceRange {
+  low?: number;
+  high?: number;
+  unit: string;
+}
+
+export interface BiomarkerOutcome {
+  outcome: string;
+  direction: string;
+  evidence?: string;
+}
+
+export interface BiomarkerIntervention {
+  intervention: string;
+  effect: string;
+  evidenceLevel?: string;
+}
+
+export interface BiomarkerSupplement {
+  supplement: string;
+  effect: string;
+  dosage?: string;
+  evidenceLevel?: string;
+}
+
+export interface BiomarkerInteraction {
+  interactsWith: string;
+  relationship?: string;
+}
+
+export interface BloodworkBiomarkerDefinition {
+  id: string;
+  name: string;
+  abbreviation: string;
+  aliases?: string[];
+  category: HealthspanCategory;
+  secondaryCategories?: HealthspanCategory[];
+  unit: string;
+  specimenType?: string;
+  nhanesVariableCode?: string;
+  optimalRanges: BiomarkerOptimalRange[];
+  clinicalReferenceRanges?: Record<string, ClinicalReferenceRange>;
+  physiologicalRole?: string;
+  associatedHealthOutcomes?: BiomarkerOutcome[];
+  dietaryInterventions?: BiomarkerIntervention[];
+  supplementConsiderations?: BiomarkerSupplement[];
+  biomarkerInteractions?: BiomarkerInteraction[];
+  keyActions: string[];
+}
+
+export interface EvaluatedLabBiomarker {
+  id: string;
+  name: string;
+  abbreviation: string;
+  category: HealthspanCategory;
+  value: number;
+  unit: string;
+  status: "low" | "optimal" | "high" | "unknown";
+  optimalRange?: BiomarkerOptimalRange;
+  clinicalRange?: ClinicalReferenceRange;
+  deviation?: number;
+  supportingActions: string[];
+}
+
+export interface BloodworkCategoryScore {
+  category: HealthspanCategory;
+  score: number;
+  optimalCount: number;
+  biomarkersConsidered: number;
+  flaggedBiomarkers: string[];
+}
+
+export interface BloodworkComboSignal {
+  name: string;
+  status: "low-risk" | "watch" | "needs-attention";
+  biomarkers: string[];
+  summary: string;
+}
+
+export interface BloodworkBiologicalAge {
+  method: "kdm-style-clinical-clock";
+  biologicalAge: number;
+  chronologicalAge?: number;
+  ageDelta?: number;
+  imputedBiomarkers: string[];
+  coverage: number;
+  comboSignals: BloodworkComboSignal[];
+  notes: string[];
+}
+
+export interface BloodworkActionPlanItem {
+  biomarkerId: string;
+  biomarkerName: string;
+  category: HealthspanCategory;
+  priority: "high" | "medium" | "low";
+  issue: string;
+  nutrition: string[];
+  supplements: string[];
+  lifestyle: string[];
+  rationale?: string;
+}
+
+export interface BloodworkAnalysis {
+  resultId: string;
+  evaluatedBiomarkers: EvaluatedLabBiomarker[];
+  categoryScores: BloodworkCategoryScore[];
+  actionPlan: BloodworkActionPlanItem[];
+  biologicalAge?: BloodworkBiologicalAge;
+  overallSummary: string;
 }
 
 export interface Habit {
