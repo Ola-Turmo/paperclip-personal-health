@@ -449,26 +449,27 @@ export function summarizeReport(report: DnaReport) {
   };
 }
 
+const FOOD_CATALOGUE = [
+  { id: "food-greek-yogurt", name: "Greek yogurt", calories: 140, proteinGrams: 16, carbGrams: 6, fatGrams: 4, source: "Curated" },
+  { id: "food-salmon", name: "Salmon fillet", calories: 280, proteinGrams: 34, carbGrams: 0, fatGrams: 16, source: "Curated" },
+  { id: "food-oats", name: "Rolled oats", calories: 190, proteinGrams: 7, carbGrams: 32, fatGrams: 4, fiberGrams: 5, source: "Curated" },
+  { id: "food-eggs", name: "Eggs", calories: 140, proteinGrams: 12, carbGrams: 1, fatGrams: 10, source: "Curated" },
+  { id: "food-blueberries", name: "Blueberries", calories: 84, proteinGrams: 1, carbGrams: 21, fatGrams: 0, fiberGrams: 4, source: "Curated" },
+  { id: "food-protein-shake", name: "Protein shake", calories: 160, proteinGrams: 30, carbGrams: 4, fatGrams: 3, source: "Curated" },
+] as const;
+
 export function findFoodMatches(query: string) {
   const q = query.trim().toLowerCase();
   if (!q) {
     return [];
   }
 
-  const catalogue = [
-    { id: "food-greek-yogurt", name: "Greek yogurt", calories: 140, proteinGrams: 16, carbGrams: 6, fatGrams: 4, source: "Curated" },
-    { id: "food-salmon", name: "Salmon fillet", calories: 280, proteinGrams: 34, carbGrams: 0, fatGrams: 16, source: "Curated" },
-    { id: "food-oats", name: "Rolled oats", calories: 190, proteinGrams: 7, carbGrams: 32, fatGrams: 4, fiberGrams: 5, source: "Curated" },
-    { id: "food-eggs", name: "Eggs", calories: 140, proteinGrams: 12, carbGrams: 1, fatGrams: 10, source: "Curated" },
-    { id: "food-blueberries", name: "Blueberries", calories: 84, proteinGrams: 1, carbGrams: 21, fatGrams: 0, fiberGrams: 4, source: "Curated" },
-    { id: "food-protein-shake", name: "Protein shake", calories: 160, proteinGrams: 30, carbGrams: 4, fatGrams: 3, source: "Curated" },
-  ];
-
-  return catalogue.filter((item) => item.name.toLowerCase().includes(q));
+  return FOOD_CATALOGUE.filter((item) => item.name.toLowerCase().includes(q) || item.id.toLowerCase() === q);
 }
 
 export function getFoodDetail(id: string) {
-  return findFoodMatches("").find((item) => item.id === id) ?? null;
+  const normalized = id.trim().toLowerCase();
+  return FOOD_CATALOGUE.find((item) => item.id.toLowerCase() === normalized) ?? null;
 }
 
 export function findAlleleEffect(annotation: DnaVariantAnnotation | undefined, genotype: string): AlleleEffect | undefined {

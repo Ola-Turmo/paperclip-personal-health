@@ -83,6 +83,9 @@ describe("Personal Health plugin", () => {
     const hydration = await harness.performAction(ACTION_KEYS.GET_HYDRATION, { date: "2026-04-18" }) as { totalMl: number; goalMl: number };
     expect(hydration.totalMl).toBe(750);
     expect(hydration.goalMl).toBe(3000);
+
+    const foodDetail = await harness.performAction(ACTION_KEYS.GET_FOOD_DETAILS, { id: "food-greek-yogurt" }) as { food: { name: string } };
+    expect(foodDetail.food.name).toBe("Greek yogurt");
   });
 
   it("parses raw DNA data into actionable reports and exports markdown", async () => {
@@ -109,7 +112,7 @@ describe("Personal Health plugin", () => {
     expect(exported.markdown).toContain("MTHFR");
   });
 
-  it("emits ambient nudges into the activity log when an agent run finishes", async () => {
+  it("emits ambient nudges once per day when an agent run finishes", async () => {
     await harness.performAction(ACTION_KEYS.ADD_MEDICATION, {
       name: "Vitamin D",
       dose: "1000 IU",
@@ -122,8 +125,17 @@ describe("Personal Health plugin", () => {
       { companyId: "company_1", entityId: "run_1", entityType: "run" },
     );
 
-    expect(harness.activity.length).toBeGreaterThan(0);
+    const firstCount = harness.activity.length;
+    expect(firstCount).toBeGreaterThan(0);
     expect(harness.activity.some((entry) => entry.message.toLowerCase().includes("no workouts logged") || entry.message.toLowerCase().includes("dose recorded"))).toBe(true);
+
+    await harness.emit(
+      "agent.run.finished",
+      { runId: "run_2" },
+      { companyId: "company_1", entityId: "run_2", entityType: "run" },
+    );
+
+    expect(harness.activity.length).toBe(firstCount);
   });
 });
 

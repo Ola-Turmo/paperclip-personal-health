@@ -6,6 +6,7 @@ import {
   createDnaReport,
   exportDnaInsightsMarkdown,
   findFoodMatches,
+  getFoodDetail,
   findVariantDetail,
   getAnnotationIndex,
   lookupRsidAcrossReports,
@@ -116,6 +117,22 @@ async function getHydrationLogForDate(ctx: any, date: string) {
   return logs.find((log) => log.date === date) ?? null;
 }
 
+async function getFreshAmbientNudges(ctx: any): Promise<HealthNudge[]> {
+  const nudges = await collectAmbientNudges(ctx);
+  const today = toIsoDate();
+  const history = await getStateValue<Record<string, string>>(ctx, DATA_KEYS.NUDGE_HISTORY, {});
+  const fresh = nudges.filter((nudge) => history[nudge.key] !== today);
+
+  if (fresh.length) {
+    await setStateValue(ctx, DATA_KEYS.NUDGE_HISTORY, {
+      ...history,
+      ...Object.fromEntries(fresh.map((nudge) => [nudge.key, today])),
+    });
+  }
+
+  return fresh;
+}
+
 async function collectAmbientNudges(ctx: any): Promise<HealthNudge[]> {
   const today = toIsoDate();
   const now = new Date();
@@ -176,7 +193,7 @@ const plugin = definePlugin({
         return;
       }
 
-      const nudges = await collectAmbientNudges(ctx);
+      const nudges = await getFreshAmbientNudges(ctx);
       await Promise.all(nudges.map((nudge) => ctx.activity.log({
         companyId,
         message: nudge.message,
@@ -188,6 +205,11 @@ const plugin = definePlugin({
         },
       })));
     });
+
+    const seededAnnotations = await getStateValue(ctx, DATA_KEYS.DNA_VARIANT_ANNOTATIONS, null);
+    if (!seededAnnotations) {
+      await setStateValue(ctx, DATA_KEYS.DNA_VARIANT_ANNOTATIONS, getAnnotationIndex());
+    }
 
     ctx.data.register("health.overview", async () => {
       const workouts = await getArrayState<WorkoutLog>(ctx, DATA_KEYS.WORKOUT_LOGS);
@@ -506,7 +528,7 @@ const plugin = definePlugin({
     });
 
     ctx.actions.register(ACTION_KEYS.GET_FOOD_DETAILS, async (params: any) => {
-      const match = findFoodMatches(params.query ?? params.id ?? "")[0] ?? null;
+      const match = params.id ? getFoodDetail(params.id) : (findFoodMatches(params.query ?? "")[0] ?? null);
       return { food: match };
     });
 

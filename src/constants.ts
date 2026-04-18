@@ -46,6 +46,7 @@ export const DATA_KEYS = {
   DNA_REPORTS: "health.dnaReports",
   DNA_VARIANT_ANNOTATIONS: "health.dnaVariantAnnotations",
   DNA_SETTINGS: "health.dnaSettings",
+  NUDGE_HISTORY: "health.nudgeHistory",
 
   // Wearables
   WEARABLE_STATUS: "health.wearableStatus",
