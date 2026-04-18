@@ -1,6 +1,6 @@
 export const PLUGIN_ID = "personal-health";
 
-// Namespaced store keys
+// ── Namespaced store keys ───────────────────────────────────────────────────
 export const DATA_KEYS = {
   // Medications
   MEDICATIONS: "health.medications",
@@ -21,6 +21,9 @@ export const DATA_KEYS = {
   MEAL_PLANS: "health.mealPlans",
   MEAL_LOGS: "health.mealLogs",
   HYDRATION_LOGS: "health.hydrationLogs",
+  DAILY_HYDRATION_GOAL_ML: "health.dailyHydrationGoalMl",
+  DAILY_CALORIE_TARGET: "health.dailyCalorieTarget",
+  MACRO_TARGETS: "health.macroTargets",
 
   // Appointments
   APPOINTMENTS: "health.appointments",
@@ -41,17 +44,17 @@ export const DATA_KEYS = {
 
   // DNA
   DNA_REPORTS: "health.dnaReports",
+  DNA_VARIANT_ANNOTATIONS: "health.dnaVariantAnnotations",
+  DNA_SETTINGS: "health.dnaSettings",
 
   // Wearables
   WEARABLE_STATUS: "health.wearableStatus",
 
   // Config
-  DAILY_HYDRATION_GOAL_ML: "health.dailyHydrationGoalMl",
-  DAILY_SLEEP_GOAL_HOURS: "health.dailySleepGoalHours",
   NOTIFICATION_CHANNEL: "health.notificationChannel",
 } as const;
 
-// Action keys
+// ── Action keys ─────────────────────────────────────────────────────────────
 export const ACTION_KEYS = {
   // Medications
   ADD_MEDICATION: "health.add-medication",
@@ -67,10 +70,13 @@ export const ACTION_KEYS = {
 
   // Workouts
   ADD_WORKOUT_PLAN: "health.add-workout-plan",
-  LOG_WORKOUT: "health.log-workout",
+  UPDATE_WORKOUT_PLAN: "health.update-workout-plan",
   GET_WORKOUT_PLANS: "health.get-workout-plans",
+  LOG_WORKOUT: "health.log-workout",
   GET_WORKOUT_LOGS: "health.get-workout-logs",
+  GET_WORKOUT_SUMMARY: "health.get-workout-summary",
   PLAN_WEEKLY_WORKOUTS: "health.plan-weekly-workouts",
+  DELETE_WORKOUT_LOG: "health.delete-workout-log",
 
   // Sleep
   LOG_SLEEP: "health.log-sleep",
@@ -79,10 +85,23 @@ export const ACTION_KEYS = {
 
   // Nutrition
   ADD_MEAL_PLAN: "health.add-meal-plan",
-  LOG_MEAL: "health.log-meal",
-  LOG_HYDRATION: "health.log-hydration",
+  UPDATE_MEAL_PLAN: "health.update-meal-plan",
   GET_MEAL_PLANS: "health.get-meal-plans",
+  LOG_MEAL: "health.log-meal",
+  LOG_QUICK_MEAL: "health.log-quick-meal",
+  GET_MEAL_LOGS: "health.get-meal-logs",
+  GET_NUTRITION_SUMMARY: "health.get-nutrition-summary",
+  SEARCH_FOODS: "health.search-foods",
+  GET_FOOD_DETAILS: "health.get-food-details",
+  SET_CALORIE_TARGET: "health.set-calorie-target",
+  SET_MACRO_TARGETS: "health.set-macro-targets",
+  DELETE_MEAL_LOG: "health.delete-meal-log",
+
+  // Hydration
+  LOG_HYDRATION: "health.log-hydration",
   GET_HYDRATION: "health.get-hydration",
+  SET_HYDRATION_GOAL: "health.set-hydration-goal",
+  DELETE_HYDRATION_ENTRY: "health.delete-hydration-entry",
 
   // Appointments
   ADD_APPOINTMENT: "health.add-appointment",
@@ -113,7 +132,16 @@ export const ACTION_KEYS = {
 
   // DNA
   ADD_DNA_REPORT: "health.add-dna-report",
+  GET_DNA_REPORTS: "health.get-dna-reports",
   GET_DNA_INSIGHTS: "health.get-dna-insights",
+  GET_DNA_INSIGHTS_BY_CATEGORY: "health.get-dna-insights-by-category",
+  GET_DNA_VARIANTS: "health.get-dna-variants",
+  GET_DNA_VARIANT_DETAIL: "health.get-dna-variant-detail",
+  LOOKUP_RSID: "health.lookup-rsid",
+  ANNOTATE_VARIANT: "health.annotate-variant",
+  COMPARE_DNA_REPORTS: "health.compare-dna-reports",
+  EXPORT_DNA_INSIGHTS: "health.export-dna-insights",
+  DELETE_DNA_REPORT: "health.delete-dna-report",
 
   // Wearables
   SYNC_WEARABLE: "health.sync-wearable",

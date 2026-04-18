@@ -59,7 +59,7 @@ const plugin = definePlugin({
 
     // ── Workouts ────────────────────────────────────────────────
     ctx.actions.register(ACTION_KEYS.LOG_WORKOUT, async (params: any) => {
-      const log: WorkoutLog = { id: generateId(), type: params.type ?? "other", name: params.name ?? "Workout", durationMinutes: params.durationMinutes ?? 0, performedAt: new Date().toISOString() };
+      const log: WorkoutLog = { id: generateId(), type: params.type ?? "other", name: params.name ?? "Workout", durationMinutes: params.durationMinutes ?? 0, performedAt: new Date().toISOString(), source: "manual" as const };
       const logs = await getArr<WorkoutLog>(ctx, DATA_KEYS.WORKOUT_LOGS);
       logs.push(log);
       await setArr(ctx, DATA_KEYS.WORKOUT_LOGS, logs);
@@ -184,7 +184,19 @@ const plugin = definePlugin({
 
     // ── DNA ─────────────────────────────────────────────────────
     ctx.actions.register(ACTION_KEYS.ADD_DNA_REPORT, async (params: any) => {
-      const report: DnaReport = { id: generateId(), uploadDate: new Date().toISOString(), source: params.source ?? "other", healthInsights: params.healthInsights ?? [] };
+      const report: DnaReport = {
+        id: generateId(),
+        uploadDate: new Date().toISOString(),
+        source: params.source ?? "other",
+        fileName: params.fileName,
+        fileHash: params.fileHash,
+        ancestryComposition: params.ancestryComposition,
+        healthInsights: params.healthInsights ?? [],
+        variants: params.variants ?? [],
+        rawSnpsImported: params.rawSnpsImported ?? 0,
+        snpsMatchedToKnowledgeBase: params.snpsMatchedToKnowledgeBase ?? 0,
+        notes: params.notes,
+      };
       const reports = await getArr<DnaReport>(ctx, DATA_KEYS.DNA_REPORTS);
       reports.push(report);
       await setArr(ctx, DATA_KEYS.DNA_REPORTS, reports);

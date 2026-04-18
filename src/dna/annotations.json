@@ -1,0 +1,469 @@
+{
+  "$schema": "dna-variant-annotation-v1",
+  "description": "Curated health-relevant DNA variant annotations for the personal health plugin. Top clinically actionable SNPs from SNPedia, 23andMe research, and published GWAS.",
+  "_comment": "Expand by running research on new rsIds and adding entries. Keep impact='risk' variants to neutral tone — consult a doctor, not Dr. Google.",
+  "variants": [
+    {
+      "rsId": "rs4686302",
+      "gene": "MTHFR",
+      "title": "MTHFR A1298C",
+      "description": "Variant in the methylenetetrahydrofolate reductase gene affecting folate metabolism. The 1298C variant (heterozygous or homozygous) reduces enzyme activity, impairing conversion of folic acid to its active form L-methylfolate.",
+      "category": "nutrition",
+      "impact": "risk",
+      "alleleEffects": [
+        { "allele": "AA", "effect": "Normal MTHFR enzyme activity", "summary": "No impact on folate metabolism" },
+        { "allele": "AC", "effect": "Reduced MTHFR activity (~30%)", "summary": "May benefit from methylfolate over folic acid" },
+        { "allele": "CC", "effect": "Significantly reduced MTHFR activity (~60%)", "summary": "Recommend methylfolate, B2, B6, B12 support; discuss with doctor" }
+      ]
+    },
+    {
+      "rsId": "rs1801133",
+      "gene": "MTHFR",
+      "title": "MTHFR C677T",
+      "description": "The most studied MTHFR variant. The T allele reduces enzyme activity dramatically. Homozygous TT individuals have ~70% reduced activity and may have elevated homocysteine levels, especially with low folate intake.",
+      "category": "nutrition",
+      "impact": "risk",
+      "alleleEffects": [
+        { "allele": "CC", "effect": "Normal enzyme activity", "summary": "No dietary modification needed" },
+        { "allele": "CT", "effect": "~35% reduced enzyme activity", "summary": "Consider folate-rich diet or methylfolate" },
+        { "allele": "TT", "effect": "~70% reduced enzyme activity", "summary": "Elevated homocysteine risk; methylfolate recommended; consult doctor" }
+      ]
+    },
+    {
+      "rsId": "rs5743836",
+      "gene": "MTHFR",
+      "title": "MTHFR C776G",
+      "description": "Another MTHFR variant affecting enzyme thermolability and folate metabolism.",
+      "category": "nutrition",
+      "impact": "neutral",
+      "alleleEffects": [
+        { "allele": "CC", "effect": "Normal activity", "summary": "No action needed" },
+        { "allele": "CG", "effect": "Moderately reduced activity", "summary": "Monitor folate intake" },
+        { "allele": "GG", "effect": "Reduced activity", "summary": "Consider methylfolate; check homocysteine" }
+      ]
+    },
+    {
+      "rsId": "rs2239122",
+      "gene": "MTHFR",
+      "title": "MTHFR 3 SNP haplotype (additive with C677T and A1298C)",
+      "description": "This variant in combination with rs1801133 and rs4686302 can compound folate metabolism issues when multiple variant alleles are present.",
+      "category": "nutrition",
+      "impact": "risk",
+      "alleleEffects": [
+        { "allele": "CC", "effect": "Normal", "summary": "No additional impact" },
+        { "allele": "CT/TT + variant alleles", "effect": "Compounded reduction in MTHFR activity", "summary": "More likely to benefit from methylfolate; check homocysteine" }
+      ]
+    },
+    {
+      "rsId": "rs4633",
+      "gene": "COMT",
+      "title": "COMT Val158Met (rs4683 variant proxy)",
+      "description": "COMT (Catechol-O-methyltransferase) breaks down dopamine, estrogens, and stress hormones. The Met/Met genotype results in lower enzyme activity, meaning slower dopamine clearance. This affects pain sensitivity, stress response, and cognitive style.",
+      "category": "pharmacogenomics",
+      "impact": "neutral",
+      "alleleEffects": [
+        { "allele": "GG (Val/Val)", "effect": "High COMT activity — fast dopamine clearance", "summary": "Higher pain tolerance, stable mood; may need more stimulant meds to work" },
+        { "allele": "GA (Val/Met)", "effect": "Intermediate activity", "summary": "Balanced dopamine metabolism" },
+        { "allele": "AA (Met/Met)", "effect": "Low COMT activity — slow dopamine clearance", "summary": "More sensitive to pain and stress; heightened emotional responsiveness; caffeine may affect more" }
+      ]
+    },
+    {
+      "rsId": "rs4683",
+      "gene": "COMT",
+      "title": "COMT Val158Met",
+      "description": "The key COMT variant determining how quickly dopamine is cleared from the prefrontal cortex. Val/Val = efficient, Met/Met = slow. Affects personality traits (warrior vs worrier), response to stimulant medications, and pain sensitivity.",
+      "category": "pharmacogenomics",
+      "impact": "neutral",
+      "alleleEffects": [
+        { "allele": "GG (Val/Val)", "effect": "High enzyme activity — fast dopamine breakdown", "summary": "Better focus under stress; may need higher stimulant dose" },
+        { "allele": "GA", "effect": "Intermediate activity", "summary": "Balanced" },
+        { "allele": "AA (Met/Met)", "effect": "Low enzyme activity — slow dopamine breakdown", "summary": "More sensitive to pain and stress; lower stimulant dose often sufficient" }
+      ]
+    },
+    {
+      "rsId": "rs1544410",
+      "gene": "VDR",
+      "title": "VDR BsmI (rs1544410)",
+      "description": "Vitamin D receptor variant affecting how cells respond to vitamin D. The BsmI variant (AA) is associated with lower vitamin D receptor density, potentially requiring higher vitamin D intake for equivalent biological effect.",
+      "category": "nutrition",
+      "impact": "neutral",
+      "alleleEffects": [
+        { "allele": "AA", "effect": "Lower VDR expression", "summary": "May need higher vitamin D intake; test levels more frequently" },
+        { "allele": "AG", "effect": "Intermediate", "summary": "Standard vitamin D guidelines likely sufficient" },
+        { "allele": "GG", "effect": "Normal VDR expression", "summary": "Normal vitamin D metabolism" }
+      ]
+    },
+    {
+      "rsId": "rs10735810",
+      "gene": "VDR",
+      "title": "VDR FokI",
+      "description": "FokI variant in the VDR gene affects the structure of the vitamin D receptor. The C allele produces a longer VDR protein with reduced transcriptional activity.",
+      "category": "nutrition",
+      "impact": "neutral",
+      "alleleEffects": [
+        { "allele": "CC (AA genotype in some annotations)", "effect": "Normal VDR activity", "summary": "Standard vitamin D guidelines" },
+        { "allele": "CT/TT", "effect": "Reduced VDR activity", "summary": "May need 20-30% more vitamin D for equivalent effect" }
+      ]
+    },
+    {
+      "rsId": "rs9939609",
+      "gene": "FTO",
+      "title": "FTO rs9939609",
+      "description": "The most well-studied obesity-associated variant. FTO (Fat Mass and Obesity-Associated) affects food intake, satiety signaling, and energy expenditure. The A allele is associated with increased food-seeking behavior and higher BMI on high-fat diets.",
+      "category": "metabolic",
+      "impact": "risk",
+      "alleleEffects": [
+        { "allele": "TT", "effect": "No increased obesity risk", "summary": "Standard weight management approach" },
+        { "allele": "TA", "effect": "Slightly increased food-seeking behavior", "summary": "Pay attention to satiety cues; higher protein diet may help" },
+        { "allele": "AA", "effect": "Significantly increased food intake, higher BMI tendency", "summary": "Structured meal timing helps; higher protein improves satiety; avoid high-fat diets" }
+      ]
+    },
+    {
+      "rsId": "rs5082",
+      "gene": "FTO",
+      "title": "FTO rs5082",
+      "description": "Another FTO variant in linkage disequilibrium with rs9939609. Affects food reward signaling and energy intake.",
+      "category": "metabolic",
+      "impact": "neutral",
+      "alleleEffects": [
+        { "allele": "GG", "effect": "Baseline food reward sensitivity", "summary": "Standard dietary approaches" },
+        { "allele": "AA/AG", "effect": "Increased food reward sensitivity", "summary": "High protein, structured meals, avoid restrictive diets" }
+      ]
+    },
+    {
+      "rsId": "rs1815739",
+      "gene": "ACTN3",
+      "title": "ACTN3 R577X",
+      "description": "Alpha-actinin-3 is expressed in fast-twitch muscle fibers. The X allele is a loss-of-function variant — 577X carriers lack alpha-actinin-3. This is one of the most studied athletic performance variants. The X allele is more common in endurance athletes; the R allele in power/sprint athletes.",
+      "category": "fitness",
+      "impact": "positive",
+      "alleleEffects": [
+        { "allele": "RR", "effect": "Normal alpha-actinin-3 — fast-twitch muscle fibers have full structural support", "summary": "Natural advantage for sprint, power, and strength activities" },
+        { "allele": "RX", "effect": "One functional copy — intermediate", "summary": "Balanced power/endurance profile" },
+        { "allele": "XX", "effect": "No alpha-actinin-3 — fast-twitch fibers rely on compensating proteins", "summary": "Endurance advantage; adapt training for power by increasing volume gradually" }
+      ]
+    },
+    {
+      "rsId": "rs4994",
+      "gene": "ACTN3",
+      "title": "ACTN3 R577X (alternative call)",
+      "description": "Same variant as rs1815739, sometimes reported as R577X nomenclature in clinical reports.",
+      "category": "fitness",
+      "impact": "positive",
+      "alleleEffects": [
+        { "allele": "RR", "effect": "Full fast-twitch fiber advantage", "summary": "Sprint/power events suit your genetics" },
+        { "allele": "RX", "effect": "Intermediate", "summary": "Mixed training works well" },
+        { "allele": "XX", "effect": "Endurance-oriented physiology", "summary": "Distance events suit you; build power through consistent training" }
+      ]
+    },
+    {
+      "rsId": "rs8192678",
+      "gene": "PPARGC1A",
+      "title": "PPARGC1A Gly482Ser",
+      "description": "PPARGC1A (Peroxisome proliferator-activated receptor gamma coactivator 1-alpha) is a master regulator of mitochondrial biogenesis. The Ser variant is associated with reduced endurance training response — carriers show less improvement in VO2max with aerobic training.",
+      "category": "fitness",
+      "impact": "neutral",
+      "alleleEffects": [
+        { "allele": "GG (Gly/Gly)", "effect": "Normal training response", "summary": "Strong VO2max gains from endurance training" },
+        { "allele": "GA (Gly/Ser)", "effect": "Reduced training response (~20%)", "summary": "May need more volume/time for same gains" },
+        { "allele": "AA (Ser/Ser)", "effect": "Reduced training response (~40%)", "summary": "Consistency matters more; longer training cycles needed" }
+      ]
+    },
+    {
+      "rs1042713",
+      "gene": "ADRB2",
+      "title": "ADRB2 Arg16Gly",
+      "description": "Beta-2 adrenergic receptor variant affecting how cells respond to adrenaline and to bronchodilators (like albuterol/salbutamol). Gly/Gly individuals have enhanced bronchodilator response.",
+      "category": "fitness",
+      "impact": "neutral",
+      "alleleEffects": [
+        { "allele": "AA (Arg/Arg)", "effect": "Normal bronchodilator response", "summary": "Standard asthma management if applicable" },
+        { "allele": "AG (Arg/Gly)", "effect": "Enhanced response to beta-agonists", "summary": "Lower doses of bronchodilators may be effective" },
+        { "allele": "GG (Gly/Gly)", "effect": "Most enhanced bronchodilator response", "summary": "Discuss with doctor if asthmatic; GWAS suggests Gly allele improves endurance training adaptation" }
+      ]
+    },
+    {
+      "rsrs1042714",
+      "gene": "ADRB2",
+      "title": "ADRB2 Gln27Glu",
+      "description": "Beta-2 adrenergic receptor variant. The Glu allele is associated with reduced risk of obesity and enhanced fat loss during exercise.",
+      "category": "metabolic",
+      "impact": "positive",
+      "alleleEffects": [
+        { "allele": "CC (Gln/Gln)", "effect": "Baseline", "summary": "Standard metabolic response" },
+        { "allele": "CG/GG (Glu carrier)", "effect": "Enhanced fat loss during exercise", "summary": "Aerobic exercise particularly effective for fat loss" }
+      ]
+    },
+    {
+      "rsId": "rs429358",
+      "gene": "APOE",
+      "title": "APOE Cys130Arg (rs429358)",
+      "description": "APOE gene encodes apolipoprotein E, which transports cholesterol in the brain and periphery. Combined with rs7412, determines APOE isoform (E2/E3/E4). E4 is the most studied Alzheimer's risk allele. IMPORTANT: having E4 does not mean you will develop Alzheimer's — it means increased statistical risk.",
+      "category": "cardiovascular",
+      "impact": "risk",
+      "alleleEffects": [
+        { "allele": "TT (Cys/Cys)", "effect": "APOE E3/E3 — neutral risk", "summary": "Average Alzheimer's and cardiovascular risk" },
+        { "allele": "TC (Cys/Arg)", "effect": "APOE E4 heterozygous — ~3x increased Alzheimer's risk", "summary": "Brain-healthy lifestyle particularly important; discuss with doctor" },
+        { "allele": "CC (Arg/Arg)", "effect": "APOE E4 homozygous — ~12x increased risk", "summary": "Prioritize cardiovascular and cognitive health; discuss monitoring with doctor" }
+      ]
+    },
+    {
+      "rsId": "rs7412",
+      "gene": "APOE",
+      "title": "APOE Arg176Cys (rs7412)",
+      "description": "Combined with rs429358 to determine APOE isoform. The T allele defines E2. E2 carriers have lower cardiovascular disease risk but may have higher triglyceride levels.",
+      "category": "cardiovascular",
+      "impact": "neutral",
+      "alleleEffects": [
+        { "allele": "CC (Arg/Arg) combined with rs429358=CC", "effect": "APOE E4", "summary": "See rs429358" },
+        { "allele": "CC (Arg/Arg) combined with rs429358=TT", "effect": "APOE E3", "summary": "Neutral" },
+        { "allele": "TT combined with rs429358=TT", "effect": "APOE E2", "summary": "Lower CVD risk but watch triglycerides" }
+      ]
+    },
+    {
+      "rsId": "rs1333049",
+      "gene": "CDKN2A/ANRIL",
+      "title": "9p21 SNP (rs1333049)",
+      "description": "One of the most replicated cardiovascular disease variants. This SNP is in a genomic region that regulates CDKN2A and ANRIL expression. The G allele is associated with ~25-30% increased risk of coronary artery disease per copy.",
+      "category": "cardiovascular",
+      "impact": "risk",
+      "alleleEffects": [
+        { "allele": "CC", "effect": "Baseline CAD risk", "summary": "No added risk" },
+        { "allele": "CG", "effect": "~25% increased CAD risk", "summary": "Prioritize heart-healthy lifestyle" },
+        { "allele": "GG", "effect": "~50% increased CAD risk", "summary": "Aggressive cardiovascular risk management; discuss with doctor" }
+      ]
+    },
+    {
+      "rsId": "rs662799",
+      "gene": "APOA5",
+      "title": "APOA5 -1131T>C",
+      "description": "APOA5 (apolipoprotein A-V) regulates triglyceride metabolism. The C allele is associated with higher triglyceride levels and increased cardiovascular risk.",
+      "category": "cardiovascular",
+      "impact": "risk",
+      "alleleEffects": [
+        { "allele": "TT", "effect": "Normal triglyceride metabolism", "summary": "Standard dietary guidelines" },
+        { "allele": "TC", "effect": "Elevated triglycerides when dietary fat is high", "summary": "Reduce saturated fat; monitor triglycerides" },
+        { "allele": "CC", "effect": "Significantly elevated triglycerides", "summary": "Low-fat diet important; omega-3 may help; discuss with doctor" }
+      ]
+    },
+    {
+      "rsId": "rs7903146",
+      "gene": "TCF7L2",
+      "title": "TCF7L2 IVS3C>T",
+      "description": "TCF7L2 is one of the strongest genetic risk factors for Type 2 Diabetes. The T allele impairs insulin secretion (not insulin sensitivity). Carriers have ~1.4x increased T2D risk per copy.",
+      "category": "metabolic",
+      "impact": "risk",
+      "alleleEffects": [
+        { "allele": "CC", "effect": "Normal insulin secretion", "summary": "Standard diabetes prevention" },
+        { "allele": "CT", "effect": "~40% increased T2D risk", "summary": "Maintain healthy weight; low-glycemic diet helps specifically for T allele carriers" },
+        { "allele": "TT", "effect": "~80% increased T2D risk", "summary": "Prioritize metabolic health; low-carb/low-glycemic diet particularly beneficial; discuss with doctor" }
+      ]
+    },
+    {
+      "rsId": "rs5219",
+      "gene": "KCNJ11",
+      "title": "KCNJ11 E23K",
+      "description": "KCNJ11 encodes a subunit of the ATP-sensitive potassium channel in pancreatic beta cells. The K allele (23K) reduces insulin secretion in response to glucose, increasing T2D risk.",
+      "category": "metabolic",
+      "impact": "risk",
+      "alleleEffects": [
+        { "allele": "EE", "effect": "Normal insulin secretion", "summary": "Standard metabolic health" },
+        { "allele": "EK", "effect": "Modestly reduced insulin secretion", "summary": "Weight management reduces the risk" },
+        { "allele": "KK", "effect": "~30% increased T2D risk", "summary": "Low-glycemic diet important; maintain healthy weight" }
+      ]
+    },
+    {
+      "rsId": "rs3818622",
+      "gene": "DEC2",
+      "title": "DEC2 Pro385Arg (rs3818622)",
+      "description": "DEC2 (also called BHLHE41) is a transcription factor controlling the circadian clock. The Arg variant (also called C385A) is associated with 'short sleep' phenotype — carriers naturally sleep less (average ~6 hours vs 8) and feel rested. About 5% of people carry this variant.",
+      "category": "sleep",
+      "impact": "positive",
+      "alleleEffects": [
+        { "allele": "PP (Pro/Pro)", "effect": "Normal sleep duration (~7-8h needed)", "summary": "Standard sleep hygiene applies" },
+        { "allele": "PR (Pro/Arg)", "effect": "Short sleep tendency (~6.5h)", "summary": "You may be a natural short sleeper; don't force 8h if you wake rested" },
+        { "allele": "RR (Arg/Arg)", "effect": "Short sleep phenotype (<6h, feel rested)", "summary": "Natural short sleeper; don't feel guilty about <7h if well-rested" }
+      ]
+    },
+    {
+      "rsId": "rs1801582",
+      "gene": "PER3",
+      "title": "PER3 VNTR (rs1801582)",
+      "description": "PER3 (Period 3) has a variable number tandem repeat (VNTR) in its coding region. The 5-repeat allele (Gly) is associated with morning preference and greater sleepiness after sleep deprivation. The 4-repeat (Val) with evening preference.",
+      "category": "sleep",
+      "impact": "neutral",
+      "alleleEffects": [
+        { "allele": "4/4 (Val/Val)", "effect": "Evening chronotype; less sleepy after sleep deprivation", "summary": "Evening types often work better with later schedules" },
+        { "allele": "4/5 or 5/5", "effect": "Morning chronotype; more sleepy after sleep deprivation", "summary": "Morning types perform better early; need more sleep after deprivation" }
+      ]
+    },
+    {
+      "rsId": "rs7784776",
+      "gene": "PER3",
+      "title": "PER3 (alternative call for same VNTR)",
+      "description": "Same variant as rs1801582, sometimes called via different rsId.",
+      "category": "sleep",
+      "impact": "neutral",
+      "alleleEffects": [
+        { "allele": "TT/TC", "effect": "Morning type", "summary": "Schedule demanding tasks earlier" },
+        { "allele": "CC", "effect": "Evening type", "summary": "Schedule creative work later in the day" }
+      ]
+    },
+    {
+      "rsId": "rs12720071",
+      "gene": "GABRA6",
+      "title": "GABRA6 T1512M",
+      "description": "GABA receptor subunit variant affecting benzodiazepine sensitivity. The C allele (Met) is associated with reduced benzodiazepine sensitivity — higher doses may be needed for equivalent effect.",
+      "category": "pharmacogenomics",
+      "impact": "neutral",
+      "alleleEffects": [
+        { "allele": "TT (Thr/Thr)", "effect": "Normal benzodiazepine sensitivity", "summary": "Standard dosing applies" },
+        { "allele": "TC/CC (Met carrier)", "effect": "Reduced benzodiazepine sensitivity", "summary": "If prescribed benzodiazepines, discuss higher dose needs with doctor" }
+      ]
+    },
+    {
+      "rsId": "rs1799853",
+      "gene": "CYP2C9",
+      "title": "CYP2C9*2 Arg144Cys",
+      "description": "CYP2C9 is involved in warfarin and NSAID metabolism. The *2 allele (Cys144) reduces enzyme activity by ~30%. Carriers require lower warfarin doses (reduced metabolism → higher blood levels).",
+      "category": "pharmacogenomics",
+      "impact": "risk",
+      "alleleEffects": [
+        { "allele": "Arg/Arg", "effect": "Normal CYP2C9 activity", "summary": "Standard warfarin/NSAID dosing" },
+        { "allele": "Arg/Cys or Cys/Cys", "effect": "Reduced warfarin metabolism", "summary": "If on warfarin, expect lower dose requirement; discuss pharmacogenomics with doctor" }
+      ]
+    },
+    {
+      "rsId": "rs1057910",
+      "gene": "CYP2C9",
+      "title": "CYP2C9*3 Ile359Leu",
+      "description": "CYP2C9*3 is a more severe loss-of-function allele (~80% reduced activity). Carriers need significantly lower warfarin doses. Also affects NSAIDs and sulfonylureas.",
+      "category": "pharmacogenomics",
+      "impact": "risk",
+      "alleleEffects": [
+        { "allele": "Ile/Ile", "effect": "Normal activity", "summary": "Standard dosing" },
+        { "allele": "Ile/Leu or Leu/Leu", "effect": "Significantly reduced warfarin metabolism", "summary": "Dramatically lower warfarin dose needed; reduced NSAID metabolism — use with caution" }
+      ]
+    },
+    {
+      "rsId": "rs4244285",
+      "gene": "CYP2C19",
+      "title": "CYP2C19*2",
+      "description": "CYP2C19*2 is a loss-of-function allele affecting metabolism of proton pump inhibitors (PPIs), clopidogrel (Plavix), and some antidepressants. Poor metabolizers (PMs) — homozygous *2/*2 — have reduced ability to activate clopidogrel.",
+      "category": "pharmacogenomics",
+      "impact": "risk",
+      "alleleEffects": [
+        { "allele": "*1/*1 (no *2)", "effect": "Normal metabolizer", "summary": "Standard drug doses" },
+        { "allele": "*1/*2", "effect": "Intermediate metabolizer", "summary": "Reduced activation of clopidogrel; may need alternative PPI" },
+        { "allele": "*2/*2", "effect": "Poor metabolizer", "summary": "Clopidogrel likely ineffective; discuss alternatives; reduced PPI efficacy" }
+      ]
+    },
+    {
+      "rsId": "rs4986893",
+      "gene": "CYP2C19",
+      "title": "CYP2C19*3",
+      "description": "CYP2C19*3 is another loss-of-function allele, more common in East Asian populations. Causes reduced metabolism of the same drugs as *2.",
+      "category": "pharmacogenomics",
+      "impact": "risk",
+      "alleleEffects": [
+        { "allele": "*1/*1", "effect": "Normal", "summary": "Standard dosing" },
+        { "allele": "*1/*3 or *3/*3", "effect": "Reduced metabolism", "summary": "Discuss with doctor if taking PPIs or clopidogrel" }
+      ]
+    },
+    {
+      "rsId": "rs12248560",
+      "gene": "CYP2C19",
+      "title": "CYP2C19*17",
+      "description": "CYP2C19*17 is an ultra-rapid metabolizer allele (gain of function). Increases enzyme activity. Carriers may have reduced plasma levels of PPIs (less effective) but better clopidogrel activation.",
+      "category": "pharmacogenomics",
+      "impact": "neutral",
+      "alleleEffects": [
+        { "allele": "CC or CT", "effect": "Ultra-rapid metabolizer", "summary": "PPIs may be less effective; clopidogrel more effectively activated" }
+      ]
+    },
+    {
+      "rsId": "rs28399433",
+      "gene": "CYP2D6",
+      "title": "CYP2D6*3",
+      "description": "CYP2D6 metabolizes ~25% of drugs including many antidepressants, antipsychotics, beta blockers, and opioids. *3 is a frameshift causing no enzyme activity. Poor metabolizers (PMs) have dramatically reduced drug clearance.",
+      "category": "pharmacogenomics",
+      "impact": "risk",
+      "alleleEffects": [
+        { "allele": "Non-*3/*3", "effect": "Some functional CYP2D6", "summary": "Standard drug metabolism" },
+        { "allele": "*3/*3", "effect": "No CYP2D6 activity — poor metabolizer", "summary": "Many drugs affected; carry a pharmacogenomics card; discuss with doctor" }
+      ]
+    },
+    {
+      "rsId": "rs16947",
+      "gene": "CYP2D6",
+      "title": "CYP2D6*2",
+      "description": "CYP2D6*2 is a normal-function allele but with duplicated copy number variants possible. The gene can be duplicated (more copies = ultra-rapid metabolizer). Complex to interpret — clinical testing recommended.",
+      "category": "pharmacogenomics",
+      "impact": "neutral",
+      "alleleEffects": [
+        { "allele": "Standard copy number", "effect": "Normal to increased function", "summary": "Drug metabolism normal or faster than average" },
+        { "allele": "Gene duplication + increased function", "effect": "Ultra-rapid metabolizer", "summary": "Some drugs may be cleared too quickly; reduced efficacy" }
+      ]
+    },
+    {
+      "rsId": "rs35621908",
+      "gene": "CYP2D6",
+      "title": "CYP2D6*41",
+      "description": "CYP2D6*41 is a reduced-function allele. Heterozygous carriers (*1/*41 or *2/*41) are intermediate metabolizers. Homozygous *41/*41 are poor metabolizers.",
+      "category": "pharmacogenomics",
+      "impact": "risk",
+      "alleleEffects": [
+        { "allele": "*41/*41", "effect": "Poor metabolizer", "summary": "Significantly reduced drug clearance; discuss with doctor" },
+        { "allele": "*1/*41 or *2/*41", "effect": "Intermediate metabolizer", "summary": "Reduced clearance of CYP2D6 substrates; monitor for side effects" }
+      ]
+    },
+    {
+      "rsId": "rs34372404",
+      "gene": "BCMO1",
+      "title": "BCMO1 (beta-carotene oxygenase 1)",
+      "description": "BCMO1 converts beta-carotene (from plants) into vitamin A. Some variants reduce conversion efficiency by 50-70%, meaning plant-based vitamin A sources are less effective. Carriers may need preformed vitamin A (animal sources or supplements).",
+      "category": "nutrition",
+      "impact": "neutral",
+      "alleleEffects": [
+        { "allele": "GG", "effect": "Normal beta-carotene conversion", "summary": "Standard vitamin A from plants works fine" },
+        { "allele": "AA or AG", "effect": "Reduced conversion (~50% less vitamin A from plants)", "summary": "Include preformed vitamin A (liver, eggs, dairy) or monitor retinol levels" }
+      ]
+    },
+    {
+      "rsId": "rs4924683",
+      "gene": "BCMO1",
+      "title": "BCMO1 (alternative variant)",
+      "description": "Another BCMO1 variant affecting beta-carotene conversion efficiency.",
+      "category": "nutrition",
+      "impact": "neutral",
+      "alleleEffects": [
+        { "allele": "AA", "effect": "Full conversion efficiency", "summary": "Plant sources of vitamin A sufficient" },
+        { "allele": "AG/GG", "effect": "Reduced conversion", "summary": "If vegetarian/vegan, consider retinol form vitamin A" }
+      ]
+    },
+    {
+      "rsId": "rs9729296",
+      "gene": "FUT2",
+      "title": "FUT2 G428A (rs9729296)",
+      "description": "FUT2 affects the ABO blood group antigen in bodily secretions (saliva, tears, etc.) and is associated with vitamin B12 absorption. The A allele (non-secretor) is associated with lower B12 levels but also reduced susceptibility to certain infections.",
+      "category": "nutrition",
+      "impact": "neutral",
+      "alleleEffects": [
+        { "allele": "GG (Secretor)", "effect": "Normal B12 absorption via intrinsic factor pathway", "summary": "Standard B12 metabolism" },
+        { "allele": "GA or AA (Non-secretor)", "effect": "Slightly lower B12 absorption; slightly lower risk of norovirus infection", "summary": "Monitor B12 levels; non-secretor status is normal and common (~20%)" }
+      ]
+    },
+    {
+      "rsId": "rs602662",
+      "gene": "FUT2",
+      "title": "FUT2 rs602662 (secretor status proxy)",
+      "description": "Another FUT2 variant strongly correlated with secretor status. Secretors (GG) can be infected by norovirus; non-secretors (AA/AG) are resistant.",
+      "category": "nutrition",
+      "impact": "neutral",
+      "alleleEffects": [
+        { "allele": "GG", "effect": "Secretor — susceptible to norovirus", "summary": "Standard precautions during outbreaks" },
+        { "allele": "AA/AG", "effect": "Non-secretor — resistant to norovirus", "summary": "Natural protection during GI outbreaks" }
+      ]
+    }
+  ]
+}

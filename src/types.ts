@@ -1,5 +1,197 @@
-// Personal Health Plugin — stub types
-// Full interfaces to be implemented per feature area
+// Personal Health Plugin — full type definitions
+
+export type WorkoutType =
+  | "running" | "cycling" | "swimming"
+  | "strength" | "hiit" | "crossfit"
+  | "yoga" | "walking" | "hiking"
+  | "tennis" | "football" | "skiing"
+  | "other";
+
+export interface WorkoutPlan {
+  id: string;
+  name: string;
+  type: WorkoutType;
+  phase: "base" | "build" | "peak" | "deload" | "recovery";
+  targetDurationMinutes: number;
+  targetDaysPerWeek: number;
+  notes?: string;
+  active: boolean;
+}
+
+export interface ExerciseLog {
+  name: string;
+  sets: number;
+  reps?: number;          // null for timed exercises
+  weightKg?: number;
+  rpe?: number;
+  notes?: string;
+}
+
+export type WorkoutSource = "manual" | "apple-health" | "garmin" | "oura" | "whoop" | "strava";
+
+export interface WorkoutLog {
+  id: string;
+  type: WorkoutType;
+  name: string;
+  performedAt: string;       // ISO 8601
+
+  // Core
+  durationMinutes: number;
+  rpe?: number;              // 1–10
+  caloriesBurned?: number;
+
+  // Cardio
+  distanceKm?: number;
+  avgPaceMinPerKm?: number;
+  avgHeartRate?: number;
+  maxHeartRate?: number;
+  elevationGainM?: number;
+  stravaActivityId?: string;
+
+  // Strength
+  exercises?: ExerciseLog[];
+
+  // Swimming
+  laps?: number;
+  strokeTypes?: string[];
+
+  // Source
+  source: WorkoutSource;
+  wearableLogId?: string;
+  rawData?: Record<string, unknown>;
+  notes?: string;
+}
+
+// ── Nutrition ─────────────────────────────────────────────────────────────────
+
+export interface MacroTargets {
+  proteinGrams: number;
+  carbGrams: number;
+  fatGrams: number;
+  fiberGrams?: number;
+}
+
+export interface MealTemplate {
+  name: string;
+  targetCalories?: number;
+  targetMacros?: MacroTargets;
+  typicalFoods?: string[];
+}
+
+export interface MealPlan {
+  id: string;
+  name: string;
+  dailyCalorieTarget?: number;
+  macroTargets?: MacroTargets;
+  mealTemplates?: MealTemplate[];
+  active: boolean;
+}
+
+export interface FoodItem {
+  name: string;
+  portion?: string;
+  calories: number;
+  proteinGrams?: number;
+  carbGrams?: number;
+  fatGrams?: number;
+  fiberGrams?: number;
+  sugarGrams?: number;
+  sodiumMg?: number;
+  source?: string;       // "Nutritionix", "USDA", "manual"
+  sourceId?: string;     // Nutritionix food item ID for fast re-log
+}
+
+export interface MealLog {
+  id: string;
+  date: string;           // YYYY-MM-DD
+  mealName: string;       // breakfast | lunch | dinner | snack | pre-workout | post-workout
+  foods: FoodItem[];
+  totalCalories: number;
+  totalMacros?: MacroTargets;
+  source: "manual" | "nutritionix" | "apple-health";
+  notes?: string;
+}
+
+export interface HydrationEntry {
+  id: string;
+  amountMl: number;
+  loggedAt: string;       // ISO timestamp
+  source: "manual" | "apple-health";
+}
+
+export interface HydrationLog {
+  id: string;
+  date: string;           // YYYY-MM-DD
+  entries: HydrationEntry[];
+  totalMl: number;       // computed sum
+  goalMl: number;         // daily goal
+}
+
+// ── DNA ───────────────────────────────────────────────────────────────────────
+
+export type DnaSource = "23andme" | "ancestrydna" | "livedna" | "other";
+export type DnaInsightCategory = "nutrition" | "fitness" | "cardiovascular" | "metabolic" | "pharmacogenomics" | "sleep" | "risk";
+export type DnaDiploidType = "heterozygous" | "homozygousdominant" | "homozygousrecessive";
+
+export interface AlleleEffect {
+  allele: string;
+  effect: string;
+  summary: string;
+}
+
+export interface DnaVariantAnnotation {
+  rsId: string;
+  gene: string;
+  title: string;
+  description: string;
+  impact: "positive" | "neutral" | "risk";
+  category: DnaInsightCategory;
+  alleleEffects?: AlleleEffect[];
+}
+
+export interface DnaVariant {
+  rsId: string;
+  chromosome: string;
+  position: number;
+  allele1: string;
+  allele2: string;
+  genotype: string;
+  diploidType: DnaDiploidType;
+  clinicalSignificance?: string;
+  annotations?: Record<string, string>;
+}
+
+export interface DnaHealthInsight {
+  id: string;
+  category: DnaInsightCategory;
+  title: string;
+  description: string;
+  impact: "positive" | "neutral" | "risk";
+  relevantVariants: string[];
+  actionableRecommendation?: string;
+  source?: string;
+}
+
+export interface AncestryComposition {
+  overall: string;
+  detail: Record<string, number>;
+}
+
+export interface DnaReport {
+  id: string;
+  uploadDate: string;
+  source: DnaSource;
+  fileName?: string;
+  fileHash?: string;
+  ancestryComposition?: AncestryComposition;
+  healthInsights: DnaHealthInsight[];
+  variants: DnaVariant[];
+  rawSnpsImported: number;
+  snpsMatchedToKnowledgeBase: number;
+  notes?: string;
+}
+
+// ── Other existing types (kept) ─────────────────────────────────────────────
 
 export interface Medication {
   id: string;
@@ -10,20 +202,27 @@ export interface Medication {
   active: boolean;
 }
 
+export interface MedicationLog {
+  id: string;
+  medicationId: string;
+  takenAt: string;
+  taken: boolean;
+  notes?: string;
+}
+
+export interface RefillLog {
+  id: string;
+  medicationId: string;
+  filledAt: string;
+  pillsRemaining?: number;
+}
+
 export interface SymptomEntry {
   id: string;
   symptom: string;
-  severity: string;
+  severity: "mild" | "moderate" | "severe";
   notes: string;
   startedAt: string;
-}
-
-export interface WorkoutLog {
-  id: string;
-  type: string;
-  name: string;
-  durationMinutes: number;
-  performedAt: string;
 }
 
 export interface SleepEntry {
@@ -31,18 +230,10 @@ export interface SleepEntry {
   date: string;
   totalMinutes: number;
   sleepScore?: number;
-}
-
-export interface MealPlan {
-  id: string;
-  name: string;
-  meals: unknown[];
-}
-
-export interface HydrationLog {
-  id: string;
-  date: string;
-  totalMl: number;
+  deepMinutes?: number;
+  remMinutes?: number;
+  wakeCount?: number;
+  source?: "manual" | "apple-health" | "garmin" | "oura" | "whoop";
 }
 
 export interface Appointment {
@@ -52,14 +243,29 @@ export interface Appointment {
   scheduledAt: string;
   durationMinutes?: number;
   notes?: string;
+  prepNotes?: string;
 }
 
 export interface LabResult {
   id: string;
   resultedAt: string;
   labName: string;
-  panels: unknown[];
+  panels: LabPanel[];
   notes?: string;
+}
+
+export interface LabPanel {
+  name: string;
+  biomarkers: LabBiomarker[];
+}
+
+export interface LabBiomarker {
+  name: string;
+  value: string | number;
+  unit: string;
+  referenceRangeLow?: number;
+  referenceRangeHigh?: number;
+  outOfRange?: boolean;
 }
 
 export interface Habit {
@@ -67,16 +273,24 @@ export interface Habit {
   name: string;
   description?: string;
   frequency: string;
-  targetDays?: number[];
+  targetDays?: number[];   // 0=Sun, 1=Mon, ...
   targetCount: number;
   currentStreak: number;
 }
 
+export interface HabitCompletion {
+  id: string;
+  habitId: string;
+  completedAt: string;
+  notes?: string;
+}
+
 export interface RecoveryStatus {
   date: string;
-  score: number;
+  score: number;           // 0–100
   overall: "red" | "yellow" | "green";
   recommendation?: string;
+  source?: "manual" | "garmin" | "oura" | "whoop";
 }
 
 export interface Supplement {
@@ -89,24 +303,36 @@ export interface Supplement {
   active: boolean;
 }
 
-export interface DnaReport {
+export interface SupplementLog {
   id: string;
-  uploadDate: string;
-  source: string;
-  healthInsights: unknown[];
+  supplementId: string;
+  takenAt: string;
+  taken: boolean;
+  notes?: string;
 }
 
 export interface WearableSyncStatus {
   device: string;
   lastSyncAt: string;
   connected: boolean;
+  deviceId?: string;        // from the wearable's API
+  error?: string;
 }
 
 export interface DailyHealthSummary {
   date: string;
-  medications: unknown[];
-  workouts: unknown[];
+  medications: MedicationLog[];
+  workouts: WorkoutLog[];
   sleep: SleepEntry | null;
-  habits: unknown[];
+  habits: HabitCompletion[];
   recovery: RecoveryStatus | null;
+  nutrition?: {
+    caloriesConsumed: number;
+    calorieTarget: number;
+    macros?: MacroTargets;
+  };
+  hydration?: {
+    totalMl: number;
+    goalMl: number;
+  };
 }
