@@ -19,7 +19,7 @@ Single user (Ola) managing personal health across: medications, symptoms, **work
 ### 4.1 Workouts & Wearable Sync
 
 #### What
-Log all physical activity — from a 5k run to a heavy squat session — and automatically sync with wearables (Apple Health, Garmin, Oura, WHOOP). Keep a persistent history, see weekly/monthly summaries, and track periodization.
+Log all physical activity — from a 5k run to a heavy squat session — and ingest local/exported wearable data from Apple Health, Garmin, Oura, or WHOOP without over-claiming live vendor sync. Keep a persistent history, see weekly/monthly summaries, and track periodization.
 
 #### Why
 Wearables capture data but you never look at it holistically. A run in Garmin, a lift in Strong, a hike logged in Apple Health — all siloed. This unifies everything and lets the AI surface patterns ("you've had 3 hard workouts in a row, consider recovery").
@@ -103,7 +103,7 @@ interface ExerciseLog {
 | `health.log-workout` | Log a workout manually |
 | `health.get-workout-logs` | Get logs, optionally by date range, type, or source |
 | `health.plan-weekly-workouts` | AI generates a weekly training plan for a given phase and available hours |
-| `health.sync-wearable` | Trigger sync with a specific wearable (pull new workouts since last sync) |
+| `health.sync-wearable` | Update wearable connection state and optionally ingest local/exported workout, sleep, and recovery payloads with dedupe |
 | `health.get-wearable-status` | Show connected wearables, last sync time, connection health |
 | `health.get-workout-summary` | Weekly/monthly stats: total volume, frequency, calories, favorite types |
 | `health.delete-workout-log` | Remove a log entry |
@@ -359,8 +359,10 @@ interface AlleleEffect {
 
 | Action | Description |
 |---|---|
-| `health.add-dna-report` | Upload a 23andMe/AncestryDNA raw file for parsing and storage |
+| `health.preview-dna-import` | Parse a DNA file into a preview before storing it |
+| `health.add-dna-report` | Upload a 23andMe, AncestryDNA, LivingDNA-style, or VCF file for parsing and storage |
 | `health.get-dna-reports` | List all imported DNA reports |
+| `health.get-dna-knowledge-base-status` | Show current local genetics knowledge-base version and supported formats |
 | `health.get-dna-insights` | Return all health insights from all reports |
 | `health.get-dna-insights-by-category` | Filter insights by category (nutrition, fitness, etc.) |
 | `health.get-dna-variants` | Get full variant list for a report |
@@ -368,6 +370,8 @@ interface AlleleEffect {
 | `health.lookup-rsid` | Quick lookup: what does this rsId mean for me? |
 | `health.annotate-variant` | Add a personal annotation/note to a variant |
 | `health.compare-dna-reports` | Compare two reports (detect changes, updated data) |
+| `health.reanalyze-dna-report` | Recompute insights for a stored report against the current local knowledge base |
+| `health.minimize-dna-report` | Strip retained variant/ancestry detail from a stored report after explicit confirmation |
 | `health.export-dna-insights` | Export insights as markdown (for sharing with doctor) |
 | `health.get-dna-bloodwork-correlations` | Cross-analyze DNA signals with bloodwork context |
 | `health.get-dna-monitoring-plan` | Generate a conservative follow-up monitoring plan |
@@ -390,11 +394,16 @@ rs3131972	1	752721	AG
 
 **AncestryDNA format:** tab-separated, slightly different column names (`# Chromosome`, `Position`, `Allele 1`, `Allele 2`)
 
+**LivingDNA-style delimited format:** delimited rows with recognizable `rsid`, `chromosome`, `position`, and `result` / `genotype` / `call` columns
+
+**VCF format:** single-sample VCF rows with standard headers and rsID-based records
+
 **Parsing steps:**
-1. Validate file header (detect 23andMe vs AncestryDNA)
+1. Validate file header/shape (detect 23andMe vs AncestryDNA vs LivingDNA-style vs VCF)
 2. Stream-parse line by line (large files: 600K+ lines)
 3. For each SNP: look up rsId in local annotation knowledge base
 4. Match variant alleles → determine genotype (homozygous dominant, heterozygous, homozygous recessive)
+5. In living mode, retain a compact genotype rematch set so future knowledge-base updates can discover newly annotated rsIDs without preserving full raw files
 5. Compute `diploidType` based on whether alleles are same/different
 6. Group annotated variants into `DnaHealthInsight` by gene/category
 7. Compute ancestry composition from ancestry-informative markers (AIMs)
@@ -452,11 +461,14 @@ A single lab value is easy to misread. This plugin should prefer trends, context
 | Action | Description |
 |---|---|
 | `health.add-lab-result` | Store a lab panel or biomarker result |
+| `health.preview-lab-import` | Preview CSV / TSV / line-based bloodwork imports with normalization notes before storing |
+| `health.import-lab-result` | Import a normalized lab result from raw text/delimited input |
 | `health.get-lab-results` | List stored lab results |
 | `health.review-lab-trends` | Review longitudinal changes across panels |
 | `health.get-bloodwork-trends` | Generate biomarker trend summaries |
 | `health.get-bloodwork-biomarkers` | List the biomarker catalog |
 | `health.get-bloodwork-biomarker` | Look up a specific biomarker definition |
+| `health.get-bloodwork-clocks` | Show available biological-age clock methods and coverage requirements |
 | `health.analyze-bloodwork` | Produce the latest bloodwork analysis |
 | `health.get-bloodwork-category-scores` | Summarize healthspan category scores |
 | `health.calculate-biological-age` | Estimate biological age from lab patterns |
@@ -479,6 +491,7 @@ Safer health software should explain its outputs. The plugin needs to know wheth
 #### State Namespaces
 - `health.privacyPolicy` → `HealthPrivacyPolicy`
 - `health.auditLog` → `HealthAuditEntry[]`
+- `health.sensitiveConsents` → `HealthConsentEntry[]`
 - `health.nudgeHistory` → `HealthNudge[]`
 
 #### Read Models / Projections
@@ -489,6 +502,8 @@ Safer health software should explain its outputs. The plugin needs to know wheth
 - `health.dna.latest` → latest DNA projection and summary
 - `health.reminders.pending` → pending reminders and nudges
 - `health.privacy.status` → privacy summary and exposure posture
+- `health.dna.kb-status` → knowledge-base status and supported import formats
+- `health.audit.summary` → audit / consent summary counts and latest entries
 
 #### Actions
 
@@ -496,13 +511,18 @@ Safer health software should explain its outputs. The plugin needs to know wheth
 |---|---|
 | `health.update-privacy-settings` | Update privacy mode and export policy |
 | `health.get-privacy-status` | Summarize the current privacy posture |
+| `health.record-sensitive-consent` | Manually record an explicit consent event for a sensitive workflow |
+| `health.get-sensitive-consents` | Review consent history for sensitive workflows |
+| `health.purge-sensitive-consents` | Purge retained consent history after explicit confirmation |
 | `health.get-health-audit-log` | Read the sensitive-action audit trail |
 | `health.purge-health-audit-log` | Remove old audit entries according to retention rules |
 
 #### Auditability rules
 - Sensitive actions should write an audit entry with category, detail, success state, and sensitivity level.
-- Sensitive DNA exports and audit-log reads/purges should require explicit confirmation.
+- Sensitive DNA exports, reanalysis, consent-history writes/reads/purges, and audit-log reads/purges should require explicit confirmation.
+- High-sensitivity DNA access/export and confirmed audit/consent-log access should also be visible through the consent history surface.
 - Privacy settings updates, sensitive exports, and purge operations should be discoverable from the audit log.
+- Consent history should inherit retention pruning and offer an explicit purge path, not just append forever.
 - Derived views should stay derived; source records remain the canonical storage.
 
 ---

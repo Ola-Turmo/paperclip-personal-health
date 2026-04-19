@@ -36,24 +36,28 @@ Most personal-health stacks break down because the data lives everywhere except 
 - Workout summaries by date range and modality
 - Recovery score tracking + recommendation engine
 - Wearable sync status scaffolding for Apple Health, Garmin, Oura, WHOOP, and Strava
+- Local/exported wearable payload ingest for workouts, sleep, and recovery without requiring live OAuth integrations, while retaining normalized workout summaries instead of full vendor payload dumps
 
 ### 3. Nutrition and hydration
 - Meal plan templates
 - Meal logging + quick meals
 - Macro and calorie target management
 - Curated food search / lookup
+- Recent-meal reuse in quick logging and food search
 - Hydration goals, intake logging, and progress checks
 
 ### 4. Labs, bloodwork, and genetic-health workflows inspired by `genetic.health`
 This plugin carries over the most useful parts of the `genetic.health` product into a Paperclip-native command surface:
 
-- Parse **23andMe** and **AncestryDNA** raw text exports
+- Parse **23andMe**, **AncestryDNA**, **LivingDNA-style delimited exports**, and **VCF** files
 - Analyze bloodwork with biomarker trend review, category scores, biological age, and conservative action plans
+- Preview/import bloodwork from CSV / TSV / line-based text with unit normalization notes
 - Cross-analyze genetics and bloodwork so DNA points to hypotheses, not conclusions
 - Map curated variants into **evidence-graded health insights**
 - Surface **nutrition, fitness, metabolic, cardiovascular, sleep, and pharmacogenomics** signals
 - Compare reports over time
 - Lookup any tracked **rsID** across imported reports
+- Reanalyze retained DNA reports against the current local knowledge base using a compact genotype rematch set in living mode
 - Export clinician-ready markdown summaries instead of raw dumps
 - Preserve **privacy mode vs living mode** DNA settings so data-control is treated as a product feature, not an afterthought
 
@@ -63,7 +67,8 @@ This plugin carries over the most useful parts of the `genetic.health` product i
 
 - Privacy mode reduces sensitive detail, suppresses ancestry inference, and minimizes variant-level retention when the user wants a stricter posture.
 - Living mode keeps richer genetics analysis available, but sensitive exports still require explicit confirmation.
-- Sensitive DNA exports and audit-log actions stay gated behind confirmation.
+- Sensitive DNA exports, reanalysis, consent-history access, and audit-log actions stay gated behind confirmation.
+- Explicit consent history is tracked for high-sensitivity DNA export/access, reanalysis, and confirmed audit/consent-log access paths, with retention pruning plus an explicit purge action for the consent log.
 - Bloodwork and DNA outputs are decision-support summaries, not diagnoses or treatment instructions.
 - Derived read models and projections keep the UI explainable by separating source records from computed summaries.
 - Sensitive actions and policy changes are captured in the audit trail so users can review what happened and when.
@@ -79,6 +84,8 @@ The plugin exposes safe, derived views so the UI can stay explainable without re
 - `health.dna.latest`
 - `health.reminders.pending`
 - `health.privacy.status`
+- `health.dna.kb-status`
+- `health.audit.summary`
 
 These views are backed by source records, then reduced into summary objects for fast review.
 
@@ -114,9 +121,12 @@ Use it when you want Paperclip to answer questions like:
 
 ### Bloodwork
 - `health.add-lab-result`
+- `health.preview-lab-import`
+- `health.import-lab-result`
 - `health.get-lab-results`
 - `health.review-lab-trends`
 - `health.get-bloodwork-trends`
+- `health.get-bloodwork-clocks`
 - `health.analyze-bloodwork`
 - `health.get-bloodwork-category-scores`
 - `health.calculate-biological-age`
@@ -124,10 +134,14 @@ Use it when you want Paperclip to answer questions like:
 
 ### DNA
 - `health.add-dna-report`
+- `health.preview-dna-import`
+- `health.get-dna-knowledge-base-status`
 - `health.get-dna-insights`
 - `health.get-dna-variant-detail`
 - `health.lookup-rsid`
 - `health.compare-dna-reports`
+- `health.reanalyze-dna-report`
+- `health.minimize-dna-report`
 - `health.export-dna-insights`
 - `health.get-dna-bloodwork-correlations`
 - `health.get-dna-monitoring-plan`
@@ -137,6 +151,9 @@ Use it when you want Paperclip to answer questions like:
 ### Privacy and audit
 - `health.update-privacy-settings`
 - `health.get-privacy-status`
+- `health.record-sensitive-consent`
+- `health.get-sensitive-consents`
+- `health.purge-sensitive-consents`
 - `health.get-health-audit-log`
 - `health.purge-health-audit-log`
 
@@ -158,6 +175,8 @@ Use it when you want Paperclip to answer questions like:
 
 Use `privacy` when you want stricter retention and redaction. Use `living` when you want richer genetics analysis and are comfortable with a broader analysis posture.
 
+VCF and LivingDNA-style delimited exports are also supported when the input contains standard VCF headers or recognizable `rsid` / `chromosome` / `position` plus `result` / `genotype` / `call` columns.
+
 The plugin will:
 1. detect the source format,
 2. parse the raw genotype rows,
@@ -176,6 +195,8 @@ The worker subscribes to `agent.run.finished` and can log nudges for:
 - newly surfaced DNA insights.
 
 This keeps the plugin proactive without becoming noisy.
+
+For wearables, the plugin still avoids claiming live vendor sync. Instead, it can ingest local/exported payloads into workout, sleep, and recovery state while keeping the integration boundary explicit and storing normalized workout summaries rather than raw vendor exports.
 
 ## Safety framing
 
@@ -204,8 +225,10 @@ npm run plugin:test
 - **Paperclip worker plugin** built with `@paperclipai/plugin-sdk`
 - **Instance-scoped state** for core health records
 - **Curated DNA knowledge base** in `src/dna/annotations.json`
+- **Bloodwork import preview/import helpers** for CSV / TSV / text lab exports
 - **Action-driven interface** for logging, summaries, comparisons, exports, reminders, and privacy controls
 - **Derived read models and projections** for overview, latest-lab, latest-DNA, reminder, and privacy views
+- **Knowledge-base status + consent history projections** for explainability on sensitive workflows
 - **DNA ↔ bloodwork correlation summaries** for conservative cross-analysis
 - **Append-only audit trail** for sensitive actions and policy changes
 - **Marketing assets** generated in-repo under `assets/readme/`

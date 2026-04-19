@@ -1,4 +1,3 @@
-import { createHash } from "node:crypto";
 import annotationFile from "./dna/annotations.json";
 import { evaluateBloodworkBiomarkers } from "./bloodwork.js";
 import type {
@@ -10,11 +9,14 @@ import type {
   DnaDiseaseRisk,
   DnaEvidenceTier,
   DnaHealthInsight,
+  DnaImportFormat,
   DnaInsightCategory,
+  DnaKnowledgeBaseStatus,
   DnaPathwaySummary,
   DnaPharmacogenomicInteraction,
   DnaPriorityFinding,
   DnaProtectiveFinding,
+  DnaReanalysisDiff,
   DnaReport,
   DnaSource,
   DnaSupplementRecommendation,
@@ -33,6 +35,7 @@ interface AnnotationBundle {
 const annotations = (annotationFile as AnnotationBundle).variants;
 const annotationMap = new Map(annotations.map((annotation) => [annotation.rsId.toLowerCase(), annotation]));
 export const DNA_KNOWLEDGE_BASE_VERSION = `curated-${annotations.length}-variants`;
+const SUPPORTED_DNA_SOURCES: DnaSource[] = ["23andme", "ancestrydna", "livedna", "vcf"];
 
 const ancestrySignals: Record<string, Record<string, number>> = {
   rs12913832: { "Northern European": 0.45 },
@@ -41,6 +44,10 @@ const ancestrySignals: Record<string, Record<string, number>> = {
   rs671: { East_Asian: 0.5 },
   rs4988235: { European: 0.4 },
 };
+
+function normalizeHeaderToken(value: string): string {
+  return value.toLowerCase().replace(/[^a-z0-9]+/g, "");
+}
 
 function normalizeAlleleKey(value: string): string {
   return value.replace(/[^A-Z]/gi, "").toUpperCase();
@@ -117,6 +124,14 @@ function inferDiploidType(genotype: string, annotation: DnaVariantAnnotation): D
 
   const baseline = annotation.alleleEffects?.[0]?.allele ? normalizeAlleleKey(annotation.alleleEffects[0].allele) : genotype;
   return baseline === genotype ? "homozygousdominant" : "homozygousrecessive";
+}
+
+function inferBasicDiploidType(genotype: string): DnaDiploidType {
+  const normalized = normalizeAlleleKey(genotype);
+  if (normalized.length < 2 || normalized[0] !== normalized[1]) {
+    return "heterozygous";
+  }
+  return "homozygousdominant";
 }
 
 function classifyClinicalSignificance(annotation: DnaVariantAnnotation): string {
@@ -206,42 +221,88 @@ function parseAncestry(lines: string[]) {
     .filter((row) => row.rsId && row.genotype && row.genotype !== "--");
 }
 
-export function getAnnotationIndex() {
-  return annotations;
+function parseDelimitedDnaRows(lines: string[]) {
+  const [header, ...body] = lines.filter((line) => line && !line.startsWith("#"));
+  const columns = header?.split(/[\t,]/).map((part) => part.trim().toLowerCase()) ?? [];
+  return body
+    .map((line) => line.split(/[\t,]/).map((part) => part.trim()))
+    .map((parts) => Object.fromEntries(columns.map((column, index) => [column, parts[index] ?? ""])))
+    .map((record) => {
+      const rsId = record.rsid ?? record.snp ?? record.marker ?? "";
+      const chromosome = record.chromosome ?? record.chrom ?? "";
+      const position = Number(record.position ?? record.pos ?? 0);
+      const genotype = normalizeAlleleKey(record.result ?? record.genotype ?? record.call ?? "");
+      return {
+        rsId,
+        chromosome,
+        position,
+        allele1: genotype?.[0] ?? "",
+        allele2: genotype?.[1] ?? genotype?.[0] ?? "",
+        genotype,
+      };
+    })
+    .filter((row) => row.rsId && row.genotype && row.genotype !== "--");
 }
 
-export function detectDnaSource(raw: string, fileName?: string): DnaSource {
-  const normalized = raw.slice(0, 500).toLowerCase();
-  const lowerName = fileName?.toLowerCase() ?? "";
-  if (lowerName.includes("ancestry") || normalized.includes("# ancestrydna") || normalized.includes("allele 1")) {
-    return "ancestrydna";
-  }
-  if (lowerName.includes("23andme") || normalized.includes("23andme") || normalized.includes("genotype")) {
-    return "23andme";
-  }
-  return "other";
+function parseLivingDna(lines: string[]) {
+  return parseDelimitedDnaRows(lines);
 }
 
-export function parseRawDnaReport(input: {
-  rawData: string;
-  fileName?: string;
-  notes?: string;
-  privacyMode?: "living" | "privacy";
-  allowAncestryInference?: boolean;
-  retainVariantLevelData?: boolean;
-}): Omit<DnaReport, "id" | "uploadDate"> {
-  const rawData = input.rawData.trim();
-  const source = detectDnaSource(rawData, input.fileName);
-  if (source === "other") {
-    throw new Error("Unsupported DNA source. Please import a 23andMe or AncestryDNA raw text export.");
+function parseVcf(lines: string[]) {
+  return lines
+    .filter((line) => line && !line.startsWith("##"))
+    .filter((line) => !line.startsWith("#CHROM") || Boolean(line))
+    .flatMap((line) => {
+      if (line.startsWith("#")) {
+        return [];
+      }
+      const [chromosome, position, rsId, ref, alt, , , , , sample] = line.split("\t");
+      if (!rsId || rsId === "." || !sample) {
+        return [];
+      }
+      const genotypeField = sample.split(":")[0] ?? "";
+      const alleles = [ref, ...(alt?.split(",") ?? [])];
+      const [leftIndex, rightIndex] = genotypeField.split(/[\/|]/).map((value) => Number(value));
+      const allele1 = Number.isInteger(leftIndex) ? (alleles[leftIndex] ?? "") : "";
+      const allele2 = Number.isInteger(rightIndex) ? (alleles[rightIndex] ?? allele1) : allele1;
+      const genotype = normalizeAlleleKey(`${allele1}${allele2}`);
+      if (!rsId || !genotype || genotype === "--") {
+        return [];
+      }
+      return [{
+        rsId,
+        chromosome,
+        position: Number(position),
+        allele1,
+        allele2,
+        genotype,
+      }];
+    });
+}
+
+function detectGenomeBuild(raw: string) {
+  const normalized = raw.toLowerCase();
+  if (normalized.includes("grch38") || normalized.includes("hg38")) {
+    return "GRCh38";
   }
-  const lines = rawData.split(/\r?\n/);
-  const parsed = source === "ancestrydna" ? parseAncestry(lines) : parse23AndMe(lines);
+  if (normalized.includes("grch37") || normalized.includes("hg19")) {
+    return "GRCh37";
+  }
+  return undefined;
+}
+
+function buildInsightsFromParsedRows(rows: Array<{
+  rsId: string;
+  chromosome: string;
+  position: number;
+  allele1: string;
+  allele2: string;
+  genotype: string;
+}>) {
   const matchedVariants: DnaVariant[] = [];
   const insights: DnaHealthInsight[] = [];
-  const parseWarnings: string[] = [];
 
-  for (const row of parsed) {
+  for (const row of rows) {
     const annotation = annotationMap.get(row.rsId.toLowerCase());
     if (!annotation) {
       continue;
@@ -267,18 +328,141 @@ export function parseRawDnaReport(input: {
     insights.push(buildInsight(annotation, variant));
   }
 
+  return { matchedVariants, insights };
+}
+
+function buildRetainedGenotypes(rows: Array<{
+  rsId: string;
+  chromosome: string;
+  position: number;
+  allele1: string;
+  allele2: string;
+  genotype: string;
+}>): DnaVariant[] {
+  return rows.map((row) => ({
+    rsId: row.rsId,
+    chromosome: row.chromosome,
+    position: row.position,
+    allele1: row.allele1,
+    allele2: row.allele2,
+    genotype: row.genotype,
+    diploidType: inferBasicDiploidType(row.genotype),
+  }));
+}
+
+function retentionSummaryForReport(input: {
+  privacyMode?: "living" | "privacy";
+  retainVariantLevelData?: boolean;
+  allowAncestryInference?: boolean;
+}) {
+  if (input.privacyMode === "privacy" || input.retainVariantLevelData === false) {
+    return "Privacy-restricted storage active: variant-level retention minimized and ancestry inference suppressed.";
+  }
+  if (input.allowAncestryInference === false) {
+    return "Living-mode storage active with a compact genotype rematch set retained while ancestry inference stays disabled.";
+  }
+  return "Living-mode storage active with curated matches plus a compact genotype rematch set retained for lookup and future reanalysis.";
+}
+
+export function getAnnotationIndex() {
+  return annotations;
+}
+
+export function detectDnaSource(raw: string, fileName?: string): DnaSource {
+  const normalized = raw.slice(0, 2_000).toLowerCase();
+  const lowerName = fileName?.toLowerCase() ?? "";
+  const lines = raw.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+  const firstNonComment = lines.find((line) => !line.startsWith("#")) ?? "";
+  const headerTokens = firstNonComment.split(/[\t,]/).map(normalizeHeaderToken);
+  const hasColumns = (...columns: string[]) => columns.every((column) => headerTokens.includes(column));
+
+  if (
+    lowerName.endsWith(".vcf")
+    || normalized.includes("##fileformat=vcf")
+    || lines.some((line) => line.startsWith("#CHROM\tPOS\tID\tREF\tALT"))
+  ) {
+    return "vcf";
+  }
+  if (
+    lowerName.includes("ancestry")
+    || normalized.includes("# ancestrydna")
+  ) {
+    return "ancestrydna";
+  }
+  if (
+    lowerName.includes("23andme")
+    || normalized.includes("23andme")
+  ) {
+    return "23andme";
+  }
+  if (
+    lowerName.includes("livingdna")
+    || normalized.includes("living dna")
+    || (hasColumns("rsid", "chromosome", "position") && headerTokens.some((token) => ["result", "genotype", "call"].includes(token)))
+  ) {
+    return "livedna";
+  }
+  if (
+    hasColumns("rsid", "chromosome", "position", "allele1", "allele2")
+  ) {
+    return "ancestrydna";
+  }
+  if (
+    hasColumns("rsid", "chromosome", "position", "genotype")
+  ) {
+    return "23andme";
+  }
+  return "other";
+}
+
+export function parseRawDnaReport(input: {
+  rawData: string;
+  fileName?: string;
+  notes?: string;
+  privacyMode?: "living" | "privacy";
+  allowAncestryInference?: boolean;
+  retainVariantLevelData?: boolean;
+}): Omit<DnaReport, "id" | "uploadDate"> {
+  const rawData = input.rawData.trim();
+  const source = detectDnaSource(rawData, input.fileName);
+  if (source === "other") {
+    throw new Error("Unsupported DNA source. Please import a 23andMe, AncestryDNA, LivingDNA, or VCF export.");
+  }
+  const lines = rawData.split(/\r?\n/);
+  const parsed = source === "ancestrydna"
+    ? parseAncestry(lines)
+    : source === "livedna"
+      ? parseLivingDna(lines)
+      : source === "vcf"
+        ? parseVcf(lines)
+        : parse23AndMe(lines);
+  const { matchedVariants, insights } = buildInsightsFromParsedRows(parsed);
+  const retainedGenotypes = buildRetainedGenotypes(parsed);
+  const parseWarnings: string[] = [];
+  if (source === "vcf") {
+    parseWarnings.push("VCF parsing currently supports single-sample SNP rows with rsIDs and biallelic genotype fields.");
+  }
+  if (source === "livedna") {
+    parseWarnings.push("LivingDNA parsing uses column-name matching across delimited exports; review source formatting if matches look sparse.");
+  }
+
   return {
     source,
+    importFormat: source === "vcf" ? "vcf" : source === "livedna" ? "delimited" : "raw-text",
     fileName: input.fileName,
-    fileHash: input.privacyMode === "privacy" ? undefined : createHash("sha256").update(rawData).digest("hex"),
     ancestryComposition: input.privacyMode === "privacy" || input.allowAncestryInference === false ? undefined : inferAncestry(matchedVariants),
     healthInsights: insights,
     variants: input.privacyMode === "privacy" || input.retainVariantLevelData === false ? [] : matchedVariants,
+    retainedGenotypes: input.privacyMode === "privacy" || input.retainVariantLevelData === false ? [] : retainedGenotypes,
     rawSnpsImported: parsed.length,
     snpsMatchedToKnowledgeBase: matchedVariants.length,
     knowledgeBaseVersion: DNA_KNOWLEDGE_BASE_VERSION,
+    genomeBuild: detectGenomeBuild(rawData),
     parseWarnings,
     isPrivacyRestricted: input.privacyMode === "privacy" || input.retainVariantLevelData === false,
+    retentionSummary: retentionSummaryForReport(input),
+    lastAnalyzedAt: new Date().toISOString(),
+    reanalysisCount: 0,
     notes: input.notes,
     privacyMode: input.privacyMode ?? "living",
   };
@@ -290,6 +474,7 @@ export function createDnaReport(input: {
   notes?: string;
   source?: DnaSource;
   variants?: DnaVariant[];
+  retainedGenotypes?: DnaVariant[];
   healthInsights?: DnaHealthInsight[];
   ancestryComposition?: DnaReport["ancestryComposition"];
   rawSnpsImported?: number;
@@ -319,17 +504,34 @@ export function createDnaReport(input: {
     id: generateId(),
     uploadDate: new Date().toISOString(),
     source: input.source ?? "other",
+    importFormat: input.source === "vcf" ? "vcf" : input.source === "livedna" ? "delimited" : "raw-text",
     fileName: input.fileName,
     ancestryComposition: input.ancestryComposition,
     healthInsights: input.healthInsights ?? [],
     variants: input.privacyMode === "privacy" || input.retainVariantLevelData === false ? [] : (input.variants ?? []),
-    rawSnpsImported: input.rawSnpsImported ?? input.variants?.length ?? 0,
+    retainedGenotypes: input.privacyMode === "privacy" || input.retainVariantLevelData === false ? [] : (input.retainedGenotypes ?? input.variants ?? []),
+    rawSnpsImported: input.rawSnpsImported ?? input.retainedGenotypes?.length ?? input.variants?.length ?? 0,
     snpsMatchedToKnowledgeBase: input.snpsMatchedToKnowledgeBase ?? input.healthInsights?.length ?? 0,
     knowledgeBaseVersion: DNA_KNOWLEDGE_BASE_VERSION,
+    genomeBuild: input.rawData ? detectGenomeBuild(input.rawData) : undefined,
     parseWarnings: input.privacyMode === "privacy" ? ["Variant-level DNA storage has been minimized for privacy mode."] : [],
     isPrivacyRestricted: input.privacyMode === "privacy" || input.retainVariantLevelData === false,
+    retentionSummary: retentionSummaryForReport(input),
+    lastAnalyzedAt: new Date().toISOString(),
+    reanalysisCount: 0,
     notes: input.notes,
     privacyMode: input.privacyMode ?? "living",
+  };
+}
+
+export function getDnaKnowledgeBaseStatus(): DnaKnowledgeBaseStatus {
+  return {
+    version: DNA_KNOWLEDGE_BASE_VERSION,
+    annotationCount: annotations.length,
+    categories: Array.from(new Set(annotations.map((annotation) => annotation.category))).sort(),
+    reportGroups: Array.from(new Set(annotations.map((annotation) => annotation.reportGroup).filter(Boolean))) as Array<NonNullable<DnaVariantAnnotation["reportGroup"]>>,
+    supportedSources: SUPPORTED_DNA_SOURCES,
+    supportedImportFormats: ["raw-text", "delimited", "vcf"],
   };
 }
 
@@ -1075,6 +1277,71 @@ export function summarizeReport(report: DnaReport) {
     monitoringPlan: getMonitoringPlan(report),
     supplementRecommendations: getSupplementRecommendations(report),
     protocol: buildActionableProtocol(report),
+  };
+}
+
+export function reanalyzeDnaReport(report: DnaReport): { reanalyzedReport: DnaReport; diff: DnaReanalysisDiff } {
+  const previousInsights = report.healthInsights;
+  const previousSummary = new Map(previousInsights.map((insight) => [insight.title, `${insight.impact}:${insight.actionableRecommendation ?? ""}`]));
+  const sourceVariants = report.retainedGenotypes?.length ? report.retainedGenotypes : report.variants;
+  const { matchedVariants, insights } = buildInsightsFromParsedRows(sourceVariants);
+  const nextInsightSummary = new Map(insights.map((insight) => [insight.title, `${insight.impact}:${insight.actionableRecommendation ?? ""}`]));
+  const addedInsightTitles = Array.from(nextInsightSummary.keys()).filter((title) => !previousSummary.has(title));
+  const removedInsightTitles = Array.from(previousSummary.keys()).filter((title) => !nextInsightSummary.has(title));
+  const changedInsightTitles = Array.from(nextInsightSummary.keys()).filter((title) => previousSummary.has(title) && previousSummary.get(title) !== nextInsightSummary.get(title));
+  const reanalyzedReport: DnaReport = {
+    ...report,
+    variants: report.isPrivacyRestricted ? [] : matchedVariants,
+    retainedGenotypes: report.isPrivacyRestricted ? [] : sourceVariants,
+    ancestryComposition: report.isPrivacyRestricted ? undefined : inferAncestry(matchedVariants),
+    healthInsights: insights,
+    snpsMatchedToKnowledgeBase: matchedVariants.length,
+    knowledgeBaseVersion: DNA_KNOWLEDGE_BASE_VERSION,
+    lastAnalyzedAt: new Date().toISOString(),
+    reanalysisCount: (report.reanalysisCount ?? 0) + 1,
+    retentionSummary: report.retentionSummary ?? retentionSummaryForReport({
+      privacyMode: report.privacyMode,
+      retainVariantLevelData: !report.isPrivacyRestricted,
+      allowAncestryInference: Boolean(report.ancestryComposition),
+    }),
+  };
+
+  return {
+    reanalyzedReport,
+    diff: {
+      reportId: report.id,
+      previousKnowledgeBaseVersion: report.knowledgeBaseVersion,
+      currentKnowledgeBaseVersion: DNA_KNOWLEDGE_BASE_VERSION,
+      addedInsightTitles,
+      removedInsightTitles,
+      changedInsightTitles,
+      insightDelta: insights.length - previousInsights.length,
+      matchedVariantDelta: matchedVariants.length - report.snpsMatchedToKnowledgeBase,
+      summary: addedInsightTitles.length || removedInsightTitles.length || changedInsightTitles.length
+        ? `${addedInsightTitles.length} added, ${removedInsightTitles.length} removed, ${changedInsightTitles.length} changed insight titles after reanalysis.`
+        : "No curated insight changes were produced by the latest reanalysis.",
+    },
+  };
+}
+
+export function minimizeDnaReport(report: DnaReport): DnaReport {
+  const warnings = new Set(report.parseWarnings ?? []);
+  warnings.add("Variant-level DNA storage was minimized after import by an explicit privacy action.");
+  return {
+    ...report,
+    fileHash: undefined,
+    ancestryComposition: undefined,
+    variants: [],
+    retainedGenotypes: [],
+    isPrivacyRestricted: true,
+    privacyMode: "privacy",
+    parseWarnings: Array.from(warnings),
+    retentionSummary: retentionSummaryForReport({
+      privacyMode: "privacy",
+      retainVariantLevelData: false,
+      allowAncestryInference: false,
+    }),
+    lastAnalyzedAt: new Date().toISOString(),
   };
 }
 

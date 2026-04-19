@@ -116,7 +116,8 @@ export interface HydrationLog {
   source: "manual" | "apple-health";
 }
 
-export type DnaSource = "23andme" | "ancestrydna" | "livedna" | "other";
+export type DnaSource = "23andme" | "ancestrydna" | "livedna" | "vcf" | "other";
+export type DnaImportFormat = "raw-text" | "delimited" | "vcf";
 export type DnaInsightCategory =
   | "nutrition"
   | "fitness"
@@ -209,16 +210,22 @@ export interface DnaReport {
   id: string;
   uploadDate: string;
   source: DnaSource;
+  importFormat?: DnaImportFormat;
   fileName?: string;
   fileHash?: string;
   ancestryComposition?: AncestryComposition;
   healthInsights: DnaHealthInsight[];
   variants: DnaVariant[];
+  retainedGenotypes?: DnaVariant[];
   rawSnpsImported: number;
   snpsMatchedToKnowledgeBase: number;
   knowledgeBaseVersion?: string;
+  genomeBuild?: string;
   parseWarnings?: string[];
   isPrivacyRestricted?: boolean;
+  retentionSummary?: string;
+  lastAnalyzedAt?: string;
+  reanalysisCount?: number;
   notes?: string;
   privacyMode?: "living" | "privacy";
 }
@@ -323,6 +330,27 @@ export interface DnaBloodworkCorrelation {
   clinicianDiscussion: string[];
 }
 
+export interface DnaKnowledgeBaseStatus {
+  version: string;
+  annotationCount: number;
+  categories: DnaInsightCategory[];
+  reportGroups: Array<NonNullable<DnaVariantAnnotation["reportGroup"]>>;
+  supportedSources: DnaSource[];
+  supportedImportFormats: DnaImportFormat[];
+}
+
+export interface DnaReanalysisDiff {
+  reportId: string;
+  previousKnowledgeBaseVersion?: string;
+  currentKnowledgeBaseVersion: string;
+  addedInsightTitles: string[];
+  removedInsightTitles: string[];
+  changedInsightTitles: string[];
+  insightDelta: number;
+  matchedVariantDelta: number;
+  summary: string;
+}
+
 export interface Medication {
   id: string;
   name: string;
@@ -382,6 +410,7 @@ export interface LabResult {
   resultedAt: string;
   labName: string;
   panels: LabPanel[];
+  importMetadata?: LabImportMetadata;
   notes?: string;
 }
 
@@ -397,6 +426,36 @@ export interface LabBiomarker {
   referenceRangeLow?: number;
   referenceRangeHigh?: number;
   outOfRange?: boolean;
+  sourceName?: string;
+}
+
+export type LabImportFormat = "csv" | "tsv" | "text";
+export type ImportConfidence = "low" | "medium" | "high";
+
+export interface LabNormalizationNote {
+  row: number;
+  biomarkerName: string;
+  message: string;
+  severity: "info" | "warning";
+}
+
+export interface LabImportMetadata {
+  fileName?: string;
+  format: LabImportFormat;
+  matchedRows: number;
+  unmatchedRows: string[];
+  confidence: ImportConfidence;
+  importedAt: string;
+  normalizationNotes: string[];
+}
+
+export interface LabImportPreview {
+  format: LabImportFormat;
+  panels: LabPanel[];
+  matchedRows: number;
+  unmatchedRows: string[];
+  confidence: ImportConfidence;
+  normalizationNotes: LabNormalizationNote[];
 }
 
 export type BiologicalSex = "male" | "female" | "all";
@@ -506,7 +565,7 @@ export interface BloodworkComboSignal {
 }
 
 export interface BloodworkBiologicalAge {
-  method: "kdm-style-clinical-clock";
+  method: BloodworkClockMethod;
   status: "available" | "insufficient-data";
   biologicalAge: number | null;
   chronologicalAge?: number;
@@ -556,9 +615,21 @@ export interface BloodworkTrend {
   latest: number;
   previous?: number;
   delta?: number;
+  deltaPercent?: number;
   direction: "improving" | "worsening" | "stable" | "insufficient-data";
   unit: string;
   points: BloodworkTrendPoint[];
+}
+
+export type BloodworkClockMethod = "kdm-style-clinical-clock";
+
+export interface BloodworkClockDescriptor {
+  method: BloodworkClockMethod;
+  label: string;
+  status: "available";
+  description: string;
+  minimumCoverage: number;
+  notes: string[];
 }
 
 export interface Habit {
@@ -656,4 +727,14 @@ export interface HealthAuditEntry {
   detail: string;
   sensitivity: "high" | "moderate" | "low";
   success: boolean;
+}
+
+export interface HealthConsentEntry {
+  id: string;
+  createdAt: string;
+  action: string;
+  scope: "dna-access" | "dna-export" | "audit-log-access" | "consent-log-access" | "dna-reanalysis" | "privacy-change";
+  detail: string;
+  reportId?: string;
+  reason?: string;
 }

@@ -12,11 +12,14 @@ import {
   findVariantDetail,
   getAnnotationIndex,
   getCarrierStatus,
+  getDnaKnowledgeBaseStatus,
   getMonitoringPlan,
   getPriorityFindings,
   getProtectiveVariants,
   getSupplementRecommendations,
   lookupRsidAcrossReports,
+  minimizeDnaReport,
+  reanalyzeDnaReport,
   summarizeDiseaseRisks,
   summarizeGeneticPathways,
   summarizePharmacogenomics,
@@ -26,16 +29,19 @@ import {
 import {
   analyzeBloodwork,
   buildBloodworkActionPlan,
+  getBloodworkClockDescriptors,
   calculateBiologicalAge,
   getBloodworkBiomarker,
   getBloodworkBiomarkers,
   getBloodworkCategoryScores,
   getBloodworkTrends,
 } from "./bloodwork.js";
+import { buildImportedLabResult, previewLabImport } from "./bloodwork-import.js";
 import type {
   Appointment,
   DailyHealthSummary,
   HealthAuditEntry,
+  HealthConsentEntry,
   DnaReport,
   DnaSettings,
   Habit,
@@ -107,9 +113,11 @@ import {
   validateAppointmentParams,
   validateBloodworkAnalysisInput,
   validateDnaImportParams,
+  validateLabImportParams,
   validateLabResultParams,
   validateMedicationParams,
   validatePrivacySettingsUpdate,
+  validateRecordConsentParams,
   validateSensitiveConfirmation,
   validateWorkoutParams,
 } from "./validation.js";
@@ -131,6 +139,42 @@ function computeMealMacros(foods: Array<Partial<MacroTargets> & { fiberGrams?: n
     fatGrams: food.fatGrams ?? 0,
     fiberGrams: food.fiberGrams ?? 0,
   })));
+}
+
+function workoutSourceFromDevice(device?: string): WorkoutLog["source"] {
+  switch (String(device ?? "").toLowerCase()) {
+    case "apple-health":
+    case "garmin":
+    case "oura":
+    case "whoop":
+    case "strava":
+      return String(device).toLowerCase() as WorkoutLog["source"];
+    default:
+      return "manual";
+  }
+}
+
+function recoverySourceFromDevice(device?: string): RecoveryStatus["source"] {
+  switch (String(device ?? "").toLowerCase()) {
+    case "garmin":
+    case "oura":
+    case "whoop":
+      return String(device).toLowerCase() as RecoveryStatus["source"];
+    default:
+      return "manual";
+  }
+}
+
+function sleepSourceFromDevice(device?: string): SleepEntry["source"] {
+  switch (String(device ?? "").toLowerCase()) {
+    case "apple-health":
+    case "garmin":
+    case "oura":
+    case "whoop":
+      return String(device).toLowerCase() as SleepEntry["source"];
+    default:
+      return "manual";
+  }
 }
 
 async function getDnaSettings(ctx: any) {
@@ -171,6 +215,126 @@ async function auditSensitiveAction(ctx: any, input: {
   success: boolean;
 }) {
   await appendAuditEntry(ctx, createAuditEntry(input));
+}
+
+function pruneConsentLog(entries: HealthConsentEntry[], retentionDays: number) {
+  const threshold = Date.now() - retentionDays * 86_400_000;
+  return entries.filter((entry) => new Date(entry.createdAt).getTime() >= threshold);
+}
+
+async function appendConsentEntry(ctx: any, entry: HealthConsentEntry) {
+  const policy = await getHealthPolicy(ctx);
+  const existing = await getArrayState<HealthConsentEntry>(ctx, DATA_KEYS.HEALTH_CONSENTS);
+  existing.push(entry);
+  await setArrayState(ctx, DATA_KEYS.HEALTH_CONSENTS, pruneConsentLog(existing, policy.auditRetentionDays));
+}
+
+async function recordConsent(ctx: any, input: Omit<HealthConsentEntry, "id" | "createdAt">) {
+  await appendConsentEntry(ctx, {
+    id: generateId(),
+    createdAt: toIsoDateTime(),
+    ...input,
+  });
+}
+
+async function getHealthConsents(ctx: any) {
+  const policy = await getHealthPolicy(ctx);
+  const entries = pruneConsentLog(await getArrayState<HealthConsentEntry>(ctx, DATA_KEYS.HEALTH_CONSENTS), policy.auditRetentionDays);
+  await setArrayState(ctx, DATA_KEYS.HEALTH_CONSENTS, entries);
+  return entries;
+}
+
+async function ensureGeneticsEnabled(ctx: any) {
+  const policy = await getHealthPolicy(ctx);
+  return policy.geneticsEnabled;
+}
+
+function sanitizeImportedWorkoutPayload(_workout: Record<string, unknown>) {
+  return undefined;
+}
+
+function hasOwnField(value: Record<string, unknown>, key: string) {
+  return Object.prototype.hasOwnProperty.call(value, key);
+}
+
+function deriveRecoveryOverall(score: number): RecoveryStatus["overall"] {
+  return score >= 75 ? "green" : score >= 45 ? "yellow" : "red";
+}
+
+function dnaReportFingerprint(report: DnaReport) {
+  const variants = report.retainedGenotypes?.length ? report.retainedGenotypes : report.variants;
+  if (!variants.length) {
+    return undefined;
+  }
+  return variants
+    .map((variant) => `${variant.rsId}:${variant.genotype}:${variant.chromosome}:${variant.position}`)
+    .sort()
+    .join("|");
+}
+
+function findDuplicateDnaReport(reports: DnaReport[], report: DnaReport) {
+  const fingerprint = dnaReportFingerprint(report);
+  if (!fingerprint) {
+    return undefined;
+  }
+  return reports.find((entry) => dnaReportFingerprint(entry) === fingerprint);
+}
+
+function presentDnaReport(report: DnaReport | null | undefined, options?: { includeSensitiveDerived?: boolean }) {
+  if (!report) {
+    return report ?? null;
+  }
+  const includeSensitiveDerived = options?.includeSensitiveDerived === true;
+  return {
+    ...report,
+    fileHash: undefined,
+    retainedGenotypes: undefined,
+    ancestryComposition: report.isPrivacyRestricted && !includeSensitiveDerived ? undefined : report.ancestryComposition,
+    variants: report.isPrivacyRestricted && !includeSensitiveDerived ? [] : report.variants,
+    healthInsights: report.isPrivacyRestricted && !includeSensitiveDerived ? [] : report.healthInsights,
+  };
+}
+
+async function confirmRestrictedDnaSummaryAccess(
+  ctx: any,
+  input: {
+    action: string;
+    params: any;
+    report?: DnaReport | null;
+    detail: string;
+    error: string;
+  },
+) {
+  if (!input.report?.isPrivacyRestricted) {
+    return { allowed: true as const };
+  }
+  const policy = await getHealthPolicy(ctx);
+  if (!canAccessSensitiveDna({ report: input.report, policy, confirmed: input.params?.confirmSensitive })) {
+    return { allowed: false as const, error: input.error };
+  }
+  await auditSensitiveAction(ctx, {
+    action: input.action,
+    category: "dna",
+    detail: input.detail,
+    sensitivity: "high",
+    success: true,
+  });
+  await recordConsent(ctx, {
+    action: input.action,
+    scope: "dna-access",
+    detail: input.detail,
+    reportId: input.report.id,
+    reason: input.params?.reason,
+  });
+  return { allowed: true as const };
+}
+
+function geneticsDisabledResult(extra?: Record<string, unknown>) {
+  return {
+    success: false,
+    error: "Genetics features are disabled in privacy settings.",
+    ...(extra ?? {}),
+  };
 }
 
 function buildAppointmentChecklist(type: string) {
@@ -298,15 +462,49 @@ const plugin = definePlugin({
     }
 
     ctx.data.register("health.overview", async () => {
+      const today = toIsoDate();
       const workouts = await getArrayState<WorkoutLog>(ctx, DATA_KEYS.WORKOUT_LOGS);
       const meals = await getArrayState<MealLog>(ctx, DATA_KEYS.MEAL_LOGS);
       const reports = await getArrayState<DnaReport>(ctx, DATA_KEYS.DNA_REPORTS);
       const labResults = await getArrayState<LabResult>(ctx, DATA_KEYS.LAB_RESULTS);
+      const hydrationGoal = await getStateValue<number>(ctx, DATA_KEYS.DAILY_HYDRATION_GOAL_ML, DEFAULT_HYDRATION_GOAL_ML);
+      const hydrationLog = await getHydrationLogForDate(ctx, today);
+      const medicationLogs = await getArrayState<MedicationLog>(ctx, DATA_KEYS.MEDICATION_LOGS);
+      const appointments = await getArrayState<Appointment>(ctx, DATA_KEYS.APPOINTMENTS);
+      const pending = buildPendingReminderProjection({
+        today,
+        medications: medicationLogs,
+        workouts,
+        meals,
+        hydrationLog,
+        hydrationGoal,
+        appointments,
+        sleepEntries: await getArrayState<SleepEntry>(ctx, DATA_KEYS.SLEEP_ENTRIES),
+        habits: await getArrayState<HabitCompletion>(ctx, DATA_KEYS.HABIT_COMPLETIONS),
+        recoveryEntries: await getArrayState<RecoveryStatus>(ctx, DATA_KEYS.RECOVERY_STATUS),
+        nudges: await collectAmbientNudges(ctx),
+      });
+      const bloodworkTrends = getBloodworkTrends(labResults).slice(0, 5);
       return {
+        date: today,
+        today: {
+          mealsLogged: meals.filter((meal) => meal.date === today).length,
+          workoutsLogged: workouts.filter((workout) => workout.performedAt.startsWith(today)).length,
+          medicationsLogged: medicationLogs.filter((log) => log.takenAt.startsWith(today)).length,
+          hydration: {
+            totalMl: computeHydrationTotal(hydrationLog),
+            goalMl: hydrationGoal,
+          },
+        },
         workoutSummary: computeWorkoutSummary(workouts),
-        mealsLogged: meals.length,
-        dna: reports.at(-1) ? summarizeReport(reports.at(-1)!) : null,
-        bloodwork: labResults.at(-1) ? analyzeBloodwork(labResults.at(-1)!, {}).overallSummary : null,
+        latestDnaSummary: reports.at(-1) ? summarizeReport(reports.at(-1)!) : null,
+        latestBloodworkSummary: labResults.at(-1) ? analyzeBloodwork(labResults.at(-1)!, {}).overallSummary : null,
+        latestBloodworkTrends: bloodworkTrends,
+        pending,
+        provenance: {
+          latestDnaReportId: reports.at(-1)?.id ?? null,
+          latestLabResultId: labResults.at(-1)?.id ?? null,
+        },
       };
     });
 
@@ -345,6 +543,19 @@ const plugin = definePlugin({
       await getHealthPolicy(ctx),
       await getArrayState<DnaReport>(ctx, DATA_KEYS.DNA_REPORTS),
     ));
+
+    ctx.data.register("health.dna.kb-status", async () => getDnaKnowledgeBaseStatus());
+
+    ctx.data.register("health.audit.summary", async () => {
+      const auditLog = await getArrayState<HealthAuditEntry>(ctx, DATA_KEYS.HEALTH_AUDIT_LOG);
+      const consents = await getHealthConsents(ctx);
+      return {
+        auditEntries: auditLog.length,
+        consentEntries: consents.length,
+        latestAuditEntry: auditLog.at(-1) ?? null,
+        latestConsent: consents.at(-1) ?? null,
+      };
+    });
 
     ctx.actions.register(ACTION_KEYS.ADD_MEDICATION, async (params: any) => {
       const input = validateMedicationParams(params);
@@ -523,11 +734,135 @@ const plugin = definePlugin({
         statuses.push(nextStatus);
       }
       await setArrayState(ctx, DATA_KEYS.WEARABLE_STATUS, statuses);
+      const source = workoutSourceFromDevice(params.device);
+      const importedWorkouts = Array.isArray(params.workouts) ? params.workouts : [];
+      const importedSleepEntries = Array.isArray(params.sleepEntries) ? params.sleepEntries : [];
+      const importedRecoveryEntries = Array.isArray(params.recoveryEntries) ? params.recoveryEntries : [];
+
+      if (importedWorkouts.length) {
+        const existingWorkouts = await getArrayState<WorkoutLog>(ctx, DATA_KEYS.WORKOUT_LOGS);
+        for (const workout of importedWorkouts) {
+          const wearableLogId = String(workout.wearableLogId ?? workout.id ?? "");
+          const candidate: WorkoutLog = {
+            id: generateId(),
+            name: String(workout.name ?? workout.type ?? "Imported workout"),
+            type: workout.type ?? "other",
+            performedAt: toIsoDateTime(workout.performedAt),
+            durationMinutes: Number(workout.durationMinutes ?? 0),
+            source,
+            wearableLogId: wearableLogId || undefined,
+            rawData: sanitizeImportedWorkoutPayload(workout),
+          };
+          if (hasOwnField(workout, "caloriesBurned")) {
+            candidate.caloriesBurned = workout.caloriesBurned as number | undefined;
+          }
+          if (hasOwnField(workout, "distanceKm")) {
+            candidate.distanceKm = workout.distanceKm as number | undefined;
+          }
+          if (hasOwnField(workout, "avgHeartRate")) {
+            candidate.avgHeartRate = workout.avgHeartRate as number | undefined;
+          }
+          if (hasOwnField(workout, "maxHeartRate")) {
+            candidate.maxHeartRate = workout.maxHeartRate as number | undefined;
+          }
+          if (hasOwnField(workout, "notes")) {
+            candidate.notes = workout.notes as string | undefined;
+          }
+          const existing = wearableLogId
+            ? existingWorkouts.find((entry) => entry.wearableLogId === wearableLogId || entry.stravaActivityId === wearableLogId)
+            : undefined;
+          if (existing) {
+            Object.assign(existing, candidate, { id: existing.id });
+          } else {
+            existingWorkouts.push(candidate);
+          }
+        }
+        await setArrayState(ctx, DATA_KEYS.WORKOUT_LOGS, existingWorkouts);
+      }
+
+      if (importedSleepEntries.length) {
+        const existingSleep = await getArrayState<SleepEntry>(ctx, DATA_KEYS.SLEEP_ENTRIES);
+        const sleepSource = sleepSourceFromDevice(params.device);
+        for (const sleepEntry of importedSleepEntries) {
+          const candidate: Partial<SleepEntry> & Pick<SleepEntry, "date" | "source"> = {
+            date: toIsoDate(sleepEntry.date),
+            source: sleepSource,
+          };
+          if (hasOwnField(sleepEntry, "totalMinutes")) {
+            candidate.totalMinutes = Number(sleepEntry.totalMinutes ?? 0);
+          }
+          if (hasOwnField(sleepEntry, "sleepScore")) {
+            candidate.sleepScore = sleepEntry.sleepScore as number | undefined;
+          }
+          if (hasOwnField(sleepEntry, "deepMinutes")) {
+            candidate.deepMinutes = sleepEntry.deepMinutes as number | undefined;
+          }
+          if (hasOwnField(sleepEntry, "remMinutes")) {
+            candidate.remMinutes = sleepEntry.remMinutes as number | undefined;
+          }
+          if (hasOwnField(sleepEntry, "wakeCount")) {
+            candidate.wakeCount = sleepEntry.wakeCount as number | undefined;
+          }
+          const existing = existingSleep.find((entry) => entry.date === candidate.date && entry.source === candidate.source);
+          if (existing) {
+            Object.assign(existing, candidate);
+          } else {
+            existingSleep.push({
+              id: generateId(),
+              date: candidate.date,
+              totalMinutes: candidate.totalMinutes ?? 0,
+              sleepScore: candidate.sleepScore,
+              deepMinutes: candidate.deepMinutes,
+              remMinutes: candidate.remMinutes,
+              wakeCount: candidate.wakeCount,
+              source: candidate.source,
+            });
+          }
+        }
+        await setArrayState(ctx, DATA_KEYS.SLEEP_ENTRIES, existingSleep);
+      }
+
+      if (importedRecoveryEntries.length) {
+        const existingRecovery = await getArrayState<RecoveryStatus>(ctx, DATA_KEYS.RECOVERY_STATUS);
+        const recoverySource = recoverySourceFromDevice(params.device);
+        for (const recoveryEntry of importedRecoveryEntries) {
+          const candidate: Partial<RecoveryStatus> & Pick<RecoveryStatus, "date" | "source"> = {
+            date: toIsoDate(recoveryEntry.date),
+            source: recoverySource,
+          };
+          if (hasOwnField(recoveryEntry, "score")) {
+            candidate.score = Number(recoveryEntry.score ?? 50);
+          }
+          if (hasOwnField(recoveryEntry, "overall")) {
+            candidate.overall = recoveryEntry.overall as RecoveryStatus["overall"] | undefined;
+          } else if (candidate.score !== undefined) {
+            candidate.overall = deriveRecoveryOverall(candidate.score);
+          }
+          if (hasOwnField(recoveryEntry, "recommendation")) {
+            candidate.recommendation = recoveryEntry.recommendation as string | undefined;
+          }
+          const existing = existingRecovery.find((entry) => entry.date === candidate.date && entry.source === candidate.source);
+          if (existing) {
+            Object.assign(existing, candidate);
+          } else {
+            existingRecovery.push({
+              date: candidate.date,
+              score: candidate.score ?? 50,
+              overall: candidate.overall ?? deriveRecoveryOverall(candidate.score ?? 50),
+              recommendation: candidate.recommendation,
+              source: candidate.source,
+            });
+          }
+        }
+        await setArrayState(ctx, DATA_KEYS.RECOVERY_STATUS, existingRecovery);
+      }
       return {
         success: true,
         wearable: nextStatus,
-        importedSessions: params.importedSessions ?? 0,
-        note: "Wearable sync scaffold updated local connection status. API polling remains a future integration boundary.",
+        importedSessions: params.importedSessions ?? importedWorkouts.length + importedSleepEntries.length + importedRecoveryEntries.length,
+        note: importedWorkouts.length || importedSleepEntries.length || importedRecoveryEntries.length
+          ? "Wearable sync ingested local/exported wearable data into workouts, sleep, and recovery state without requiring live API connectivity."
+          : "Wearable sync scaffold updated local connection status. API polling remains a future integration boundary.",
       };
     });
 
@@ -604,20 +939,25 @@ const plugin = definePlugin({
 
     ctx.actions.register(ACTION_KEYS.LOG_QUICK_MEAL, async (params: any) => {
       const plans = await getArrayState<MealPlan>(ctx, DATA_KEYS.MEAL_PLANS);
+      const mealLogs = await getArrayState<MealLog>(ctx, DATA_KEYS.MEAL_LOGS);
       const template = plans.flatMap((plan) => plan.mealTemplates ?? []).find((entry) => entry.name.toLowerCase() === String(params.name ?? params.mealName ?? "").toLowerCase());
-      const foods = (template?.typicalFoods ?? []).map((name) => ({ name, calories: Math.round((template?.targetCalories ?? 450) / Math.max((template?.typicalFoods?.length ?? 1), 1)) }));
+      const recent = mealLogs
+        .slice()
+        .reverse()
+        .find((entry) => entry.mealName.toLowerCase() === String(params.mealName ?? params.name ?? "").toLowerCase());
+      const foods = (template?.typicalFoods ?? recent?.foods?.map((food) => food.name) ?? []).map((name) => ({ name, calories: Math.round((template?.targetCalories ?? recent?.totalCalories ?? 450) / Math.max((template?.typicalFoods?.length ?? recent?.foods?.length ?? 1), 1)) }));
       const meal: MealLog = {
         id: generateId(),
         date: toIsoDate(params.date),
         mealName: params.mealName ?? template?.name ?? params.name ?? "quick-meal",
         foods,
-        totalCalories: params.totalCalories ?? template?.targetCalories ?? computeMealCalories(foods),
-        totalMacros: params.totalMacros ?? template?.targetMacros,
+        totalCalories: params.totalCalories ?? template?.targetCalories ?? recent?.totalCalories ?? computeMealCalories(foods),
+        totalMacros: params.totalMacros ?? template?.targetMacros ?? recent?.totalMacros,
         source: "manual",
-        notes: params.notes ?? `Quick meal from ${template?.name ?? "recent template"}`,
+        notes: params.notes ?? `Quick meal from ${template?.name ?? recent?.mealName ?? "recent template"}`,
       };
       await appendArrayItem(ctx, DATA_KEYS.MEAL_LOGS, meal);
-      return { success: true, meal, templateFound: Boolean(template) };
+      return { success: true, meal, templateFound: Boolean(template), recentMealFound: Boolean(recent) };
     });
 
     ctx.actions.register(ACTION_KEYS.GET_MEAL_LOGS, async (params: any) => {
@@ -648,9 +988,15 @@ const plugin = definePlugin({
 
     ctx.actions.register(ACTION_KEYS.SEARCH_FOODS, async (params: any) => {
       const matches = findFoodMatches(params.query ?? "");
+      const recentFoods = Array.from(new Map(
+        (await getArrayState<MealLog>(ctx, DATA_KEYS.MEAL_LOGS))
+          .flatMap((meal) => meal.foods)
+          .filter((food) => String(food.name ?? "").toLowerCase().includes(String(params.query ?? "").toLowerCase()))
+          .map((food) => [food.name.toLowerCase(), { ...food, source: food.source ?? "recent-log" }]),
+      ).values());
       const dnaReports = await getArrayState<DnaReport>(ctx, DATA_KEYS.DNA_REPORTS);
       const dnaHints = dnaReports.at(-1)?.healthInsights.filter((insight) => insight.category === "nutrition" || insight.category === "metabolic").slice(0, 2).map((insight) => insight.actionableRecommendation ?? insight.title) ?? [];
-      return { foods: matches, dnaHints };
+      return { foods: [...recentFoods, ...matches].slice(0, 12), dnaHints };
     });
 
     ctx.actions.register(ACTION_KEYS.GET_FOOD_DETAILS, async (params: any) => {
@@ -794,6 +1140,57 @@ const plugin = definePlugin({
       return { success: true, labResult: result };
     });
 
+    ctx.actions.register(ACTION_KEYS.PREVIEW_LAB_IMPORT, async (params: any) => {
+      const input = validateLabImportParams(params);
+      return {
+        success: true,
+        preview: previewLabImport({
+          rawData: input.rawData,
+          fileName: input.fileName,
+          defaultPanelName: input.defaultPanelName,
+        }),
+      };
+    });
+
+    ctx.actions.register(ACTION_KEYS.IMPORT_LAB_RESULT, async (params: any) => {
+      const input = validateLabImportParams(params);
+      const { preview, labResult } = buildImportedLabResult({
+        labName: input.labName ?? "Imported Lab Result",
+        rawData: input.rawData,
+        fileName: input.fileName,
+        resultedAt: input.resultedAt,
+        defaultPanelName: input.defaultPanelName,
+        notes: input.notes,
+      });
+      if (preview.matchedRows === 0 || !preview.panels.length) {
+        await auditSensitiveAction(ctx, {
+          action: ACTION_KEYS.IMPORT_LAB_RESULT,
+          category: "bloodwork",
+          detail: `Rejected lab import from ${input.fileName ?? input.labName ?? "inline payload"} because no biomarker rows matched the local catalogue.`,
+          sensitivity: "high",
+          success: false,
+        });
+        return {
+          success: false,
+          error: "Lab import did not match any supported biomarkers, so nothing was stored.",
+          preview,
+        };
+      }
+      await appendArrayItem(ctx, DATA_KEYS.LAB_RESULTS, labResult);
+      await auditSensitiveAction(ctx, {
+        action: ACTION_KEYS.IMPORT_LAB_RESULT,
+        category: "bloodwork",
+        detail: `Imported lab result from ${labResult.labName} with ${preview.matchedRows} matched biomarker rows.`,
+        sensitivity: "high",
+        success: true,
+      });
+      return {
+        success: true,
+        labResult,
+        preview,
+      };
+    });
+
     ctx.actions.register(ACTION_KEYS.GET_LAB_RESULTS, async () => ({
       labResults: await getArrayState<LabResult>(ctx, DATA_KEYS.LAB_RESULTS),
     }));
@@ -818,6 +1215,10 @@ const plugin = definePlugin({
       biomarker: params?.id ? getBloodworkBiomarker(params.id) : getBloodworkBiomarker(params?.query ?? ""),
     }));
 
+    ctx.actions.register(ACTION_KEYS.GET_BLOODWORK_CLOCKS, async () => ({
+      clocks: getBloodworkClockDescriptors(),
+    }));
+
     ctx.actions.register(ACTION_KEYS.ANALYZE_BLOODWORK, async (params: any) => {
       const input = validateBloodworkAnalysisInput(params);
       const results = await getArrayState<LabResult>(ctx, DATA_KEYS.LAB_RESULTS);
@@ -839,6 +1240,7 @@ const plugin = definePlugin({
           age: input.age,
           chronologicalAge: input.chronologicalAge,
           sex: input.sex,
+          clockMethod: input.clockMethod,
         }),
       };
     });
@@ -875,6 +1277,7 @@ const plugin = definePlugin({
           age: input.age,
           chronologicalAge: input.chronologicalAge,
           sex: input.sex,
+          clockMethod: input.clockMethod,
         }),
       };
     });
@@ -993,7 +1396,28 @@ const plugin = definePlugin({
       supplementLogs: await getArrayState<SupplementLog>(ctx, DATA_KEYS.SUPPLEMENT_LOGS),
     }));
 
+    ctx.actions.register(ACTION_KEYS.PREVIEW_DNA_IMPORT, async (params: any) => {
+      if (!(await ensureGeneticsEnabled(ctx))) {
+        return geneticsDisabledResult({ preview: null });
+      }
+      const input = validateDnaImportParams(params);
+      return {
+        success: true,
+        preview: presentDnaReport(createDnaReport({
+          rawData: input.rawData,
+          fileName: input.fileName,
+          notes: input.notes,
+          privacyMode: input.privacyMode ?? (await getDnaSettings(ctx)).privacyMode,
+          allowAncestryInference: (await getHealthPolicy(ctx)).allowAncestryInference,
+          retainVariantLevelData: (await getHealthPolicy(ctx)).retainVariantLevelData,
+        })),
+      };
+    });
+
     ctx.actions.register(ACTION_KEYS.ADD_DNA_REPORT, async (params: any) => {
+      if (!(await ensureGeneticsEnabled(ctx))) {
+        return geneticsDisabledResult({ dnaReport: null });
+      }
       const input = validateDnaImportParams(params);
       const settings = await getDnaSettings(ctx);
       const policy = await getHealthPolicy(ctx);
@@ -1011,6 +1435,18 @@ const plugin = definePlugin({
         allowAncestryInference: policy.allowAncestryInference,
         retainVariantLevelData: policy.retainVariantLevelData && (input.privacyMode ?? settings.privacyMode) !== "privacy",
       });
+      const existingReports = await getArrayState<DnaReport>(ctx, DATA_KEYS.DNA_REPORTS);
+      const duplicate = findDuplicateDnaReport(existingReports, report);
+      if (duplicate) {
+        return {
+          success: true,
+          dnaReport: presentDnaReport(duplicate),
+          duplicate: true,
+          settings: await getDnaSettings(ctx),
+          policy,
+          reportSummary: duplicate.isPrivacyRestricted ? null : summarizeReport(duplicate),
+        };
+      }
       await appendArrayItem(ctx, DATA_KEYS.DNA_REPORTS, report);
       const updatedSettings = await setDnaSettings(ctx, {
         lastImport: report.uploadDate,
@@ -1029,45 +1465,134 @@ const plugin = definePlugin({
       });
       return {
         success: true,
-        dnaReport: report,
+        dnaReport: presentDnaReport(report),
         settings: updatedSettings,
         policy: await getHealthPolicy(ctx),
-        reportSummary: summarizeReport(report),
+        reportSummary: report.isPrivacyRestricted ? null : summarizeReport(report),
       };
     });
 
-    ctx.actions.register(ACTION_KEYS.GET_DNA_REPORTS, async () => {
+    ctx.actions.register(ACTION_KEYS.GET_DNA_REPORTS, async (params: any) => {
+      if (!(await ensureGeneticsEnabled(ctx))) {
+        return geneticsDisabledResult({ dnaReports: [] });
+      }
       const reports = await getArrayState<DnaReport>(ctx, DATA_KEYS.DNA_REPORTS);
+      const hasRestricted = reports.some((report) => report.isPrivacyRestricted);
+      if (hasRestricted && params?.confirmSensitive) {
+        await auditSensitiveAction(ctx, {
+          action: ACTION_KEYS.GET_DNA_REPORTS,
+          category: "dna",
+          detail: "Confirmed access to privacy-restricted DNA report summaries.",
+          sensitivity: "high",
+          success: true,
+        });
+        await recordConsent(ctx, {
+          action: ACTION_KEYS.GET_DNA_REPORTS,
+          scope: "dna-access",
+          detail: "Confirmed access to privacy-restricted DNA report summaries.",
+          reason: params?.reason,
+        });
+      }
       return {
-        dnaReports: reports.map((report) => report.isPrivacyRestricted
-          ? {
-              ...report,
-              fileHash: undefined,
-              ancestryComposition: undefined,
-              variants: [],
-            }
-          : report),
+        dnaReports: reports.map((report) => presentDnaReport(report, {
+          includeSensitiveDerived: Boolean(params?.confirmSensitive),
+        })),
         settings: await getDnaSettings(ctx),
         policy: await getHealthPolicy(ctx),
+        ...(hasRestricted && !params?.confirmSensitive
+          ? { warning: "Privacy-restricted DNA reports were redacted. Pass confirmSensitive=true to include derived genetics findings." }
+          : {}),
       };
     });
 
+    ctx.actions.register(ACTION_KEYS.GET_DNA_KNOWLEDGE_BASE_STATUS, async () => ({
+      success: true,
+      status: getDnaKnowledgeBaseStatus(),
+    }));
+
     ctx.actions.register(ACTION_KEYS.GET_DNA_INSIGHTS, async (params: any) => {
+      if (!(await ensureGeneticsEnabled(ctx))) {
+        return geneticsDisabledResult({ dnaInsights: [] });
+      }
       const reports = await getArrayState<DnaReport>(ctx, DATA_KEYS.DNA_REPORTS);
       if (params?.reportId) {
         const report = reports.find((entry) => entry.id === params.reportId);
+        const access = await confirmRestrictedDnaSummaryAccess(ctx, {
+          action: ACTION_KEYS.GET_DNA_INSIGHTS,
+          params,
+          report,
+          detail: report ? `Confirmed privacy-restricted DNA insight access for ${report.id}.` : "Confirmed privacy-restricted DNA insight access.",
+          error: "DNA insights require explicit confirmation in privacy mode.",
+        });
+        if (!access.allowed) {
+          return { dnaInsights: [], error: access.error };
+        }
         return { dnaInsights: report?.healthInsights ?? [] };
       }
-      return { dnaInsights: reports.flatMap((report) => report.healthInsights) };
+      const restrictedReports = reports.filter((report) => report.isPrivacyRestricted);
+      if (restrictedReports.length && params?.confirmSensitive) {
+        await auditSensitiveAction(ctx, {
+          action: ACTION_KEYS.GET_DNA_INSIGHTS,
+          category: "dna",
+          detail: "Confirmed aggregated DNA insight access including privacy-restricted reports.",
+          sensitivity: "high",
+          success: true,
+        });
+        await recordConsent(ctx, {
+          action: ACTION_KEYS.GET_DNA_INSIGHTS,
+          scope: "dna-access",
+          detail: "Confirmed aggregated DNA insight access including privacy-restricted reports.",
+          reason: params?.reason,
+        });
+      }
+      const visibleReports = restrictedReports.length && !params?.confirmSensitive
+        ? reports.filter((report) => !report.isPrivacyRestricted)
+        : reports;
+      return {
+        dnaInsights: visibleReports.flatMap((report) => report.healthInsights),
+        ...(restrictedReports.length && !params?.confirmSensitive
+          ? { warning: "Privacy-restricted reports were omitted. Pass confirmSensitive=true to include them." }
+          : {}),
+      };
     });
 
     ctx.actions.register(ACTION_KEYS.GET_DNA_INSIGHTS_BY_CATEGORY, async (params: any) => {
+      if (!(await ensureGeneticsEnabled(ctx))) {
+        return geneticsDisabledResult({ dnaInsights: [] });
+      }
       const reports = await getArrayState<DnaReport>(ctx, DATA_KEYS.DNA_REPORTS);
-      const insights = reports.flatMap((report) => report.healthInsights).filter((insight) => insight.category === params.category);
-      return { dnaInsights: insights };
+      const restrictedReports = reports.filter((report) => report.isPrivacyRestricted);
+      if (restrictedReports.length && params?.confirmSensitive) {
+        await auditSensitiveAction(ctx, {
+          action: ACTION_KEYS.GET_DNA_INSIGHTS_BY_CATEGORY,
+          category: "dna",
+          detail: `Confirmed category-filtered DNA insight access for ${params.category} including privacy-restricted reports.`,
+          sensitivity: "high",
+          success: true,
+        });
+        await recordConsent(ctx, {
+          action: ACTION_KEYS.GET_DNA_INSIGHTS_BY_CATEGORY,
+          scope: "dna-access",
+          detail: `Confirmed category-filtered DNA insight access for ${params.category} including privacy-restricted reports.`,
+          reason: params?.reason,
+        });
+      }
+      const visibleReports = restrictedReports.length && !params?.confirmSensitive
+        ? reports.filter((report) => !report.isPrivacyRestricted)
+        : reports;
+      const insights = visibleReports.flatMap((report) => report.healthInsights).filter((insight) => insight.category === params.category);
+      return {
+        dnaInsights: insights,
+        ...(restrictedReports.length && !params?.confirmSensitive
+          ? { warning: "Privacy-restricted reports were omitted. Pass confirmSensitive=true to include them." }
+          : {}),
+      };
     });
 
     ctx.actions.register(ACTION_KEYS.GET_DNA_VARIANTS, async (params: any) => {
+      if (!(await ensureGeneticsEnabled(ctx))) {
+        return geneticsDisabledResult({ dnaVariants: [] });
+      }
       const reports = await getArrayState<DnaReport>(ctx, DATA_KEYS.DNA_REPORTS);
       const report = reports.find((entry) => entry.id === params.reportId) ?? reports.at(-1);
       const policy = await getHealthPolicy(ctx);
@@ -1082,11 +1607,21 @@ const plugin = definePlugin({
           sensitivity: "high",
           success: true,
         });
+        await recordConsent(ctx, {
+          action: ACTION_KEYS.GET_DNA_VARIANTS,
+          scope: "dna-access",
+          detail: `Confirmed privacy-restricted variant access for ${report.id}.`,
+          reportId: report.id,
+          reason: params?.reason,
+        });
       }
       return { dnaVariants: report?.variants ?? [] };
     });
 
     ctx.actions.register(ACTION_KEYS.GET_DNA_VARIANT_DETAIL, async (params: any) => {
+      if (!(await ensureGeneticsEnabled(ctx))) {
+        return geneticsDisabledResult({ detail: null });
+      }
       const reports = await getArrayState<DnaReport>(ctx, DATA_KEYS.DNA_REPORTS);
       const report = reports.find((entry) => entry.id === params.reportId) ?? reports.at(-1);
       const policy = await getHealthPolicy(ctx);
@@ -1101,11 +1636,21 @@ const plugin = definePlugin({
           sensitivity: "high",
           success: true,
         });
+        await recordConsent(ctx, {
+          action: ACTION_KEYS.GET_DNA_VARIANT_DETAIL,
+          scope: "dna-access",
+          detail: `Confirmed privacy-restricted variant detail access for ${report.id}.`,
+          reportId: report.id,
+          reason: params?.reason,
+        });
       }
       return { detail: report ? findVariantDetail(report, params.rsId) : null };
     });
 
     ctx.actions.register(ACTION_KEYS.LOOKUP_RSID, async (params: any) => {
+      if (!(await ensureGeneticsEnabled(ctx))) {
+        return geneticsDisabledResult({ matches: [] });
+      }
       const reports = await getArrayState<DnaReport>(ctx, DATA_KEYS.DNA_REPORTS);
       const policy = await getHealthPolicy(ctx);
       const matches = lookupRsidAcrossReports(reports, params.rsId).filter((entry) => {
@@ -1116,79 +1661,238 @@ const plugin = definePlugin({
     });
 
     ctx.actions.register(ACTION_KEYS.ANNOTATE_VARIANT, async (params: any) => {
-      const updated = await replaceById<DnaReport>(ctx, DATA_KEYS.DNA_REPORTS, params.reportId, (report) => annotateVariant(report, params.rsId, params.note));
-      return { success: Boolean(updated), dnaReport: updated };
+      if (!(await ensureGeneticsEnabled(ctx))) {
+        return geneticsDisabledResult({ dnaReport: null });
+      }
+      const reports = await getArrayState<DnaReport>(ctx, DATA_KEYS.DNA_REPORTS);
+      const report = reports.find((entry) => entry.id === params.reportId) ?? null;
+      const access = await confirmRestrictedDnaSummaryAccess(ctx, {
+        action: ACTION_KEYS.ANNOTATE_VARIANT,
+        params,
+        report,
+        detail: report ? `Confirmed privacy-restricted variant annotation update for ${report.id}.` : "Confirmed privacy-restricted variant annotation update.",
+        error: "Variant annotation updates require explicit confirmation in privacy mode.",
+      });
+      if (!access.allowed) {
+        return { success: false, dnaReport: null, error: access.error };
+      }
+      const updated = await replaceById<DnaReport>(ctx, DATA_KEYS.DNA_REPORTS, params.reportId, (existing) => annotateVariant(existing, params.rsId, params.note));
+      await auditSensitiveAction(ctx, {
+        action: ACTION_KEYS.ANNOTATE_VARIANT,
+        category: "dna",
+        detail: updated ? `Annotated variant ${params.rsId} on DNA report ${updated.id}.` : `Attempted variant annotation for missing DNA report ${params.reportId}.`,
+        sensitivity: "high",
+        success: Boolean(updated),
+      });
+      return { success: Boolean(updated), dnaReport: presentDnaReport(updated, { includeSensitiveDerived: Boolean(params?.confirmSensitive) }) };
     });
 
     ctx.actions.register(ACTION_KEYS.COMPARE_DNA_REPORTS, async (params: any) => {
+      if (!(await ensureGeneticsEnabled(ctx))) {
+        return geneticsDisabledResult({ comparison: null });
+      }
       const reports = await getArrayState<DnaReport>(ctx, DATA_KEYS.DNA_REPORTS);
       const left = reports.find((report) => report.id === params.leftReportId);
       const right = reports.find((report) => report.id === params.rightReportId);
       if (!left || !right) {
         return { success: false, error: "Both reports must exist to compare them." };
       }
+      const restrictedReport = [left, right].find((report) => report.isPrivacyRestricted) ?? null;
+      const access = await confirmRestrictedDnaSummaryAccess(ctx, {
+        action: ACTION_KEYS.COMPARE_DNA_REPORTS,
+        params,
+        report: restrictedReport,
+        detail: `Confirmed privacy-restricted DNA comparison between ${left.id} and ${right.id}.`,
+        error: "Comparing privacy-restricted DNA reports requires explicit confirmation.",
+      });
+      if (!access.allowed) {
+        return { success: false, comparison: null, error: access.error };
+      }
+      await auditSensitiveAction(ctx, {
+        action: ACTION_KEYS.COMPARE_DNA_REPORTS,
+        category: "dna",
+        detail: `Compared DNA reports ${left.id} and ${right.id}.`,
+        sensitivity: restrictedReport ? "high" : "moderate",
+        success: true,
+      });
       return { success: true, comparison: compareDnaReports(left, right) };
     });
 
     ctx.actions.register(ACTION_KEYS.GET_DNA_PRIORITY_FINDINGS, async (params: any) => {
+      if (!(await ensureGeneticsEnabled(ctx))) {
+        return geneticsDisabledResult({ priorityFindings: [] });
+      }
       const reports = await getArrayState<DnaReport>(ctx, DATA_KEYS.DNA_REPORTS);
       const report = reports.find((entry) => entry.id === params?.reportId) ?? reports.at(-1);
+      const access = await confirmRestrictedDnaSummaryAccess(ctx, {
+        action: ACTION_KEYS.GET_DNA_PRIORITY_FINDINGS,
+        params,
+        report,
+        detail: report ? `Confirmed privacy-restricted priority findings access for ${report.id}.` : "Confirmed privacy-restricted priority findings access.",
+        error: "Priority genetics findings require explicit confirmation in privacy mode.",
+      });
+      if (!access.allowed) {
+        return { priorityFindings: [], error: access.error };
+      }
       return { priorityFindings: report ? getPriorityFindings(report) : [] };
     });
 
     ctx.actions.register(ACTION_KEYS.GET_DNA_DISEASE_RISKS, async (params: any) => {
+      if (!(await ensureGeneticsEnabled(ctx))) {
+        return geneticsDisabledResult({ diseaseRisks: [] });
+      }
       const reports = await getArrayState<DnaReport>(ctx, DATA_KEYS.DNA_REPORTS);
       const report = reports.find((entry) => entry.id === params?.reportId) ?? reports.at(-1);
+      const access = await confirmRestrictedDnaSummaryAccess(ctx, {
+        action: ACTION_KEYS.GET_DNA_DISEASE_RISKS,
+        params,
+        report,
+        detail: report ? `Confirmed privacy-restricted disease-risk access for ${report.id}.` : "Confirmed privacy-restricted disease-risk access.",
+        error: "Disease-risk summaries require explicit confirmation in privacy mode.",
+      });
+      if (!access.allowed) {
+        return { diseaseRisks: [], error: access.error };
+      }
       return { diseaseRisks: report ? summarizeDiseaseRisks(report) : [] };
     });
 
     ctx.actions.register(ACTION_KEYS.GET_DNA_PHARMACOGENOMICS, async (params: any) => {
+      if (!(await ensureGeneticsEnabled(ctx))) {
+        return geneticsDisabledResult({ pharmacogenomics: [] });
+      }
       const reports = await getArrayState<DnaReport>(ctx, DATA_KEYS.DNA_REPORTS);
       const report = reports.find((entry) => entry.id === params?.reportId) ?? reports.at(-1);
+      const access = await confirmRestrictedDnaSummaryAccess(ctx, {
+        action: ACTION_KEYS.GET_DNA_PHARMACOGENOMICS,
+        params,
+        report,
+        detail: report ? `Confirmed privacy-restricted pharmacogenomic access for ${report.id}.` : "Confirmed privacy-restricted pharmacogenomic access.",
+        error: "Pharmacogenomic summaries require explicit confirmation in privacy mode.",
+      });
+      if (!access.allowed) {
+        return { pharmacogenomics: [], error: access.error };
+      }
       return { pharmacogenomics: report ? summarizePharmacogenomics(report) : [] };
     });
 
     ctx.actions.register(ACTION_KEYS.GET_DNA_PATHWAYS, async (params: any) => {
+      if (!(await ensureGeneticsEnabled(ctx))) {
+        return geneticsDisabledResult({ pathways: [] });
+      }
       const reports = await getArrayState<DnaReport>(ctx, DATA_KEYS.DNA_REPORTS);
       const report = reports.find((entry) => entry.id === params?.reportId) ?? reports.at(-1);
+      const access = await confirmRestrictedDnaSummaryAccess(ctx, {
+        action: ACTION_KEYS.GET_DNA_PATHWAYS,
+        params,
+        report,
+        detail: report ? `Confirmed privacy-restricted pathway access for ${report.id}.` : "Confirmed privacy-restricted pathway access.",
+        error: "Pathway summaries require explicit confirmation in privacy mode.",
+      });
+      if (!access.allowed) {
+        return { pathways: [], error: access.error };
+      }
       return { pathways: report ? summarizeGeneticPathways(report) : [] };
     });
 
     ctx.actions.register(ACTION_KEYS.GET_DNA_TRAITS, async (params: any) => {
+      if (!(await ensureGeneticsEnabled(ctx))) {
+        return geneticsDisabledResult({ traits: [] });
+      }
       const reports = await getArrayState<DnaReport>(ctx, DATA_KEYS.DNA_REPORTS);
       const report = reports.find((entry) => entry.id === params?.reportId) ?? reports.at(-1);
+      const access = await confirmRestrictedDnaSummaryAccess(ctx, {
+        action: ACTION_KEYS.GET_DNA_TRAITS,
+        params,
+        report,
+        detail: report ? `Confirmed privacy-restricted trait access for ${report.id}.` : "Confirmed privacy-restricted trait access.",
+        error: "Trait summaries require explicit confirmation in privacy mode.",
+      });
+      if (!access.allowed) {
+        return { traits: [], error: access.error };
+      }
       return { traits: report ? summarizeTraits(report) : [] };
     });
 
     ctx.actions.register(ACTION_KEYS.GET_DNA_CARRIER_STATUS, async (params: any) => {
+      if (!(await ensureGeneticsEnabled(ctx))) {
+        return geneticsDisabledResult({ carrierStatus: [] });
+      }
       const reports = await getArrayState<DnaReport>(ctx, DATA_KEYS.DNA_REPORTS);
       const report = reports.find((entry) => entry.id === params?.reportId) ?? reports.at(-1);
-      const policy = await getHealthPolicy(ctx);
-      if (report?.isPrivacyRestricted && !canAccessSensitiveDna({ report, policy, confirmed: params?.confirmSensitive })) {
-        return { carrierStatus: [], error: "Carrier-level detail requires explicit confirmation in privacy mode." };
+      const access = await confirmRestrictedDnaSummaryAccess(ctx, {
+        action: ACTION_KEYS.GET_DNA_CARRIER_STATUS,
+        params,
+        report,
+        detail: report ? `Confirmed carrier-status access for ${report.id}.` : "Confirmed carrier-status access.",
+        error: "Carrier-level detail requires explicit confirmation in privacy mode.",
+      });
+      if (!access.allowed) {
+        return { carrierStatus: [], error: access.error };
       }
       return { carrierStatus: report ? getCarrierStatus(report) : [] };
     });
 
     ctx.actions.register(ACTION_KEYS.GET_DNA_PROTECTIVE_VARIANTS, async (params: any) => {
+      if (!(await ensureGeneticsEnabled(ctx))) {
+        return geneticsDisabledResult({ protectiveVariants: [] });
+      }
       const reports = await getArrayState<DnaReport>(ctx, DATA_KEYS.DNA_REPORTS);
       const report = reports.find((entry) => entry.id === params?.reportId) ?? reports.at(-1);
+      const access = await confirmRestrictedDnaSummaryAccess(ctx, {
+        action: ACTION_KEYS.GET_DNA_PROTECTIVE_VARIANTS,
+        params,
+        report,
+        detail: report ? `Confirmed privacy-restricted protective-variant access for ${report.id}.` : "Confirmed privacy-restricted protective-variant access.",
+        error: "Protective genetics findings require explicit confirmation in privacy mode.",
+      });
+      if (!access.allowed) {
+        return { protectiveVariants: [], error: access.error };
+      }
       return { protectiveVariants: report ? getProtectiveVariants(report) : [] };
     });
 
     ctx.actions.register(ACTION_KEYS.GET_DNA_MONITORING_PLAN, async (params: any) => {
+      if (!(await ensureGeneticsEnabled(ctx))) {
+        return geneticsDisabledResult({ monitoringPlan: [] });
+      }
       const reports = await getArrayState<DnaReport>(ctx, DATA_KEYS.DNA_REPORTS);
       const report = reports.find((entry) => entry.id === params?.reportId) ?? reports.at(-1);
+      const access = await confirmRestrictedDnaSummaryAccess(ctx, {
+        action: ACTION_KEYS.GET_DNA_MONITORING_PLAN,
+        params,
+        report,
+        detail: report ? `Confirmed privacy-restricted monitoring-plan access for ${report.id}.` : "Confirmed privacy-restricted monitoring-plan access.",
+        error: "Monitoring-plan access requires explicit confirmation in privacy mode.",
+      });
+      if (!access.allowed) {
+        return { monitoringPlan: [], error: access.error };
+      }
       return { monitoringPlan: report ? getMonitoringPlan(report) : [] };
     });
 
     ctx.actions.register(ACTION_KEYS.GET_DNA_SUPPLEMENT_RECOMMENDATIONS, async (params: any) => {
+      if (!(await ensureGeneticsEnabled(ctx))) {
+        return geneticsDisabledResult({ supplementRecommendations: [] });
+      }
       const reports = await getArrayState<DnaReport>(ctx, DATA_KEYS.DNA_REPORTS);
       const report = reports.find((entry) => entry.id === params?.reportId) ?? reports.at(-1);
+      const access = await confirmRestrictedDnaSummaryAccess(ctx, {
+        action: ACTION_KEYS.GET_DNA_SUPPLEMENT_RECOMMENDATIONS,
+        params,
+        report,
+        detail: report ? `Confirmed privacy-restricted supplement recommendation access for ${report.id}.` : "Confirmed privacy-restricted supplement recommendation access.",
+        error: "Supplement recommendations require explicit confirmation in privacy mode.",
+      });
+      if (!access.allowed) {
+        return { supplementRecommendations: [], error: access.error };
+      }
       return { supplementRecommendations: report ? getSupplementRecommendations(report) : [] };
     });
 
     ctx.actions.register(ACTION_KEYS.GET_DNA_BLOODWORK_CORRELATIONS, async (params: any) => {
+      if (!(await ensureGeneticsEnabled(ctx))) {
+        return geneticsDisabledResult({ correlations: [] });
+      }
       const reports = await getArrayState<DnaReport>(ctx, DATA_KEYS.DNA_REPORTS);
       const report = reports.find((entry) => entry.id === params?.reportId) ?? reports.at(-1);
       const results = await getArrayState<LabResult>(ctx, DATA_KEYS.LAB_RESULTS);
@@ -1196,10 +1900,23 @@ const plugin = definePlugin({
       if (!report || !result) {
         return { correlations: [], error: "A DNA report and lab result are both required for cross-analysis." };
       }
+      const access = await confirmRestrictedDnaSummaryAccess(ctx, {
+        action: ACTION_KEYS.GET_DNA_BLOODWORK_CORRELATIONS,
+        params,
+        report,
+        detail: `Confirmed privacy-restricted DNA-to-bloodwork correlation access for ${report.id}.`,
+        error: "DNA-to-bloodwork correlations require explicit confirmation in privacy mode.",
+      });
+      if (!access.allowed) {
+        return { correlations: [], error: access.error };
+      }
       return { correlations: correlateDnaWithBloodwork(report, result) };
     });
 
     ctx.actions.register(ACTION_KEYS.EXPORT_DNA_INSIGHTS, async (params: any) => {
+      if (!(await ensureGeneticsEnabled(ctx))) {
+        return geneticsDisabledResult({ markdown: "" });
+      }
       const reports = await getArrayState<DnaReport>(ctx, DATA_KEYS.DNA_REPORTS);
       const report = reports.find((entry) => entry.id === params.reportId) ?? reports.at(-1);
       const policy = await getHealthPolicy(ctx);
@@ -1219,11 +1936,23 @@ const plugin = definePlugin({
           sensitivity: includeSensitive ? "high" : "moderate",
           success: true,
         });
+        if (includeSensitive) {
+          await recordConsent(ctx, {
+            action: ACTION_KEYS.EXPORT_DNA_INSIGHTS,
+            scope: "dna-export",
+            detail: `Confirmed sensitive DNA insights export for ${report.id}.`,
+            reportId: report.id,
+            reason: params?.reason,
+          });
+        }
       }
       return { markdown };
     });
 
     ctx.actions.register(ACTION_KEYS.EXPORT_DNA_COMPREHENSIVE_REPORT, async (params: any) => {
+      if (!(await ensureGeneticsEnabled(ctx))) {
+        return geneticsDisabledResult({ markdown: "" });
+      }
       const reports = await getArrayState<DnaReport>(ctx, DATA_KEYS.DNA_REPORTS);
       const report = reports.find((entry) => entry.id === params.reportId) ?? reports.at(-1);
       const policy = await getHealthPolicy(ctx);
@@ -1243,11 +1972,80 @@ const plugin = definePlugin({
           sensitivity: includeSensitive ? "high" : "moderate",
           success: true,
         });
+        if (includeSensitive) {
+          await recordConsent(ctx, {
+            action: ACTION_KEYS.EXPORT_DNA_COMPREHENSIVE_REPORT,
+            scope: "dna-export",
+            detail: `Confirmed sensitive comprehensive DNA export for ${report.id}.`,
+            reportId: report.id,
+            reason: params?.reason,
+          });
+        }
       }
       return { markdown };
     });
 
+    ctx.actions.register(ACTION_KEYS.REANALYZE_DNA_REPORT, async (params: any) => {
+      if (!(await ensureGeneticsEnabled(ctx))) {
+        return geneticsDisabledResult({ diff: null, dnaReport: null });
+      }
+      validateSensitiveConfirmation(params?.confirmSensitive);
+      const reports = await getArrayState<DnaReport>(ctx, DATA_KEYS.DNA_REPORTS);
+      const report = reports.find((entry) => entry.id === params?.reportId) ?? reports.at(-1);
+      if (!report) {
+        return { success: false, error: "No DNA report available to reanalyze." };
+      }
+      if (!(report.retainedGenotypes?.length || report.variants.length)) {
+        return { success: false, error: "This DNA report does not retain variant-level data, so it cannot be reanalyzed without reimporting." };
+      }
+      const { reanalyzedReport, diff } = reanalyzeDnaReport(report);
+      const updated = await replaceById<DnaReport>(ctx, DATA_KEYS.DNA_REPORTS, report.id, () => reanalyzedReport);
+      await recordConsent(ctx, {
+        action: ACTION_KEYS.REANALYZE_DNA_REPORT,
+        scope: "dna-reanalysis",
+        detail: `Confirmed DNA reanalysis for ${report.id}.`,
+        reportId: report.id,
+        reason: params?.reason,
+      });
+      await auditSensitiveAction(ctx, {
+        action: ACTION_KEYS.REANALYZE_DNA_REPORT,
+        category: "dna",
+        detail: `Reanalyzed DNA report ${report.id} against ${diff.currentKnowledgeBaseVersion}.`,
+        sensitivity: "high",
+        success: true,
+      });
+      return { success: Boolean(updated), dnaReport: presentDnaReport(updated), diff };
+    });
+
+    ctx.actions.register(ACTION_KEYS.MINIMIZE_DNA_REPORT, async (params: any) => {
+      if (!(await ensureGeneticsEnabled(ctx))) {
+        return geneticsDisabledResult({ dnaReport: null });
+      }
+      validateSensitiveConfirmation(params?.confirmSensitive);
+      const updated = await replaceById<DnaReport>(ctx, DATA_KEYS.DNA_REPORTS, params.reportId, (report) => minimizeDnaReport(report));
+      if (updated) {
+        await recordConsent(ctx, {
+          action: ACTION_KEYS.MINIMIZE_DNA_REPORT,
+          scope: "privacy-change",
+          detail: `Confirmed destructive DNA minimization for ${updated.id}.`,
+          reportId: updated.id,
+          reason: params?.reason,
+        });
+      }
+      await auditSensitiveAction(ctx, {
+        action: ACTION_KEYS.MINIMIZE_DNA_REPORT,
+        category: "privacy",
+        detail: updated ? `Minimized stored DNA report ${updated.id}.` : `Attempted minimization for missing DNA report ${params.reportId}.`,
+        sensitivity: "high",
+        success: Boolean(updated),
+      });
+      return { success: Boolean(updated), dnaReport: presentDnaReport(updated) };
+    });
+
     ctx.actions.register(ACTION_KEYS.DELETE_DNA_REPORT, async (params: any) => {
+      if (!(await ensureGeneticsEnabled(ctx))) {
+        return geneticsDisabledResult({ dnaReport: null });
+      }
       const removed = await removeById<DnaReport>(ctx, DATA_KEYS.DNA_REPORTS, params.id);
       await auditSensitiveAction(ctx, {
         action: ACTION_KEYS.DELETE_DNA_REPORT,
@@ -1281,8 +2079,61 @@ const plugin = definePlugin({
     ctx.actions.register(ACTION_KEYS.GET_HEALTH_AUDIT_LOG, async (params: any) => {
       const policy = await getHealthPolicy(ctx);
       validateSensitiveConfirmation(params?.confirmSensitive);
+      await auditSensitiveAction(ctx, {
+        action: ACTION_KEYS.GET_HEALTH_AUDIT_LOG,
+        category: "privacy",
+        detail: "Confirmed access to sensitive health audit log.",
+        sensitivity: "high",
+        success: true,
+      });
+      await recordConsent(ctx, {
+        action: ACTION_KEYS.GET_HEALTH_AUDIT_LOG,
+        scope: "audit-log-access",
+        detail: "Confirmed access to sensitive health audit log.",
+        reason: params?.reason,
+      });
       const entries = pruneAuditLog(await getArrayState<HealthAuditEntry>(ctx, DATA_KEYS.HEALTH_AUDIT_LOG), policy.auditRetentionDays);
       return { auditLog: entries };
+    });
+
+    ctx.actions.register(ACTION_KEYS.RECORD_SENSITIVE_CONSENT, async (params: any) => {
+      validateSensitiveConfirmation(params?.confirmSensitive);
+      const input = validateRecordConsentParams(params);
+      await recordConsent(ctx, {
+        action: ACTION_KEYS.RECORD_SENSITIVE_CONSENT,
+        scope: input.scope,
+        detail: `Manually recorded consent note: ${input.detail}`,
+        reportId: input.reportId,
+        reason: input.reason,
+      });
+      await auditSensitiveAction(ctx, {
+        action: ACTION_KEYS.RECORD_SENSITIVE_CONSENT,
+        category: "privacy",
+        detail: `Manually recorded a sensitive consent note for scope ${input.scope}.`,
+        sensitivity: "moderate",
+        success: true,
+      });
+      return { success: true, consent: (await getHealthConsents(ctx)).at(-1) ?? null };
+    });
+
+    ctx.actions.register(ACTION_KEYS.GET_SENSITIVE_CONSENTS, async (params: any) => {
+      validateSensitiveConfirmation(params?.confirmSensitive);
+      await auditSensitiveAction(ctx, {
+        action: ACTION_KEYS.GET_SENSITIVE_CONSENTS,
+        category: "privacy",
+        detail: "Confirmed access to sensitive consent history.",
+        sensitivity: "high",
+        success: true,
+      });
+      await recordConsent(ctx, {
+        action: ACTION_KEYS.GET_SENSITIVE_CONSENTS,
+        scope: "consent-log-access",
+        detail: "Confirmed access to sensitive consent history.",
+        reason: params?.reason,
+      });
+      return {
+        consents: await getHealthConsents(ctx),
+      };
     });
 
     ctx.actions.register(ACTION_KEYS.PURGE_HEALTH_AUDIT_LOG, async (params: any) => {
@@ -1292,6 +2143,19 @@ const plugin = definePlugin({
         action: ACTION_KEYS.PURGE_HEALTH_AUDIT_LOG,
         category: "privacy",
         detail: "Purged health audit log.",
+        sensitivity: "moderate",
+        success: true,
+      });
+      return { success: true };
+    });
+
+    ctx.actions.register(ACTION_KEYS.PURGE_SENSITIVE_CONSENTS, async (params: any) => {
+      validateSensitiveConfirmation(params?.confirmSensitive);
+      await setArrayState(ctx, DATA_KEYS.HEALTH_CONSENTS, []);
+      await auditSensitiveAction(ctx, {
+        action: ACTION_KEYS.PURGE_SENSITIVE_CONSENTS,
+        category: "privacy",
+        detail: "Purged sensitive consent history.",
         sensitivity: "moderate",
         success: true,
       });

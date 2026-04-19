@@ -6,6 +6,8 @@ import type {
   BloodworkBiologicalAge,
   BloodworkBiomarkerDefinition,
   BloodworkCategoryScore,
+  BloodworkClockDescriptor,
+  BloodworkClockMethod,
   BloodworkComboSignal,
   BiomarkerOptimalRange,
   ClinicalReferenceRange,
@@ -24,6 +26,7 @@ interface AnalyzeBloodworkInput {
   age?: number;
   chronologicalAge?: number;
   sex?: BiologicalSex;
+  clockMethod?: BloodworkClockMethod;
 }
 
 interface ComboDefinition {
@@ -38,6 +41,20 @@ interface KdmParams {
 }
 
 const MIN_BIOLOGICAL_AGE_COVERAGE = 0.45;
+
+const BLOODWORK_CLOCKS: BloodworkClockDescriptor[] = [
+  {
+    method: "kdm-style-clinical-clock",
+    label: "KDM-style clinical clock",
+    status: "available",
+    description: "Transparent clinical biomarker clock inspired by NHANES/KDM-style weighting with explicit coverage thresholds.",
+    minimumCoverage: MIN_BIOLOGICAL_AGE_COVERAGE,
+    notes: [
+      "Returns no age when biomarker coverage is too low.",
+      "Designed for educational review and trend context, not diagnosis.",
+    ],
+  },
+];
 
 const CATEGORY_LIFESTYLE_GUIDANCE: Record<HealthspanCategory, string[]> = {
   "Heart Health": ["Favor a Mediterranean-style eating pattern", "Build 150+ minutes/week of aerobic activity", "Review blood pressure, sleep, and stress with the full picture in mind"],
@@ -447,6 +464,7 @@ function computeComboSignals(values: Record<string, number>): BloodworkComboSign
 }
 
 function calculateBiologicalAgeFromEntries(entries: EvaluatedLabBiomarker[], input: AnalyzeBloodworkInput): BloodworkBiologicalAge {
+  const method = input.clockMethod ?? "kdm-style-clinical-clock";
   const inputValues = Object.fromEntries(entries.map((entry) => [entry.name, entry.value]));
   const normalizedValues: Record<string, number> = {};
   const imputedBiomarkers: string[] = [];
@@ -476,7 +494,7 @@ function calculateBiologicalAgeFromEntries(entries: EvaluatedLabBiomarker[], inp
   const confidence: BloodworkBiologicalAge["confidence"] = coverage >= 0.8 ? "high" : coverage >= 0.6 ? "medium" : "low";
 
   return {
-    method: "kdm-style-clinical-clock",
+    method,
     status: enoughCoverage ? "available" : "insufficient-data",
     biologicalAge,
     chronologicalAge,
@@ -508,6 +526,10 @@ export function getBloodworkBiomarkers(params?: { category?: string; query?: str
 
 export function getBloodworkBiomarker(query: string) {
   return BLOODWORK_LOOKUP.get(normalizeToken(query)) ?? null;
+}
+
+export function getBloodworkClockDescriptors() {
+  return BLOODWORK_CLOCKS;
 }
 
 export function evaluateBloodworkBiomarkers(result: LabResult, input: AnalyzeBloodworkInput = {}): EvaluatedLabBiomarker[] {
@@ -617,6 +639,9 @@ export function getBloodworkTrends(results: LabResult[]) {
       const latest = ordered.at(-1);
       const previous = ordered.at(-2);
       const delta = latest && previous ? round(latest.value - previous.value, 2) : undefined;
+      const deltaPercent = latest && previous && previous.value !== 0 && typeof delta === "number"
+        ? round((delta / previous.value) * 100, 1)
+        : undefined;
       const direction = previous && typeof delta === "number"
         ? Math.abs(delta) < 0.01
           ? "stable"
@@ -631,6 +656,7 @@ export function getBloodworkTrends(results: LabResult[]) {
         latest: latest?.value ?? 0,
         previous: previous?.value,
         delta,
+        deltaPercent,
         direction,
         unit: latest?.unit ?? "",
         points: ordered,

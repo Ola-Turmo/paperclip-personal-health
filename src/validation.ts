@@ -1,6 +1,7 @@
 import { detectDnaSource } from "./dna.js";
 import type {
   BiologicalSex,
+  BloodworkClockMethod,
   DnaSettings,
   HealthPrivacyPolicy,
   LabPanel,
@@ -121,10 +122,37 @@ export function validateDnaImportParams(value: unknown) {
   const fileName = optionalString(obj.fileName, "fileName", { max: 240 });
   const source = detectDnaSource(rawData, fileName);
   if (source === "other") {
-    throw new ValidationError("DNA import must be a supported 23andMe or AncestryDNA raw text export.");
+    throw new ValidationError("DNA import must be a supported 23andMe, AncestryDNA, LivingDNA-style delimited, or VCF export.");
   }
   if (!rawData.includes("\n")) {
     throw new ValidationError("DNA import appears malformed: expected multiple lines of raw genotype data.");
+  }
+  const lines = rawData.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+  const normalizeHeader = (line: string) => line.split(/[\t,]/).map((part) => part.toLowerCase().replace(/[^a-z0-9]+/g, ""));
+  const firstNonComment = lines.find((line) => !line.startsWith("#")) ?? "";
+  const headers = normalizeHeader(firstNonComment);
+  const hasHeaders = (...expected: string[]) => expected.every((column) => headers.includes(column));
+  const dataLines = lines.filter((line) => !line.startsWith("#"));
+
+  if (source === "vcf") {
+    const hasFileFormat = lines.some((line) => line.toLowerCase().startsWith("##fileformat=vcf"));
+    const hasColumnHeader = lines.some((line) => line.startsWith("#CHROM\tPOS\tID\tREF\tALT"));
+    if (!hasFileFormat || !hasColumnHeader || dataLines.length < 1) {
+      throw new ValidationError("VCF import appears malformed: expected VCF headers plus at least one variant row.");
+    }
+  } else if (source === "ancestrydna") {
+    if (!hasHeaders("rsid", "chromosome", "position", "allele1", "allele2") || dataLines.length < 2) {
+      throw new ValidationError("AncestryDNA import appears malformed: expected rsid/chromosome/position/allele1/allele2 columns with at least one genotype row.");
+    }
+  } else if (source === "23andme") {
+    if (!hasHeaders("rsid", "chromosome", "position", "genotype") || dataLines.length < 2) {
+      throw new ValidationError("23andMe import appears malformed: expected rsid/chromosome/position/genotype columns with at least one genotype row.");
+    }
+  } else if (source === "livedna") {
+    const hasDelimHeaders = hasHeaders("rsid", "chromosome", "position") && headers.some((column) => ["result", "genotype", "call"].includes(column));
+    if (!hasDelimHeaders || dataLines.length < 2) {
+      throw new ValidationError("LivingDNA-style import appears malformed: expected rsid/chromosome/position plus result/genotype/call columns with at least one genotype row.");
+    }
   }
   return {
     rawData,
@@ -166,6 +194,22 @@ export function validateLabResultParams(value: unknown) {
   };
 }
 
+export function validateLabImportParams(value: unknown) {
+  const obj = expectObject(value);
+  const rawData = expectString(obj.rawData, "rawData", { max: 1_000_000 });
+  if (!rawData.includes("\n")) {
+    throw new ValidationError("Lab import must include multiple lines of delimited or line-based results.");
+  }
+  return {
+    rawData,
+    fileName: optionalString(obj.fileName, "fileName", { max: 240 }),
+    labName: optionalString(obj.labName, "labName", { max: 160 }),
+    resultedAt: optionalString(obj.resultedAt, "resultedAt", { max: 80 }),
+    defaultPanelName: optionalString(obj.defaultPanelName, "defaultPanelName", { max: 120 }),
+    notes: optionalString(obj.notes, "notes", { max: 2000 }),
+  };
+}
+
 export function validatePrivacySettingsUpdate(value: unknown): Partial<DnaSettings & HealthPrivacyPolicy> {
   const obj = expectObject(value);
   return {
@@ -194,6 +238,18 @@ export function validateBloodworkAnalysisInput(value: unknown) {
     age: optionalNumber(obj.age, "age", { min: 0, max: 120 }),
     chronologicalAge: optionalNumber(obj.chronologicalAge, "chronologicalAge", { min: 0, max: 120 }),
     sex: optionalEnum(obj.sex, "sex", ["male", "female", "all"] satisfies readonly BiologicalSex[]),
+    clockMethod: optionalEnum(obj.clockMethod, "clockMethod", ["kdm-style-clinical-clock"] satisfies readonly BloodworkClockMethod[]),
+  };
+}
+
+export function validateRecordConsentParams(value: unknown) {
+  const obj = expectObject(value);
+  return {
+    action: optionalString(obj.action, "action", { max: 160 }),
+    scope: expectEnum(obj.scope, "scope", ["dna-access", "dna-export", "audit-log-access", "consent-log-access", "dna-reanalysis", "privacy-change"] as const),
+    detail: expectString(obj.detail, "detail", { max: 500 }),
+    reportId: optionalString(obj.reportId, "reportId", { max: 80 }),
+    reason: optionalString(obj.reason, "reason", { max: 500 }),
   };
 }
 

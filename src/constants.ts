@@ -48,6 +48,7 @@ export const DATA_KEYS = {
   DNA_SETTINGS: "health.dnaSettings",
   HEALTH_POLICY: "health.privacyPolicy",
   HEALTH_AUDIT_LOG: "health.auditLog",
+  HEALTH_CONSENTS: "health.sensitiveConsents",
   NUDGE_HISTORY: "health.nudgeHistory",
 
   // Wearables
@@ -114,11 +115,14 @@ export const ACTION_KEYS = {
 
   // Labs
   ADD_LAB_RESULT: "health.add-lab-result",
+  PREVIEW_LAB_IMPORT: "health.preview-lab-import",
+  IMPORT_LAB_RESULT: "health.import-lab-result",
   GET_LAB_RESULTS: "health.get-lab-results",
   REVIEW_LAB_TRENDS: "health.review-lab-trends",
   GET_BLOODWORK_TRENDS: "health.get-bloodwork-trends",
   GET_BLOODWORK_BIOMARKERS: "health.get-bloodwork-biomarkers",
   GET_BLOODWORK_BIOMARKER: "health.get-bloodwork-biomarker",
+  GET_BLOODWORK_CLOCKS: "health.get-bloodwork-clocks",
   ANALYZE_BLOODWORK: "health.analyze-bloodwork",
   GET_BLOODWORK_CATEGORY_SCORES: "health.get-bloodwork-category-scores",
   CALCULATE_BIOLOGICAL_AGE: "health.calculate-biological-age",
@@ -142,7 +146,9 @@ export const ACTION_KEYS = {
 
   // DNA
   ADD_DNA_REPORT: "health.add-dna-report",
+  PREVIEW_DNA_IMPORT: "health.preview-dna-import",
   GET_DNA_REPORTS: "health.get-dna-reports",
+  GET_DNA_KNOWLEDGE_BASE_STATUS: "health.get-dna-knowledge-base-status",
   GET_DNA_INSIGHTS: "health.get-dna-insights",
   GET_DNA_INSIGHTS_BY_CATEGORY: "health.get-dna-insights-by-category",
   GET_DNA_VARIANTS: "health.get-dna-variants",
@@ -160,6 +166,8 @@ export const ACTION_KEYS = {
   GET_DNA_MONITORING_PLAN: "health.get-dna-monitoring-plan",
   GET_DNA_SUPPLEMENT_RECOMMENDATIONS: "health.get-dna-supplement-recommendations",
   GET_DNA_BLOODWORK_CORRELATIONS: "health.get-dna-bloodwork-correlations",
+  REANALYZE_DNA_REPORT: "health.reanalyze-dna-report",
+  MINIMIZE_DNA_REPORT: "health.minimize-dna-report",
   EXPORT_DNA_COMPREHENSIVE_REPORT: "health.export-dna-comprehensive-report",
   EXPORT_DNA_INSIGHTS: "health.export-dna-insights",
   DELETE_DNA_REPORT: "health.delete-dna-report",
@@ -167,6 +175,9 @@ export const ACTION_KEYS = {
   // Privacy / audit
   UPDATE_PRIVACY_SETTINGS: "health.update-privacy-settings",
   GET_PRIVACY_STATUS: "health.get-privacy-status",
+  RECORD_SENSITIVE_CONSENT: "health.record-sensitive-consent",
+  GET_SENSITIVE_CONSENTS: "health.get-sensitive-consents",
+  PURGE_SENSITIVE_CONSENTS: "health.purge-sensitive-consents",
   GET_HEALTH_AUDIT_LOG: "health.get-health-audit-log",
   PURGE_HEALTH_AUDIT_LOG: "health.purge-health-audit-log",
 
