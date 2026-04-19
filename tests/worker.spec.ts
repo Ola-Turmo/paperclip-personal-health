@@ -87,6 +87,11 @@ rs1801133\t1\t11856378\tTT
 rs429358\t19\t44908684\tCT
 `;
 
+const dnaSample23AndMeCsv = `rsid,chromosome,position,genotype
+rs1801133,1,11856378,TT
+rs429358,19,44908684,CT
+`;
+
 describe("Personal Health plugin", () => {
   let harness: Awaited<ReturnType<typeof buildHarness>>;
 
@@ -340,6 +345,20 @@ describe("Personal Health plugin", () => {
     expect(compareBlocked.success).toBe(false);
     expect(compareBlocked.error).toContain("explicit confirmation");
 
+    const compareConfirmed = await harness.performAction(ACTION_KEYS.COMPARE_DNA_REPORTS, {
+      leftReportId: reportId,
+      rightReportId: reportId,
+      confirmSensitive: true,
+    }) as { success: boolean; comparison: { changedVariants: unknown[] } };
+    expect(compareConfirmed.success).toBe(true);
+    expect(Array.isArray(compareConfirmed.comparison.changedVariants)).toBe(true);
+
+    const lookupConfirmed = await harness.performAction(ACTION_KEYS.LOOKUP_RSID, {
+      rsId: "rs1801133",
+      confirmSensitive: true,
+    }) as { matches: Array<{ reportId: string }> };
+    expect(Array.isArray(lookupConfirmed.matches)).toBe(true);
+
     const annotateBlocked = await harness.performAction(ACTION_KEYS.ANNOTATE_VARIANT, {
       reportId,
       rsId: "rs1801133",
@@ -361,6 +380,7 @@ describe("Personal Health plugin", () => {
     }) as { auditLog: Array<{ action: string }> };
     expect(auditLog.auditLog.some((entry) => entry.action === ACTION_KEYS.ADD_DNA_REPORT)).toBe(true);
     expect(auditLog.auditLog.some((entry) => entry.action === ACTION_KEYS.GET_HEALTH_AUDIT_LOG)).toBe(true);
+    expect(auditLog.auditLog.some((entry) => entry.action === ACTION_KEYS.COMPARE_DNA_REPORTS)).toBe(true);
 
     await expect(
       harness.performAction(ACTION_KEYS.GET_SENSITIVE_CONSENTS, {}),
@@ -373,6 +393,20 @@ describe("Personal Health plugin", () => {
       }),
     ).rejects.toThrow("confirmSensitive must be true for this sensitive operation.");
 
+    await expect(
+      harness.performAction(ACTION_KEYS.UPDATE_PRIVACY_SETTINGS, {
+        allowSensitiveExports: true,
+      }),
+    ).rejects.toThrow("confirmSensitive must be true for this sensitive operation.");
+
+    const updatedPrivacy = await harness.performAction(ACTION_KEYS.UPDATE_PRIVACY_SETTINGS, {
+      confirmSensitive: true,
+      allowSensitiveExports: true,
+      allowAncestryInference: false,
+    }) as { policy: { allowSensitiveExports: boolean; allowAncestryInference: boolean } };
+    expect(updatedPrivacy.policy.allowSensitiveExports).toBe(true);
+    expect(updatedPrivacy.policy.allowAncestryInference).toBe(false);
+
     await harness.performAction(ACTION_KEYS.RECORD_SENSITIVE_CONSENT, {
       confirmSensitive: true,
       scope: "privacy-change",
@@ -381,8 +415,14 @@ describe("Personal Health plugin", () => {
 
     const consentsBeforePurge = await harness.performAction(ACTION_KEYS.GET_SENSITIVE_CONSENTS, {
       confirmSensitive: true,
-    }) as { consents: Array<{ action: string }> };
-    expect(consentsBeforePurge.consents.some((entry) => entry.action === ACTION_KEYS.RECORD_SENSITIVE_CONSENT)).toBe(true);
+    }) as { consents: Array<{ action: string; scope: string }> };
+    expect(consentsBeforePurge.consents).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ action: ACTION_KEYS.RECORD_SENSITIVE_CONSENT, scope: "privacy-change" }),
+        expect.objectContaining({ action: ACTION_KEYS.UPDATE_PRIVACY_SETTINGS, scope: "privacy-change" }),
+        expect.objectContaining({ action: ACTION_KEYS.COMPARE_DNA_REPORTS, scope: "dna-access" }),
+      ]),
+    );
 
     await harness.performAction(ACTION_KEYS.PURGE_SENSITIVE_CONSENTS, {
       confirmSensitive: true,
@@ -392,6 +432,29 @@ describe("Personal Health plugin", () => {
       confirmSensitive: true,
     }) as { consents: Array<{ action: string }> };
     expect(consentsAfterPurge.consents.some((entry) => entry.action === ACTION_KEYS.RECORD_SENSITIVE_CONSENT)).toBe(false);
+
+    await expect(
+      harness.performAction(ACTION_KEYS.DELETE_DNA_REPORT, {
+        id: reportId,
+      }),
+    ).rejects.toThrow("confirmSensitive must be true for this sensitive operation.");
+
+    const deleted = await harness.performAction(ACTION_KEYS.DELETE_DNA_REPORT, {
+      id: reportId,
+      confirmSensitive: true,
+    }) as { success: boolean; dnaReport: { id: string; variants: unknown[] } };
+    expect(deleted.success).toBe(true);
+    expect(deleted.dnaReport.id).toBe(reportId);
+    expect(deleted.dnaReport.variants).toEqual([]);
+
+    const consentsAfterDelete = await harness.performAction(ACTION_KEYS.GET_SENSITIVE_CONSENTS, {
+      confirmSensitive: true,
+    }) as { consents: Array<{ action: string; scope: string }> };
+    expect(consentsAfterDelete.consents).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ action: ACTION_KEYS.DELETE_DNA_REPORT, scope: "privacy-change" }),
+      ]),
+    );
   });
 
   it("creates bloodwork trends, correlation insights, and withholds biological age when coverage is too low", async () => {
@@ -522,6 +585,17 @@ describe("Personal Health plugin", () => {
         expect.objectContaining({ method: "kdm-style-clinical-clock", status: "available" }),
       ]),
     );
+  });
+
+  it("accepts comma-delimited 23andMe-style DNA imports", async () => {
+    const preview = await harness.performAction(ACTION_KEYS.PREVIEW_DNA_IMPORT, {
+      fileName: "23andme-export.csv",
+      rawData: dnaSample23AndMeCsv,
+    }) as { preview: { source: string; rawSnpsImported: number; snpsMatchedToKnowledgeBase: number } };
+
+    expect(preview.preview.source).toBe("23andme");
+    expect(preview.preview.rawSnpsImported).toBe(2);
+    expect(preview.preview.snpsMatchedToKnowledgeBase).toBeGreaterThan(0);
   });
 
   it("supports vcf dna preview, duplicate detection, reanalysis, minimization, and consent history", async () => {
@@ -705,6 +779,33 @@ describe("Personal Health plugin", () => {
     expect(Array.isArray(overview.pending.nudges)).toBe(true);
   });
 
+  it("preserves ancestry opt-out during DNA reanalysis", () => {
+    const report = createDnaReport({
+      source: "23andme",
+      privacyMode: "living",
+      allowAncestryInference: false,
+      retainVariantLevelData: true,
+      variants: [
+        {
+          rsId: "rs1801133",
+          chromosome: "1",
+          position: 11856378,
+          allele1: "T",
+          allele2: "T",
+          genotype: "TT",
+          diploidType: "homozygousdominant",
+        },
+      ],
+      healthInsights: [],
+      rawSnpsImported: 1,
+      snpsMatchedToKnowledgeBase: 0,
+    });
+
+    const { reanalyzedReport } = reanalyzeDnaReport(report);
+    expect(reanalyzedReport.allowAncestryInference).toBe(false);
+    expect(reanalyzedReport.ancestryComposition).toBeUndefined();
+  });
+
   it("reanalyzes against retained genotypes even when a prior report stored no matched variants", () => {
     const legacyReport = createDnaReport({
       source: "vcf",
@@ -791,6 +892,7 @@ describe("Personal Health plugin", () => {
     }) as { dnaReport: { id: string } };
 
     await harness.performAction(ACTION_KEYS.UPDATE_PRIVACY_SETTINGS, {
+      confirmSensitive: true,
       privacyMode: "living",
       allowSensitiveExports: true,
       retainVariantLevelData: true,

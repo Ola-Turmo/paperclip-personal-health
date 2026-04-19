@@ -11,7 +11,7 @@
     "plugin:build": "node esbuild.config.mjs",
     "plugin:dev": "node ./esbuild.config.mjs --watch",
     "plugin:test": "vitest run",
-    "test": "node tests/smoke.mjs"
+    "test": "npm run plugin:test && node tests/smoke.mjs"
   },
   "devDependencies": {
     "@paperclipai/plugin-sdk": "^2026.416.0",

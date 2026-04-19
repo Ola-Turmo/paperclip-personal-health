@@ -214,6 +214,7 @@ export interface DnaReport {
   fileName?: string;
   fileHash?: string;
   ancestryComposition?: AncestryComposition;
+  allowAncestryInference?: boolean;
   healthInsights: DnaHealthInsight[];
   variants: DnaVariant[];
   retainedGenotypes?: DnaVariant[];

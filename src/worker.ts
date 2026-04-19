@@ -1657,6 +1657,24 @@ const plugin = definePlugin({
         const report = reports.find((item) => item.id === entry.reportId);
         return !report?.isPrivacyRestricted || canAccessSensitiveDna({ report, policy, confirmed: params?.confirmSensitive });
       });
+      const restrictedMatches = matches.filter((entry) => reports.find((item) => item.id === entry.reportId)?.isPrivacyRestricted);
+      if (restrictedMatches.length) {
+        const reportIds = restrictedMatches.map((entry) => entry.reportId);
+        await auditSensitiveAction(ctx, {
+          action: ACTION_KEYS.LOOKUP_RSID,
+          category: "dna",
+          detail: `Looked up ${params.rsId} across privacy-restricted DNA reports (${reportIds.join(", ")}).`,
+          sensitivity: "high",
+          success: true,
+        });
+        await recordConsent(ctx, {
+          action: ACTION_KEYS.LOOKUP_RSID,
+          scope: "dna-access",
+          detail: `Confirmed privacy-restricted rsID lookup for ${params.rsId} across ${reportIds.join(", ")}.`,
+          reportId: reportIds.length === 1 ? reportIds[0] : undefined,
+          reason: params?.reason,
+        });
+      }
       return { matches };
     });
 
@@ -2046,7 +2064,17 @@ const plugin = definePlugin({
       if (!(await ensureGeneticsEnabled(ctx))) {
         return geneticsDisabledResult({ dnaReport: null });
       }
+      validateSensitiveConfirmation(params?.confirmSensitive);
       const removed = await removeById<DnaReport>(ctx, DATA_KEYS.DNA_REPORTS, params.id);
+      if (removed) {
+        await recordConsent(ctx, {
+          action: ACTION_KEYS.DELETE_DNA_REPORT,
+          scope: "privacy-change",
+          detail: `Confirmed destructive DNA report deletion for ${removed.id}.`,
+          reportId: removed.id,
+          reason: params?.reason,
+        });
+      }
       await auditSensitiveAction(ctx, {
         action: ACTION_KEYS.DELETE_DNA_REPORT,
         category: "dna",
@@ -2054,13 +2082,20 @@ const plugin = definePlugin({
         sensitivity: "high",
         success: Boolean(removed),
       });
-      return { success: Boolean(removed), dnaReport: removed };
+      return { success: Boolean(removed), dnaReport: presentDnaReport(removed) };
     });
 
     ctx.actions.register(ACTION_KEYS.UPDATE_PRIVACY_SETTINGS, async (params: any) => {
+      validateSensitiveConfirmation(params?.confirmSensitive);
       const next = validatePrivacySettingsUpdate(params);
       const settings = await setDnaSettings(ctx, next);
       const policy = await setHealthPolicy(ctx, derivePolicy(settings));
+      await recordConsent(ctx, {
+        action: ACTION_KEYS.UPDATE_PRIVACY_SETTINGS,
+        scope: "privacy-change",
+        detail: `Confirmed privacy settings update to ${policy.privacyMode} mode.`,
+        reason: params?.reason,
+      });
       await auditSensitiveAction(ctx, {
         action: ACTION_KEYS.UPDATE_PRIVACY_SETTINGS,
         category: "privacy",

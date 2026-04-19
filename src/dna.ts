@@ -189,11 +189,15 @@ function inferAncestry(variants: DnaVariant[]) {
   };
 }
 
+function splitDelimitedDnaLine(line: string) {
+  return line.split(/[	,]/).map((part) => part.trim());
+}
+
 function parse23AndMe(lines: string[]) {
   return lines
     .filter((line) => line && !line.startsWith("#"))
     .slice(1)
-    .map((line) => line.split(/\t/))
+    .map(splitDelimitedDnaLine)
     .map(([rsid, chromosome, position, genotype]) => ({
       rsId: rsid,
       chromosome,
@@ -209,7 +213,7 @@ function parseAncestry(lines: string[]) {
   return lines
     .filter((line) => line && !line.startsWith("#"))
     .slice(1)
-    .map((line) => line.split(/\t/))
+    .map(splitDelimitedDnaLine)
     .map(([rsid, chromosome, position, allele1, allele2]) => ({
       rsId: rsid,
       chromosome,
@@ -451,6 +455,7 @@ export function parseRawDnaReport(input: {
     importFormat: source === "vcf" ? "vcf" : source === "livedna" ? "delimited" : "raw-text",
     fileName: input.fileName,
     ancestryComposition: input.privacyMode === "privacy" || input.allowAncestryInference === false ? undefined : inferAncestry(matchedVariants),
+    allowAncestryInference: input.allowAncestryInference !== false,
     healthInsights: insights,
     variants: input.privacyMode === "privacy" || input.retainVariantLevelData === false ? [] : matchedVariants,
     retainedGenotypes: input.privacyMode === "privacy" || input.retainVariantLevelData === false ? [] : retainedGenotypes,
@@ -507,6 +512,7 @@ export function createDnaReport(input: {
     importFormat: input.source === "vcf" ? "vcf" : input.source === "livedna" ? "delimited" : "raw-text",
     fileName: input.fileName,
     ancestryComposition: input.ancestryComposition,
+    allowAncestryInference: input.allowAncestryInference ?? Boolean(input.ancestryComposition),
     healthInsights: input.healthInsights ?? [],
     variants: input.privacyMode === "privacy" || input.retainVariantLevelData === false ? [] : (input.variants ?? []),
     retainedGenotypes: input.privacyMode === "privacy" || input.retainVariantLevelData === false ? [] : (input.retainedGenotypes ?? input.variants ?? []),
@@ -1293,7 +1299,8 @@ export function reanalyzeDnaReport(report: DnaReport): { reanalyzedReport: DnaRe
     ...report,
     variants: report.isPrivacyRestricted ? [] : matchedVariants,
     retainedGenotypes: report.isPrivacyRestricted ? [] : sourceVariants,
-    ancestryComposition: report.isPrivacyRestricted ? undefined : inferAncestry(matchedVariants),
+    ancestryComposition: report.isPrivacyRestricted || report.allowAncestryInference === false ? undefined : inferAncestry(matchedVariants),
+    allowAncestryInference: report.allowAncestryInference !== false,
     healthInsights: insights,
     snpsMatchedToKnowledgeBase: matchedVariants.length,
     knowledgeBaseVersion: DNA_KNOWLEDGE_BASE_VERSION,
@@ -1302,7 +1309,7 @@ export function reanalyzeDnaReport(report: DnaReport): { reanalyzedReport: DnaRe
     retentionSummary: report.retentionSummary ?? retentionSummaryForReport({
       privacyMode: report.privacyMode,
       retainVariantLevelData: !report.isPrivacyRestricted,
-      allowAncestryInference: Boolean(report.ancestryComposition),
+      allowAncestryInference: report.allowAncestryInference !== false,
     }),
   };
 
@@ -1331,6 +1338,7 @@ export function minimizeDnaReport(report: DnaReport): DnaReport {
     ...report,
     fileHash: undefined,
     ancestryComposition: undefined,
+    allowAncestryInference: false,
     variants: [],
     retainedGenotypes: [],
     isPrivacyRestricted: true,
