@@ -11,28 +11,47 @@ import type {
   WorkoutPlan,
 } from "./types.js";
 
-export const INSTANCE_SCOPE = { scopeKind: "instance" as const };
+const PERSONAL_COMPANY_NAME = "Personal";
+let personalCompanyIdPromise: Promise<string> | null = null;
+
+async function resolvePersonalCompanyId(ctx: any): Promise<string> {
+  if (!personalCompanyIdPromise) {
+    personalCompanyIdPromise = (async () => {
+      const companies = await ctx.companies.list({ limit: 200, offset: 0 });
+      const personal = companies.find((company: { name?: string }) => company.name === PERSONAL_COMPANY_NAME);
+      if (!personal?.id) {
+        throw new Error(`Personal Health requires a '${PERSONAL_COMPANY_NAME}' company`);
+      }
+      return personal.id;
+    })();
+  }
+  return personalCompanyIdPromise;
+}
+
+async function getPersonalScope(ctx: any) {
+  return { scopeKind: "company" as const, scopeId: await resolvePersonalCompanyId(ctx) };
+}
 
 export function generateId(): string {
   return randomUUID();
 }
 
 export async function getStateValue<T>(ctx: any, key: string, fallback: T): Promise<T> {
-  const value = await ctx.state.get({ ...INSTANCE_SCOPE, stateKey: key });
+  const value = await ctx.state.get({ ...(await getPersonalScope(ctx)), stateKey: key });
   return (value ?? fallback) as T;
 }
 
 export async function setStateValue<T>(ctx: any, key: string, value: T): Promise<void> {
-  await ctx.state.set({ ...INSTANCE_SCOPE, stateKey: key }, value);
+  await ctx.state.set({ ...(await getPersonalScope(ctx)), stateKey: key }, value);
 }
 
 export async function getArrayState<T>(ctx: any, key: string): Promise<T[]> {
-  const value = await ctx.state.get({ ...INSTANCE_SCOPE, stateKey: key });
+  const value = await ctx.state.get({ ...(await getPersonalScope(ctx)), stateKey: key });
   return Array.isArray(value) ? (value as T[]) : [];
 }
 
 export async function setArrayState<T>(ctx: any, key: string, value: T[]): Promise<void> {
-  await ctx.state.set({ ...INSTANCE_SCOPE, stateKey: key }, value);
+  await ctx.state.set({ ...(await getPersonalScope(ctx)), stateKey: key }, value);
 }
 
 export async function appendArrayItem<T>(ctx: any, key: string, item: T): Promise<T[]> {

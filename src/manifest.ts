@@ -9,6 +9,7 @@ const manifest: PaperclipPluginManifestV1 = {
   author: "turmo.dev",
   categories: ["automation"],
   capabilities: [
+    "companies.read",
     "events.subscribe",
     "plugin.state.read",
     "plugin.state.write",
